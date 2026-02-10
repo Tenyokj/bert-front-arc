@@ -90,10 +90,32 @@ export default function Home() {
                   Active rounds
                 </p>
                 <p className="mt-3 text-3xl font-semibold text-slate-900">
-                  8 live
+                  57 live
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
                   1,742 voters participating
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/50 bg-gradient-to-br from-white/80 to-slate-100/80 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Total Ideas
+                </p>
+                <p className="mt-3 text-3xl font-semibold text-slate-900">
+                  8,688  
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  1,023 received grants
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/50 bg-gradient-to-br from-white/80 to-slate-100/80 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Tokens
+                </p>
+                <p className="mt-3 text-3xl font-semibold text-slate-900">
+                  BTK - BERT governance tokens
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  800M BTK in circulation
                 </p>
               </div>
             </div>
