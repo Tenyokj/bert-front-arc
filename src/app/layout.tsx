@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   title: "BERT — DAO Grants Engine",
   description:
     "BERT turns community proposals into funded outcomes with transparent voting and grants.",
+  icons: {
+    icon: "/bert-logo.png",
+    apple: "/bert-logo.png",
+  },
 };
 
 export default function RootLayout({
