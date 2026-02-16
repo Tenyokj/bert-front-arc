@@ -595,7 +595,7 @@ export default function FaqPage() {
                                 Builders
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                <a className="footer-link" href="https://docs.bert.fi">Docs</a>
+                                <a className="footer-link" href="https://bertdao-docs.vercel.app">Docs</a>
                                 <a className="footer-link" href="/developer-guide">Developer guide</a>
                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/docs/CONTRACTS.md">Smart contracts</a>
                               </div>
