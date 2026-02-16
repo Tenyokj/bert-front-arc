@@ -102,6 +102,9 @@ export default function IdeaDetailsPage() {
     error: completeError,
     writeContract: writeMarkCompleted,
   } = useWriteContract();
+  const sendReview = writeReview as unknown as (variables: Record<string, unknown>) => void;
+  const sendMarkLowQuality = writeMarkLowQuality as unknown as (variables: Record<string, unknown>) => void;
+  const sendMarkCompleted = writeMarkCompleted as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isReviewConfirming, isSuccess: isReviewSuccess } = useWaitForTransactionReceipt({
     hash: reviewTxHash,
   });
@@ -168,6 +171,8 @@ export default function IdeaDetailsPage() {
         setIsLoading(false);
         return;
       }
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       setIsLoading(true);
       setLoadError(null);
@@ -196,7 +201,7 @@ export default function IdeaDetailsPage() {
 
               let reviewsData: IdeaReview[] = [];
               try {
-                const reviewsRow = (await client.readContract({
+                const reviewsRow = (await readContract({
                   address: contracts.ideaRegistry,
                   abi: ideaRegistryAbi,
                   functionName: "getIdeaReviews",
@@ -220,14 +225,14 @@ export default function IdeaDetailsPage() {
           }
         }
 
-        const structRow = await client.readContract({
+        const structRow = await readContract({
           address: contracts.ideaRegistry,
           abi: ideaRegistryAbi,
           functionName: "getIdeaStruct",
           args: [BigInt(ideaId)],
         });
 
-        const reviewsRow = (await client.readContract({
+        const reviewsRow = (await readContract({
           address: contracts.ideaRegistry,
           abi: ideaRegistryAbi,
           functionName: "getIdeaReviews",
@@ -250,7 +255,7 @@ export default function IdeaDetailsPage() {
         let roundVoters: string[] = [];
 
         if (contracts.votingSystem) {
-          const currentRound = (await client.readContract({
+          const currentRound = (await readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
@@ -260,7 +265,7 @@ export default function IdeaDetailsPage() {
           for (let rid = maxRound; rid >= 1; rid--) {
             let info: readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint] | null = null;
             try {
-              info = (await client.readContract({
+              info = (await readContract({
                 address: contracts.votingSystem,
                 abi: votingSystemAbi,
                 functionName: "getRoundInfo",
@@ -275,7 +280,7 @@ export default function IdeaDetailsPage() {
             const ideaIds = info[1].map((value) => Number(value));
             if (ideaIds.includes(ideaId)) {
               resolvedRoundId = rid;
-              roundVoters = (await client.readContract({
+              roundVoters = (await readContract({
                 address: contracts.votingSystem,
                 abi: votingSystemAbi,
                 functionName: "getVotersForIdea",
@@ -422,7 +427,7 @@ export default function IdeaDetailsPage() {
                   isReviewConfirming
                 }
                 onClick={() => {
-                  writeReview({
+                  sendReview({
                     address: contracts.ideaRegistry!,
                     abi: ideaRegistryAbi,
                     functionName: "addReview",
@@ -444,7 +449,7 @@ export default function IdeaDetailsPage() {
                   idea.isLowQuality
                 }
                 onClick={() => {
-                  writeMarkLowQuality({
+                  sendMarkLowQuality({
                     address: contracts.ideaRegistry!,
                     abi: ideaRegistryAbi,
                     functionName: "markLowQuality",
@@ -465,7 +470,7 @@ export default function IdeaDetailsPage() {
                   isCompleteConfirming
                 }
                 onClick={() => {
-                  writeMarkCompleted({
+                  sendMarkCompleted({
                     address: contracts.ideaRegistry!,
                     abi: ideaRegistryAbi,
                     functionName: "markAsCompleted",

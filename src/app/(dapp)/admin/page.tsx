@@ -300,18 +300,20 @@ export default function AdminPage() {
 
     async function loadAdmin() {
       if (!publicClient) return;
+      const readContract = (config: Record<string, unknown>) =>
+        (publicClient as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       if (!contracts.rolesRegistry || !address) {
         setIsAdmin(null);
       } else {
         try {
-          const adminRole = (await publicClient.readContract({
+          const adminRole = (await readContract({
             address: contracts.rolesRegistry,
             abi: rolesRegistryAbi,
             functionName: "DEFAULT_ADMIN_ROLE",
           })) as `0x${string}`;
 
-          const hasRole = (await publicClient.readContract({
+          const hasRole = (await readContract({
             address: contracts.rolesRegistry,
             abi: rolesRegistryAbi,
             functionName: "hasRole",
@@ -340,7 +342,7 @@ export default function AdminPage() {
           let contractState: ContractUiState["state"] = "Unknown";
           if (contract.stateFn) {
             try {
-              const paused = (await publicClient.readContract({
+              const paused = (await readContract({
                 address: contract.address,
                 abi: contract.abi,
                 functionName: contract.stateFn,
@@ -356,7 +358,7 @@ export default function AdminPage() {
           const linkedValues: Record<string, string> = {};
           for (const linked of contract.linked) {
             try {
-              const value = (await publicClient.readContract({
+              const value = (await readContract({
                 address: contract.address,
                 abi: contract.abi,
                 functionName: linked.readFn,
@@ -372,7 +374,7 @@ export default function AdminPage() {
           const paramValues: Record<string, bigint> = {};
           for (const param of contract.params ?? []) {
             try {
-              const value = (await publicClient.readContract({
+              const value = (await readContract({
                 address: contract.address,
                 abi: contract.abi,
                 functionName: param.readFn,
@@ -423,6 +425,7 @@ export default function AdminPage() {
 
   const busy = isPending || isConfirming;
   const isWriteBlocked = busy || isAdmin !== true;
+  const sendWrite = writeContract as unknown as (variables: Record<string, unknown>, options?: Record<string, unknown>) => void;
 
   const runWrite = async (params: {
     actionKey: string;
@@ -452,7 +455,7 @@ export default function AdminPage() {
       return;
     }
 
-    writeContract(
+    sendWrite(
       {
         address: params.address,
         abi: params.abi,

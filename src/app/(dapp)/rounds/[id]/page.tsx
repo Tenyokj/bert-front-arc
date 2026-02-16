@@ -84,6 +84,7 @@ export default function RoundDetailsPage() {
     error: approveError,
     writeContract: writeApprove,
   } = useWriteContract();
+  const sendApprove = writeApprove as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
     hash: approveTxHash,
   });
@@ -94,6 +95,7 @@ export default function RoundDetailsPage() {
     error: endError,
     writeContract: writeEndRound,
   } = useWriteContract();
+  const sendEndRound = writeEndRound as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isEndConfirming, isSuccess: isEndConfirmed } = useWaitForTransactionReceipt({
     hash: endTxHash,
   });
@@ -104,6 +106,7 @@ export default function RoundDetailsPage() {
     error: voteError,
     writeContract: writeVote,
   } = useWriteContract();
+  const sendVote = writeVote as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isVoteConfirming, isSuccess: isVoteConfirmed } = useWaitForTransactionReceipt({
     hash: voteTxHash,
   });
@@ -114,6 +117,7 @@ export default function RoundDetailsPage() {
     error: claimError,
     writeContract: writeClaim,
   } = useWriteContract();
+  const sendClaim = writeClaim as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isClaimConfirming, isSuccess: isClaimConfirmed } = useWaitForTransactionReceipt({
     hash: claimTxHash,
   });
@@ -169,6 +173,10 @@ export default function RoundDetailsPage() {
       enabled: Boolean(contracts.grantManager && Number.isFinite(roundId)),
     },
   });
+  const minStakeValue = minStake as bigint | undefined;
+  const allowanceValue = allowance as bigint | undefined;
+  const tokenBalanceValue = tokenBalance as bigint | undefined;
+  const userHasVotedValue = userHasVoted as boolean | undefined;
 
   const canClaimGrant = Array.isArray(canClaimGrantRaw) ? Boolean(canClaimGrantRaw[0]) : false;
   const claimGrantReason = Array.isArray(canClaimGrantRaw)
@@ -187,6 +195,8 @@ export default function RoundDetailsPage() {
         setIsLoading(false);
         return;
       }
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       setIsLoading(true);
       setLoadError(null);
@@ -238,13 +248,13 @@ export default function RoundDetailsPage() {
                     isReviewed: false,
                   } satisfies RoundIdea;
                 })
-                .filter((entry): entry is RoundIdea => entry !== null);
+                .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
               if (contracts.ideaRegistry && ideaDetails.length > 0) {
                 const reviewedRows = await Promise.all(
                   ideaDetails.map(async (entry) => {
                     try {
-                      const count = (await client.readContract({
+                      const count = (await readContract({
                         address: contracts.ideaRegistry!,
                         abi: ideaRegistryAbi,
                         functionName: "getReviewCount",
@@ -285,7 +295,7 @@ export default function RoundDetailsPage() {
           }
         }
 
-        const row = (await client.readContract({
+        const row = (await readContract({
           address: contracts.votingSystem,
           abi: votingSystemAbi,
           functionName: "getRoundInfo",
@@ -310,25 +320,25 @@ export default function RoundDetailsPage() {
         const ideaDetails = await Promise.all(
           nextRound.ideaIds.map(async (ideaId) => {
             const [idea, ideaRoundVotes, ideaVoters, reviewCount] = (await Promise.all([
-              client.readContract({
+              readContract({
                 address: contracts.ideaRegistry!,
                 abi: ideaRegistryAbi,
                 functionName: "getIdea",
                 args: [BigInt(ideaId)],
               }),
-              client.readContract({
+              readContract({
                 address: contracts.votingSystem!,
                 abi: votingSystemAbi,
                 functionName: "getVotesForIdea",
                 args: [BigInt(roundId), BigInt(ideaId)],
               }),
-              client.readContract({
+              readContract({
                 address: contracts.votingSystem!,
                 abi: votingSystemAbi,
                 functionName: "getVotersForIdea",
                 args: [BigInt(roundId), BigInt(ideaId)],
               }),
-              client.readContract({
+              readContract({
                 address: contracts.ideaRegistry!,
                 abi: ideaRegistryAbi,
                 functionName: "getReviewCount",
@@ -357,7 +367,7 @@ export default function RoundDetailsPage() {
 
         const votersByIdea = await Promise.all(
           nextRound.ideaIds.map(async (ideaId) => {
-            const addresses = (await client.readContract({
+            const addresses = (await readContract({
               address: contracts.votingSystem!,
               abi: votingSystemAbi,
               functionName: "getVotersForIdea",
@@ -403,7 +413,7 @@ export default function RoundDetailsPage() {
     return <p className="rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{loadError || "Round not found"}</p>;
   }
 
-  const canVote = isConnected && round.active && !round.ended && !Boolean(userHasVoted);
+  const canVote = isConnected && round.active && !round.ended && !Boolean(userHasVotedValue);
   const canEndRound = round.active && !round.ended && Math.floor(Date.now() / 1000) > Number(round.endTime);
 
   return (
@@ -432,7 +442,7 @@ export default function RoundDetailsPage() {
           <button
             disabled={!isConnected || !canEndRound || isEndPending || isEndConfirming}
             onClick={() =>
-              writeEndRound({
+              sendEndRound({
                 address: contracts.votingSystem!,
                 abi: votingSystemAbi,
                 functionName: "endVotingRound",
@@ -453,7 +463,7 @@ export default function RoundDetailsPage() {
             <button
               disabled={!isConnected || !canClaimByWallet || isClaimPending || isClaimConfirming}
               onClick={() => {
-                writeClaim({
+                sendClaim({
                   address: contracts.grantManager!,
                   abi: grantManagerAbi,
                   functionName: "claimGrant",
@@ -470,7 +480,7 @@ export default function RoundDetailsPage() {
 
         {round.active && (
           <p className="mt-2 text-xs text-slate-300">
-            {userHasVoted ? "Your wallet already voted in this round." : "You can vote once in this round."}
+            {userHasVotedValue ? "Your wallet already voted in this round." : "You can vote once in this round."}
           </p>
         )}
         {!canEndRound && round.active && !round.ended && (
@@ -492,7 +502,7 @@ export default function RoundDetailsPage() {
         )}
         {contracts.governanceToken && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
-            Wallet balance: {formatBtk(tokenBalance)} | Allowance to FundingPool: {formatBtk(allowance)} | Min stake: {formatBtk(minStake)}
+            Wallet balance: {formatBtk(tokenBalanceValue)} | Allowance to FundingPool: {formatBtk(allowanceValue)} | Min stake: {formatBtk(minStakeValue)}
           </p>
         )}
 
@@ -534,9 +544,9 @@ export default function RoundDetailsPage() {
           {ideas.map((idea) => {
             const amountInput = voteAmountByIdea[idea.id] ?? "";
             const parsedAmount = safeParseAmount(amountInput);
-            const needApprove = (allowance ?? 0n) < parsedAmount;
-            const insufficientBalance = (tokenBalance ?? 0n) < parsedAmount;
-            const belowMinStake = minStake !== undefined && parsedAmount > 0n && parsedAmount < minStake;
+            const needApprove = (allowanceValue ?? 0n) < parsedAmount;
+            const insufficientBalance = (tokenBalanceValue ?? 0n) < parsedAmount;
+            const belowMinStake = minStakeValue !== undefined && parsedAmount > 0n && parsedAmount < minStakeValue;
             const invalidVoteAmount = parsedAmount <= 0n || insufficientBalance || belowMinStake;
             const votingBusy = isVotePending || isVoteConfirming || isApprovePending || isApproveConfirming;
             const isOwnIdea = Boolean(address) && idea.author.toLowerCase() === address!.toLowerCase();
@@ -598,7 +608,7 @@ export default function RoundDetailsPage() {
                       disabled={!isConnected || parsedAmount <= 0n || isApprovePending || isApproveConfirming || !contracts.governanceToken || !contracts.fundingPool || isOwnIdea}
                       onClick={() => {
                         if (!contracts.governanceToken || !contracts.fundingPool || parsedAmount <= 0n) return;
-                        writeApprove({
+                        sendApprove({
                           address: contracts.governanceToken,
                           abi: governanceTokenAbi,
                           functionName: "approve",
@@ -616,7 +626,7 @@ export default function RoundDetailsPage() {
                     disabled={!canVote || invalidVoteAmount || votingBusy || isOwnIdea}
                     onClick={() => {
                       if (!contracts.votingSystem || invalidVoteAmount) return;
-                      writeVote({
+                      sendVote({
                         address: contracts.votingSystem,
                         abi: votingSystemAbi,
                         functionName: "vote",
@@ -633,7 +643,7 @@ export default function RoundDetailsPage() {
                 {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient BTK balance for this vote amount.</p>}
                 {belowMinStake && <p className="mt-2 text-xs text-rose-300">Amount is below `minStake`.</p>}
                 {isOwnIdea && <p className="mt-2 text-xs text-rose-300">You cannot vote for your own idea.</p>}
-                {!isOwnIdea && userHasVoted && <p className="mt-2 text-xs text-rose-300">You already voted in this round (one vote per wallet per round).</p>}
+                {!isOwnIdea && userHasVotedValue && <p className="mt-2 text-xs text-rose-300">You already voted in this round (one vote per wallet per round).</p>}
               </div>
             );
           })}

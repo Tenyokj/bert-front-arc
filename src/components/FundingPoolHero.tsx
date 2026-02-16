@@ -106,14 +106,19 @@ export function FundingPoolHero() {
     args: address ? [address] : undefined,
     query: { enabled: Boolean(token && address) },
   });
+  const allowanceValue = allowance as bigint | undefined;
+  const balanceValue = balance as bigint | undefined;
+  const poolPausedValue = poolPaused as boolean | undefined;
 
   const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending, error: approveError } =
     useWriteContract();
+  const sendApprove = writeApprove as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isApproveConfirming } = useWaitForTransactionReceipt({
     hash: approveHash,
   });
   const { writeContract: writeDeposit, data: depositHash, isPending: isDepositPending, error: depositError } =
     useWriteContract();
+  const sendDeposit = writeDeposit as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isDepositConfirming } = useWaitForTransactionReceipt({
     hash: depositHash,
   });
@@ -126,9 +131,9 @@ export function FundingPoolHero() {
     }
   }, [amount]);
 
-  const needApprove = (allowance ?? 0n) < (parsedAmount > 0n ? parsedAmount : 0n);
+  const needApprove = (allowanceValue ?? 0n) < (parsedAmount > 0n ? parsedAmount : 0n);
   const invalidAmount = parsedAmount <= 0n;
-  const insufficientBalance = balance !== undefined && parsedAmount > balance;
+  const insufficientBalance = balanceValue !== undefined && parsedAmount > balanceValue;
   const actionDisabled =
     !hasContracts ||
     !isConnected ||
@@ -138,7 +143,7 @@ export function FundingPoolHero() {
     isApproveConfirming ||
     isDepositPending ||
     isDepositConfirming ||
-    Boolean(poolPaused);
+    Boolean(poolPausedValue);
 
   const formatBtk = (value?: bigint) => {
     if (value === undefined) return "...";
@@ -373,7 +378,7 @@ export function FundingPoolHero() {
               disabled={actionDisabled}
               onClick={() => {
                 if (!token || !fundingPool || parsedAmount <= 0n) return;
-                writeApprove({
+                sendApprove({
                   address: token,
                   abi: governanceTokenAbi,
                   functionName: "approve",
@@ -391,7 +396,7 @@ export function FundingPoolHero() {
               disabled={actionDisabled}
               onClick={() => {
                 if (!fundingPool || parsedAmount <= 0n) return;
-                writeDeposit({
+                sendDeposit({
                   address: fundingPool,
                   abi: fundingPoolAbi,
                   functionName: "deposit",
@@ -406,7 +411,7 @@ export function FundingPoolHero() {
           )}
         </div>
         {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient BTK balance.</p>}
-        {poolPaused && <p className="mt-2 text-xs text-amber-200">FundingPool is paused by admin.</p>}
+        {poolPausedValue && <p className="mt-2 text-xs text-amber-200">FundingPool is paused by admin.</p>}
         {!hasContracts && (
           <p className="mt-2 text-xs text-amber-200">Set `NEXT_PUBLIC_FUNDING_POOL_ADDRESS` and `NEXT_PUBLIC_GOVERNANCE_TOKEN_ADDRESS` in `.env`.</p>
         )}

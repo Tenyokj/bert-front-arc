@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatUnits } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
@@ -27,7 +27,7 @@ type UserIdea = {
   statusCode: bigint;
 };
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { address, isConnected } = useAccount();
   const client = usePublicClient();
   const searchParams = useSearchParams();
@@ -70,6 +70,8 @@ export default function ProfilePage() {
         setVotesToReviewer(0n);
         return;
       }
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       setIsLoading(true);
       setLoadError(null);
@@ -92,7 +94,7 @@ export default function ProfilePage() {
         }
 
         if (!rows.length) {
-          const ideaIds = (await client.readContract({
+          const ideaIds = (await readContract({
             address: contracts.ideaRegistry,
             abi: ideaRegistryAbi,
             functionName: "getIdeasByAuthor",
@@ -101,7 +103,7 @@ export default function ProfilePage() {
 
           rows = await Promise.all(
             [...ideaIds].reverse().map(async (ideaId) => {
-              const idea = (await client.readContract({
+              const idea = (await readContract({
                 address: contracts.ideaRegistry!,
                 abi: ideaRegistryAbi,
                 functionName: "getIdea",
@@ -122,7 +124,7 @@ export default function ProfilePage() {
 
         let nextBtk = "0";
         if (contracts.governanceToken) {
-          const rawBalance = (await client.readContract({
+          const rawBalance = (await readContract({
             address: contracts.governanceToken,
             abi: governanceTokenAbi,
             functionName: "balanceOf",
@@ -140,7 +142,7 @@ export default function ProfilePage() {
 
         if (contracts.votingSystem) {
           let nextWonIdeasCount = 0;
-          const currentRoundId = (await client.readContract({
+          const currentRoundId = (await readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
@@ -150,7 +152,7 @@ export default function ProfilePage() {
           if (roundCount > 0) {
             const roundInfos = await Promise.all(
               Array.from({ length: roundCount }, (_, idx) =>
-                client.readContract({
+                readContract({
                   address: contracts.votingSystem!,
                   abi: votingSystemAbi,
                   functionName: "getRoundInfo",
@@ -172,14 +174,14 @@ export default function ProfilePage() {
         }
 
         if (contracts.reputationSystem) {
-          const isInitialized = (await client.readContract({
+          const isInitialized = (await readContract({
             address: contracts.reputationSystem,
             abi: reputationSystemAbi,
             functionName: "isInitialized",
             args: [displayAddress],
           })) as boolean;
           const currentReputation = isInitialized
-            ? ((await client.readContract({
+            ? ((await readContract({
                 address: contracts.reputationSystem,
                 abi: reputationSystemAbi,
                 functionName: "getReputation",
@@ -190,7 +192,7 @@ export default function ProfilePage() {
         }
 
         if (contracts.voterProgression) {
-          const progression = (await client.readContract({
+          const progression = (await readContract({
             address: contracts.voterProgression,
             abi: voterProgressionAbi,
             functionName: "getProgressionStatus",
@@ -329,5 +331,13 @@ export default function ProfilePage() {
         </>
       )}
     </section>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">Loading profile...</p>}>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

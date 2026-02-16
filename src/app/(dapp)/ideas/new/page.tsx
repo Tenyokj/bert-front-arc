@@ -16,6 +16,7 @@ export default function NewIdeaPage() {
   );
   const { isConnected } = useAccount();
   const { data: txHash, isPending, error, writeContract } = useWriteContract();
+  const sendWrite = writeContract as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
   });
@@ -37,7 +38,7 @@ export default function NewIdeaPage() {
     event.preventDefault();
     if (!canSubmit || !contracts.ideaRegistry) return;
 
-    writeContract({
+    sendWrite({
       address: contracts.ideaRegistry,
       abi: ideaRegistryAbi,
       functionName: "createIdea",

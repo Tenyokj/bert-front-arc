@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatUnits } from "viem";
 import { FaCheckCircle, FaClock } from "react-icons/fa";
@@ -34,7 +34,7 @@ function durationHours(startsAt: bigint, endsAt: bigint) {
   return Math.max(Math.round(diffSeconds / 3600), 0);
 }
 
-export default function RoundsPage() {
+function RoundsPageContent() {
   const client = usePublicClient();
   const { isConnected } = useAccount();
   const searchParams = useSearchParams();
@@ -44,6 +44,7 @@ export default function RoundsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const { data: txHash, isPending, error, writeContract } = useWriteContract();
+  const sendWrite = writeContract as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
   const pageSize = 30;
   const canStartByIdeas = missingIdeas === 0;
@@ -70,25 +71,27 @@ export default function RoundsPage() {
       setIsLoading(true);
       setLoadError(null);
       try {
+        const readContract = (config: Record<string, unknown>) =>
+          (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
         const [currentRoundId, ideaLimit, totalIdeas, lastUsedIdeaId] = (await Promise.all([
-          client.readContract({
+          readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
           }),
-          client.readContract({
+          readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "IDEAS_PER_ROUND",
           }),
           contracts.ideaRegistry
-            ? client.readContract({
+            ? readContract({
                 address: contracts.ideaRegistry,
                 abi: ideaRegistryAbi,
                 functionName: "totalIdeas",
               })
             : Promise.resolve(0n),
-          client.readContract({
+          readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "lastUsedIdeaId",
@@ -137,7 +140,7 @@ export default function RoundsPage() {
         const entries = await Promise.all(
           ids.map(async (id) => {
             try {
-              const row = (await client.readContract({
+              const row = (await readContract({
                 address: contracts.votingSystem!,
                 abi: votingSystemAbi,
                 functionName: "getRoundInfo",
@@ -178,7 +181,7 @@ export default function RoundsPage() {
   const onStartRound = () => {
     if (!contracts.votingSystem) return;
     if (!canStartByIdeas) return;
-    writeContract({
+    sendWrite({
       address: contracts.votingSystem,
       abi: votingSystemAbi,
       functionName: "startVotingRound",
@@ -293,5 +296,13 @@ export default function RoundsPage() {
 
       <Pagination basePath="/rounds" currentPage={currentPage} totalItems={rounds.length} pageSize={pageSize} />
     </section>
+  );
+}
+
+export default function RoundsPage() {
+  return (
+    <Suspense fallback={<p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">Loading rounds...</p>}>
+      <RoundsPageContent />
+    </Suspense>
   );
 }

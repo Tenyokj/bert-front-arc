@@ -131,7 +131,7 @@ export default function PrivacyNoticePage() {
           </section>
         </main>
 
-                        <footer className="relative mt-32 border-t border-white/20 pb-16 pt-12">
+                       <footer className="relative mt-32 border-t border-white/20 pb-16 pt-12">
                           <div className="pointer-events-none absolute -left-10 top-8 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.25),transparent_65%)] blur-2xl" />
                           <div className="pointer-events-none absolute right-[-3rem] top-16 h-52 w-52 rounded-full bg-[radial-gradient(circle,rgba(244,63,94,0.22),transparent_65%)] blur-2xl" />
                           <div className="text-sm text-slate-500">
@@ -157,10 +157,10 @@ export default function PrivacyNoticePage() {
                                 BERT DAO
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                <a className="footer-link" href="#">Governance stack</a>
+                                <a className="footer-link" href="/governance-stack">Governance stack</a>
                                 <a className="footer-link" href="/policy-docs">Policy docs</a>
                                 <a className="footer-link" href="/on-chain-votes">On-chain votes</a>
-                                <a className="footer-link" href="#">Treasury policies</a>
+                                <a className="footer-link" href="/treasury-policies">Treasury policies</a>
                               </div>
                             </div>
                 
@@ -169,7 +169,7 @@ export default function PrivacyNoticePage() {
                                 Builders
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                <a className="footer-link" href="/developer-guide">Docs</a>
+                                <a className="footer-link" href="https://docs.bert.fi">Docs</a>
                                 <a className="footer-link" href="/developer-guide">Developer guide</a>
                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/docs/CONTRACTS.md">Smart contracts</a>
                               </div>
@@ -182,17 +182,17 @@ export default function PrivacyNoticePage() {
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                 <a className="footer-link" href="/how-it-works">How it works</a>
                                 <a className="footer-link" href="/faq">FAQ</a>
-                        <a className="footer-link" href="/sepolia-guide">Sepolia guide</a>
+                                <a className="footer-link" href="/sepolia-guide">Sepolia guide</a>
                                 <a className="footer-link" href="/press-kit">Press kit</a>
-                        <a className="footer-link" href="/build-dapps">Build dApps</a>
+                                <a className="footer-link" href="/build-dapps">Build dApps</a>
                               </div>
                             </div>
                           </div>
                 
                           <div className="mt-10 grid gap-10 lg:grid-cols-4">
                             <div>
-                              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                Social Links
+                                <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                                  Social Links
                               </h4>
                               <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
                                 <a href="https://github.com/tenyokj"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
@@ -206,7 +206,7 @@ export default function PrivacyNoticePage() {
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                 <a className="footer-link" href="/protocol-stats">Protocol stats</a>
-                                <a className="footer-link" href="#">Treasury metrics</a>
+                                <a className="footer-link" href="/treasury-policies#reporting">Treasury metrics</a>
                               </div>
                             </div>
                             <div className="lg:col-span-2">

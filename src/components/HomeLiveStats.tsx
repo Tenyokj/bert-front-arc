@@ -41,18 +41,20 @@ export function HomeLiveStats() {
 
     async function load() {
       if (!client) return;
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       const next: HomeStats = {};
 
       if (contracts.fundingPool) {
         try {
           const [poolBalance, fundedProposals] = (await Promise.all([
-            client.readContract({
+            readContract({
               address: contracts.fundingPool,
               abi: fundingPoolAbi,
               functionName: "totalPoolBalance",
             }),
-            client.readContract({
+            readContract({
               address: contracts.fundingPool,
               abi: fundingPoolAbi,
               functionName: "getDistributionCount",
@@ -68,7 +70,7 @@ export function HomeLiveStats() {
 
       if (contracts.votingSystem) {
         try {
-          const currentRoundId = (await client.readContract({
+          const currentRoundId = (await readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
@@ -78,7 +80,7 @@ export function HomeLiveStats() {
           if (totalRounds > 0) {
             const infos = await Promise.all(
               Array.from({ length: totalRounds }, (_, idx) =>
-                client.readContract({
+                readContract({
                   address: contracts.votingSystem!,
                   abi: votingSystemAbi,
                   functionName: "getRoundInfo",
@@ -97,7 +99,7 @@ export function HomeLiveStats() {
             for (const round of active) {
               for (const ideaId of round[1]) {
                 try {
-                  const voters = (await client.readContract({
+                  const voters = (await readContract({
                     address: contracts.votingSystem!,
                     abi: votingSystemAbi,
                     functionName: "getVotersForIdea",
@@ -123,7 +125,7 @@ export function HomeLiveStats() {
 
       if (contracts.ideaRegistry) {
         try {
-          const totalIdeas = (await client.readContract({
+          const totalIdeas = (await readContract({
             address: contracts.ideaRegistry,
             abi: ideaRegistryAbi,
             functionName: "totalIdeas",
@@ -137,12 +139,12 @@ export function HomeLiveStats() {
       if (contracts.governanceToken) {
         try {
           const [tokenSymbol, tokenSupply] = (await Promise.all([
-            client.readContract({
+            readContract({
               address: contracts.governanceToken,
               abi: governanceTokenAbi,
               functionName: "symbol",
             }),
-            client.readContract({
+            readContract({
               address: contracts.governanceToken,
               abi: governanceTokenAbi,
               functionName: "totalSupply",
@@ -204,4 +206,3 @@ export function HomeLiveStats() {
     </div>
   );
 }
-

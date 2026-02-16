@@ -62,6 +62,7 @@ export function FaucetClaim() {
     isPending: isClaiming,
     writeContract,
   } = useWriteContract();
+  const sendWrite = writeContract as unknown as (variables: Record<string, unknown>) => void;
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -69,7 +70,7 @@ export function FaucetClaim() {
 
   const onClaim = () => {
     if (!faucetAddress) return;
-    writeContract({
+    sendWrite({
       abi: brtfaucetAbi,
       address: faucetAddress,
       functionName: "claim",

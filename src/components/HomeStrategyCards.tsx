@@ -33,17 +33,19 @@ export function HomeStrategyCards() {
 
     async function load() {
       if (!client) return;
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
       const next: StrategyStats = {};
 
       if (contracts.fundingPool) {
         try {
           const [poolBalance, distributionCount] = (await Promise.all([
-            client.readContract({
+            readContract({
               address: contracts.fundingPool,
               abi: fundingPoolAbi,
               functionName: "totalPoolBalance",
             }),
-            client.readContract({
+            readContract({
               address: contracts.fundingPool,
               abi: fundingPoolAbi,
               functionName: "getDistributionCount",
@@ -57,7 +59,7 @@ export function HomeStrategyCards() {
           const count = Number(distributionCount);
           for (let i = 0; i < count; i += 1) {
             try {
-              const distribution = (await client.readContract({
+              const distribution = (await readContract({
                 address: contracts.fundingPool,
                 abi: fundingPoolAbi,
                 functionName: "getDistribution",
@@ -76,7 +78,7 @@ export function HomeStrategyCards() {
 
       if (contracts.votingSystem) {
         try {
-          const currentRoundId = (await client.readContract({
+          const currentRoundId = (await readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
@@ -86,7 +88,7 @@ export function HomeStrategyCards() {
           if (totalRounds > 0) {
             const infos = await Promise.all(
               Array.from({ length: totalRounds }, (_, idx) =>
-                client.readContract({
+                readContract({
                   address: contracts.votingSystem!,
                   abi: votingSystemAbi,
                   functionName: "getRoundInfo",
@@ -104,7 +106,7 @@ export function HomeStrategyCards() {
             for (const round of active) {
               for (const ideaId of round[1]) {
                 try {
-                  const voters = (await client.readContract({
+                  const voters = (await readContract({
                     address: contracts.votingSystem!,
                     abi: votingSystemAbi,
                     functionName: "getVotersForIdea",
@@ -216,4 +218,3 @@ export function HomeStrategyCards() {
     </div>
   );
 }
-

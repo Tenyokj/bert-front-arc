@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePublicClient } from "wagmi";
 
@@ -16,7 +16,7 @@ function normalize(input: string) {
   return input.trim().toLowerCase();
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const client = usePublicClient();
   const searchParams = useSearchParams();
   const queryRaw = searchParams.get("q") ?? "";
@@ -39,6 +39,8 @@ export default function SearchPage() {
         setRounds([]);
         return;
       }
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       try {
         if (hasSubgraphConfigured()) {
@@ -65,12 +67,12 @@ export default function SearchPage() {
         }
 
         const [totalIdeas, currentRoundId] = (await Promise.all([
-          client.readContract({
+          readContract({
             address: contracts.ideaRegistry,
             abi: ideaRegistryAbi,
             functionName: "totalIdeas",
           }),
-          client.readContract({
+          readContract({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
@@ -83,7 +85,7 @@ export default function SearchPage() {
         const ideaResults = ideaCount
           ? await Promise.all(
               Array.from({ length: ideaCount }, (_, i) => i + 1).map(async (id) => {
-                const row = (await client.readContract({
+                const row = (await readContract({
                   address: contracts.ideaRegistry!,
                   abi: ideaRegistryAbi,
                   functionName: "getIdea",
@@ -98,7 +100,7 @@ export default function SearchPage() {
           ? await Promise.all(
               Array.from({ length: roundCount }, (_, i) => i + 1).map(async (id) => {
                 try {
-                  const row = (await client.readContract({
+                  const row = (await readContract({
                     address: contracts.votingSystem!,
                     abi: votingSystemAbi,
                     functionName: "getRoundInfo",
@@ -203,5 +205,13 @@ export default function SearchPage() {
         </p>
       )}
     </section>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">Loading search...</p>}>
+      <SearchPageContent />
+    </Suspense>
   );
 }

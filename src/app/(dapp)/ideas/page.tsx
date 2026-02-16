@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePublicClient } from "wagmi";
 
@@ -22,7 +22,7 @@ type OnChainIdea = {
   statusCode: bigint;
 };
 
-export default function IdeasPage() {
+function IdeasPageContent() {
   const client = usePublicClient();
   const searchParams = useSearchParams();
   const [ideas, setIdeas] = useState<OnChainIdea[]>([]);
@@ -40,6 +40,8 @@ export default function IdeasPage() {
         setIsLoading(false);
         return;
       }
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       setIsLoading(true);
       setLoadError(null);
@@ -72,7 +74,7 @@ export default function IdeasPage() {
           }
         }
 
-        const total = (await client.readContract({
+        const total = (await readContract({
           address: contracts.ideaRegistry,
           abi: ideaRegistryAbi,
           functionName: "totalIdeas",
@@ -87,7 +89,7 @@ export default function IdeasPage() {
         const ids = Array.from({ length: count }, (_, i) => i + 1).reverse();
         const results = await Promise.all(
           ids.map(async (id) => {
-            const idea = (await client.readContract({
+            const idea = (await readContract({
               address: contracts.ideaRegistry!,
               abi: ideaRegistryAbi,
               functionName: "getIdea",
@@ -143,11 +145,13 @@ export default function IdeasPage() {
         if (!cancelled) setReviewedIdeas({});
         return;
       }
+      const readContract = (config: Record<string, unknown>) =>
+        (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       const rows = await Promise.all(
         visibleIdeas.map(async (idea) => {
           try {
-            const count = (await client.readContract({
+            const count = (await readContract({
               address: contracts.ideaRegistry!,
               abi: ideaRegistryAbi,
               functionName: "getReviewCount",
@@ -227,5 +231,13 @@ export default function IdeasPage() {
 
       <Pagination basePath="/ideas" currentPage={currentPage} totalItems={ideas.length} pageSize={pageSize} />
     </section>
+  );
+}
+
+export default function IdeasPage() {
+  return (
+    <Suspense fallback={<p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">Loading ideas...</p>}>
+      <IdeasPageContent />
+    </Suspense>
   );
 }
