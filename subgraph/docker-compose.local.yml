@@ -1,0 +1,60 @@
+services:
+  ipfs:
+    image: ipfs/kubo:v0.34.1
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    volumes:
+      - ipfs-data:/data/ipfs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:5001/api/v0/version >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: let-me-in
+      POSTGRES_DB: graph-node
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graph-node -d graph-node -h 127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  graph-node:
+    image: graphprotocol/graph-node:v0.40.0
+    restart: unless-stopped
+    platform: linux/amd64
+    depends_on:
+      ipfs:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8020:8020"
+      - "8030:8030"
+      - "8040:8040"
+    environment:
+      postgres_host: postgres
+      postgres_user: graph-node
+      postgres_pass: let-me-in
+      postgres_db: graph-node
+      ipfs: ipfs:5001
+      ethereum: "hardhat:http://host.docker.internal:8545"
+      GRAPH_LOG: info
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  postgres-data:
+  ipfs-data:

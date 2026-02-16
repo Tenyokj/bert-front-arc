@@ -1,0 +1,28 @@
+<svg width="1400" height="560" viewBox="0 0 1400 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .t1 { font: 700 98px Inter, Segoe UI, Arial, sans-serif; fill: #1e293b; }
+      .t2 { font: 600 50px Inter, Segoe UI, Arial, sans-serif; fill: #334155; }
+      .t3 { font: 600 34px Inter, Segoe UI, Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <!-- single flat coin -->
+  <circle cx="700" cy="165" r="118" fill="#f8fafc" stroke="#94a3b8" stroke-width="10"/>
+  <circle cx="700" cy="165" r="94" fill="none" stroke="#cbd5e1" stroke-width="4"/>
+
+  <!-- pentagon outline behind ethereum mark -->
+  <polygon points="700,124 758,160 758,222 700,256 642,222 642,160" fill="none" stroke="#64748b" stroke-width="7"/>
+
+  <!-- simplified ethereum mark -->
+  <polygon points="700,90 652,162 700,139 748,162" fill="#64748b"/>
+  <polygon points="700,236 652,172 700,202 748,172" fill="#334155"/>
+
+  <!-- text block -->
+  <text x="700" y="404" text-anchor="middle" class="t1">BTK</text>
+  <text x="700" y="466" text-anchor="middle" class="t2">BERT Token</text>
+
+  <!-- small standard badge -->
+  <rect x="870" y="424" width="176" height="58" rx="29" fill="#f8fafc" stroke="#94a3b8" stroke-width="3"/>
+  <text x="958" y="462" text-anchor="middle" class="t3">ERC-20</text>
+</svg>

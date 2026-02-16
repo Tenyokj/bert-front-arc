@@ -1,0 +1,296 @@
+export type SubgraphRound = {
+  id: string;
+  startTime: string;
+  endTime: string;
+  active: boolean;
+  ended: boolean;
+  totalVotes: string;
+  winningIdeaId: string;
+  ideaIds: string[];
+};
+
+export type SubgraphIdea = {
+  id: string;
+  author: string;
+  title: string;
+  description: string;
+  link: string;
+  createdAt: string;
+  totalVotes: string;
+  status: string;
+  roundId?: string | null;
+};
+
+export type SubgraphVote = {
+  id: string;
+  roundId: string;
+  ideaId: string;
+  voter: string;
+  amount: string;
+  timestamp: string;
+};
+
+type GraphQLResponse<T> = {
+  data?: T;
+  errors?: Array<{ message: string }>;
+};
+
+const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
+
+export function hasSubgraphConfigured() {
+  return Boolean(subgraphUrl);
+}
+
+export async function fetchGraphQL<T>(query: string, variables?: Record<string, unknown>) {
+  if (!subgraphUrl) {
+    throw new Error("NEXT_PUBLIC_SUBGRAPH_URL is not set");
+  }
+
+  const res = await fetch(subgraphUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Subgraph request failed: ${res.status}`);
+  }
+
+  const payload = (await res.json()) as GraphQLResponse<T>;
+  if (payload.errors?.length) {
+    throw new Error(payload.errors.map((entry) => entry.message).join("; "));
+  }
+
+  if (!payload.data) {
+    throw new Error("Subgraph response has no data");
+  }
+
+  return payload.data;
+}
+
+const ROUNDS_QUERY = `
+  query Rounds($first: Int!, $skip: Int!) {
+    rounds(first: $first, skip: $skip, orderBy: id, orderDirection: desc) {
+      id
+      startTime
+      endTime
+      active
+      ended
+      totalVotes
+      winningIdeaId
+      ideaIds
+    }
+  }
+`;
+
+export async function fetchRoundsPageFromSubgraph(first: number, skip: number) {
+  const data = await fetchGraphQL<{ rounds: SubgraphRound[] }>(ROUNDS_QUERY, {
+    first,
+    skip,
+  });
+
+  return data.rounds;
+}
+
+const IDEAS_QUERY = `
+  query Ideas($first: Int!, $skip: Int!) {
+    ideas(first: $first, skip: $skip, orderBy: id, orderDirection: desc) {
+      id
+      author
+      title
+      description
+      link
+      createdAt
+      totalVotes
+      status
+      roundId
+    }
+  }
+`;
+
+export async function fetchIdeasPageFromSubgraph(first: number, skip: number) {
+  const data = await fetchGraphQL<{ ideas: SubgraphIdea[] }>(IDEAS_QUERY, {
+    first,
+    skip,
+  });
+  return data.ideas;
+}
+
+const ROUND_BY_ID_QUERY = `
+  query RoundById($id: ID!) {
+    round(id: $id) {
+      id
+      startTime
+      endTime
+      active
+      ended
+      totalVotes
+      winningIdeaId
+      ideaIds
+    }
+  }
+`;
+
+export async function fetchRoundByIdFromSubgraph(roundId: string) {
+  const data = await fetchGraphQL<{ round: SubgraphRound | null }>(ROUND_BY_ID_QUERY, {
+    id: roundId,
+  });
+  return data.round;
+}
+
+const IDEA_BY_ID_QUERY = `
+  query IdeaById($id: ID!) {
+    idea(id: $id) {
+      id
+      author
+      title
+      description
+      link
+      createdAt
+      totalVotes
+      status
+      roundId
+    }
+  }
+`;
+
+export async function fetchIdeaByIdFromSubgraph(ideaId: string) {
+  const data = await fetchGraphQL<{ idea: SubgraphIdea | null }>(IDEA_BY_ID_QUERY, {
+    id: ideaId,
+  });
+  return data.idea;
+}
+
+const IDEAS_BY_IDS_QUERY = `
+  query IdeasByIds($ids: [ID!]!) {
+    ideas(where: { id_in: $ids }, first: 1000) {
+      id
+      author
+      title
+      description
+      link
+      createdAt
+      totalVotes
+      status
+      roundId
+    }
+  }
+`;
+
+export async function fetchIdeasByIdsFromSubgraph(ids: string[]) {
+  if (!ids.length) return [] as SubgraphIdea[];
+  const data = await fetchGraphQL<{ ideas: SubgraphIdea[] }>(IDEAS_BY_IDS_QUERY, {
+    ids,
+  });
+  return data.ideas;
+}
+
+const IDEAS_BY_AUTHOR_QUERY = `
+  query IdeasByAuthor($author: Bytes!, $first: Int!, $skip: Int!) {
+    ideas(
+      where: { author: $author }
+      first: $first
+      skip: $skip
+      orderBy: id
+      orderDirection: desc
+    ) {
+      id
+      author
+      title
+      description
+      link
+      createdAt
+      totalVotes
+      status
+      roundId
+    }
+  }
+`;
+
+export async function fetchIdeasByAuthorFromSubgraph(
+  author: string,
+  first = 2000,
+  skip = 0
+) {
+  const data = await fetchGraphQL<{ ideas: SubgraphIdea[] }>(IDEAS_BY_AUTHOR_QUERY, {
+    author: author.toLowerCase(),
+    first,
+    skip,
+  });
+  return data.ideas;
+}
+
+const VOTES_BY_ROUND_QUERY = `
+  query VotesByRound($roundId: BigInt!, $first: Int!) {
+    votes(
+      first: $first
+      where: { roundId: $roundId }
+      orderBy: timestamp
+      orderDirection: desc
+    ) {
+      id
+      roundId
+      ideaId
+      voter
+      amount
+      timestamp
+    }
+  }
+`;
+
+export async function fetchVotesByRoundFromSubgraph(roundId: string, first = 2000) {
+  const data = await fetchGraphQL<{ votes: SubgraphVote[] }>(VOTES_BY_ROUND_QUERY, {
+    roundId,
+    first,
+  });
+  return data.votes;
+}
+
+const VOTES_BY_IDEA_QUERY = `
+  query VotesByIdea($ideaId: BigInt!, $first: Int!) {
+    votes(
+      first: $first
+      where: { ideaId: $ideaId }
+      orderBy: timestamp
+      orderDirection: desc
+    ) {
+      id
+      roundId
+      ideaId
+      voter
+      amount
+      timestamp
+    }
+  }
+`;
+
+export async function fetchVotesByIdeaFromSubgraph(ideaId: string, first = 2000) {
+  const data = await fetchGraphQL<{ votes: SubgraphVote[] }>(VOTES_BY_IDEA_QUERY, {
+    ideaId,
+    first,
+  });
+  return data.votes;
+}
+
+const SEARCH_QUERY = `
+  query Search($q: String!, $first: Int!) {
+    rounds(first: $first, where: { id_contains: $q }, orderBy: id, orderDirection: desc) {
+      id
+      totalVotes
+    }
+    ideas(first: $first, where: { title_contains_nocase: $q }, orderBy: id, orderDirection: desc) {
+      id
+      title
+      totalVotes
+    }
+  }
+`;
+
+export async function searchSubgraph(q: string, first: number) {
+  const data = await fetchGraphQL<{
+    rounds: Array<{ id: string; totalVotes: string }>;
+    ideas: Array<{ id: string; title: string; totalVotes: string }>;
+  }>(SEARCH_QUERY, { q, first });
+  return data;
+}

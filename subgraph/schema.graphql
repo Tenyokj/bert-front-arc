@@ -1,0 +1,37 @@
+type Round @entity(immutable: false) {
+  id: ID!
+  startTime: BigInt!
+  endTime: BigInt!
+  active: Boolean!
+  ended: Boolean!
+  totalVotes: BigInt!
+  winningIdeaId: BigInt!
+  ideaIds: [BigInt!]!
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type Idea @entity(immutable: false) {
+  id: ID!
+  author: Bytes
+  title: String!
+  description: String!
+  link: String!
+  createdAt: BigInt!
+  totalVotes: BigInt!
+  status: Int!
+  roundId: BigInt
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type Vote @entity(immutable: true) {
+  id: ID!
+  roundId: BigInt!
+  ideaId: BigInt!
+  voter: Bytes!
+  amount: BigInt!
+  txHash: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}

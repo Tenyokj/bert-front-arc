@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BERT Protocol Docs</title>
+    <meta
+      name="description"
+      content="BERT protocol documentation: architecture, contracts, Sepolia deployment, operations, and integration guides."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div>
+            <div class="brand-title">BERT docs</div>
+            <div class="brand-subtitle">Protocol reference</div>
+          </div>
+        </div>
+
+        <nav id="nav" class="nav"></nav>
+
+        <div class="sidebar-footer">
+          <a href="https://github.com/Tenyokj/bert-core" target="_blank" rel="noreferrer">Core repo</a>
+          <a href="https://thegraph.com/studio/subgraph/bert-sepolia" target="_blank" rel="noreferrer">Subgraph</a>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="search-wrap">
+            <input id="searchInput" type="search" placeholder="Search docs..." aria-label="Search docs" />
+          </div>
+          <a class="top-link" href="../" target="_blank" rel="noreferrer">Main site</a>
+          <a class="top-link" href="https://tenyokj.github.io/web3-studio/" target="_blank" rel="noreferrer">Web3 Studio</a>
+        </header>
+
+        <article id="doc" class="doc"></article>
+        <footer id="pager" class="pager"></footer>
+      </main>
+    </div>
+
+    <script src="./assets/docs-data.js"></script>
+    <script src="./assets/app.js"></script>
+  </body>
+</html>

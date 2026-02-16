@@ -1,0 +1,414 @@
+:root {
+  --base: #303446;
+  --mantle: #292c3c;
+  --crust: #232634;
+  --surface0: #414559;
+  --surface1: #51576d;
+  --surface2: #626880;
+  --text: #c6d0f5;
+  --subtext1: #b5bfe2;
+  --subtext0: #a5adce;
+  --overlay0: #737994;
+  --overlay1: #838ba7;
+  --blue: #8caaee;
+  --teal: #81c8be;
+  --mauve: #ca9ee6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--base);
+  color: var(--text);
+  font-family: "Sora", "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--subtext1);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--text);
+}
+
+.layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--mantle);
+  border-right: 1px solid var(--surface0);
+  padding: 18px 14px;
+}
+
+.brand {
+  border-bottom: 1px solid var(--surface0);
+  padding: 2px 8px 14px;
+  margin-bottom: 10px;
+}
+
+.brand-title {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.brand-subtitle {
+  margin-top: 2px;
+  color: var(--overlay1);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-group {
+  margin-top: 10px;
+  color: var(--overlay1);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 8px 4px;
+  border-top: 1px solid var(--surface0);
+}
+
+.nav button {
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--subtext0);
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nav button:hover {
+  background: #3a3f55;
+  color: var(--text);
+}
+
+.nav button.active {
+  background: #3f455d;
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  margin-top: 16px;
+  border-top: 1px solid var(--surface0);
+  padding: 12px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.content {
+  min-width: 0;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(41, 44, 60, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--surface0);
+  height: 56px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-wrap {
+  flex: 1;
+  max-width: 370px;
+}
+
+#searchInput {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--surface0);
+  background: var(--crust);
+  color: var(--text);
+  font-size: 14px;
+  padding: 0 12px;
+}
+
+#searchInput:focus {
+  outline: 1px solid var(--blue);
+  border-color: var(--blue);
+}
+
+.top-link {
+  color: var(--overlay1);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.doc {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 26px 22px 20px;
+}
+
+.doc h1 {
+  font-size: 36px;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--surface0);
+  padding-bottom: 10px;
+}
+
+.doc .lead {
+  margin: 0 0 20px;
+  color: var(--subtext1);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.doc h2 {
+  margin: 26px 0 8px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: #dbe2ff;
+}
+
+.doc h3 {
+  margin: 18px 0 7px;
+  font-size: 17px;
+  color: #d0d9fb;
+}
+
+.doc p,
+.doc li {
+  color: var(--subtext1);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 19px;
+}
+
+.doc li + li {
+  margin-top: 4px;
+}
+
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.doc th,
+.doc td {
+  border: 1px solid var(--surface0);
+  padding: 8px;
+  vertical-align: top;
+  font-size: 13px;
+}
+
+.doc th {
+  background: var(--mantle);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.doc code {
+  font-family: "IBM Plex Mono", monospace;
+  background: var(--crust);
+  border: 1px solid var(--surface0);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: #f0f3ff;
+  font-size: 13px;
+}
+
+.doc pre {
+  overflow-x: auto;
+  background: var(--crust);
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  padding: 14px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.callout {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--surface1);
+  border-left: 3px solid var(--mauve);
+  border-radius: 8px;
+  background: #2c3143;
+  color: var(--subtext1);
+}
+
+.callout.warning {
+  border-left-color: #e5c890;
+  background: #3b372e;
+  border-color: #695f49;
+}
+
+.callout.danger {
+  border-left-color: #e78284;
+  background: #3c2c35;
+  border-color: #6a4b5b;
+}
+
+.callout.info {
+  border-left-color: #8caaee;
+  background: #2b3347;
+  border-color: #45577f;
+}
+
+.doc strong {
+  font-weight: 600;
+  color: #f0f3ff;
+}
+
+.hl-red {
+  color: #f2a6ad;
+  font-weight: 600;
+}
+
+.hl-yellow {
+  color: #efd6a0;
+  font-weight: 600;
+}
+
+.hl-green {
+  color: #a6d8cf;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  border: 1px solid var(--surface1);
+  background: #2f3448;
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin: 0 8px 8px 0;
+  color: var(--subtext0);
+  font-size: 12px;
+}
+
+.small {
+  color: var(--overlay1);
+  font-size: 13px;
+}
+
+.search-results {
+  margin-top: 16px;
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  background: var(--mantle);
+  padding: 14px;
+}
+
+.pager {
+  max-width: 780px;
+  margin: 0 auto 40px;
+  padding: 0 26px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pager a {
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--mantle);
+  color: var(--subtext1);
+  display: block;
+}
+
+.pager a:hover {
+  border-color: var(--surface1);
+  background: #2f3448;
+}
+
+.pager a.right {
+  text-align: right;
+}
+
+.pager .label {
+  font-size: 12px;
+  color: var(--overlay1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pager .title {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--surface0);
+  }
+
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .top-link {
+    display: none;
+  }
+
+  .search-wrap {
+    max-width: none;
+  }
+
+  .doc {
+    padding: 20px 14px;
+  }
+
+  .doc h1 {
+    font-size: 30px;
+  }
+
+  .doc p,
+  .doc li {
+    font-size: 14px;
+  }
+
+  .pager {
+    padding: 0 14px;
+    margin-bottom: 26px;
+  }
+}

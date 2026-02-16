@@ -1,0 +1,53 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum
+    name: VotingSystem
+    network: sepolia
+    source:
+      address: "0x34B611EFEc9ce93d5443Bfcf1fc7D10640cfb943"
+      abi: VotingSystemUpgradeable
+      startBlock: 10267352
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Round
+        - Vote
+      abis:
+        - name: VotingSystemUpgradeable
+          file: ../src/abi/DAO/VotingSystemUpgradeable.sol/VotingSystemUpgradeable.json
+      eventHandlers:
+        - event: VotingRoundStarted(indexed uint256,uint256[],uint256,uint256)
+          handler: handleVotingRoundStarted
+        - event: VotingRoundEnded(indexed uint256,uint256,uint256)
+          handler: handleVotingRoundEnded
+        - event: VoteCast(indexed address,indexed uint256,indexed uint256,uint256)
+          handler: handleVoteCast
+      file: ./src/mapping.ts
+
+  - kind: ethereum
+    name: IdeaRegistry
+    network: sepolia
+    source:
+      address: "0xFf4F0AEeCe93847d68E0FF169142E64f613850BE"
+      abi: IdeaRegistryUpgradeable
+      startBlock: 10267341
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Idea
+      abis:
+        - name: IdeaRegistryUpgradeable
+          file: ../src/abi/DAO/IdeaRegistryUpgradeable.sol/IdeaRegistryUpgradeable.json
+      eventHandlers:
+        - event: IdeaCreated(indexed uint256,indexed address,string)
+          handler: handleIdeaCreated
+        - event: IdeaStatusUpdated(indexed uint256,uint8)
+          handler: handleIdeaStatusUpdated
+      file: ./src/mapping.ts
