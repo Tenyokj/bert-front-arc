@@ -463,11 +463,11 @@ export default function HowItWorksPage() {
             </div>
 
             <div className="mt-8 border-t border-white/15 pt-5 text-sm">
-              <Link href="https://github.com/tenyokj/bert-core/docs/ARCHITECTURE.md" className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
+              <Link href="https://github.com/Tenyokj/bert-core/blob/main/docs/ARCHITECTURE.md" className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
                 <FaBook /> Architecture
               </Link>
               <br />
-              <Link href="https://github.com/tenyokj/bert-core/docs/CONTRACTS.md" className="mt-3 inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
+              <Link href="https://github.com/Tenyokj/bert-core/blob/main/docs/CONTRACTS.md" className="mt-3 inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
                 <FaBook /> Contracts
               </Link>
             </div>
