@@ -9,7 +9,7 @@ dataSources:
     source:
       address: "0x34B611EFEc9ce93d5443Bfcf1fc7D10640cfb943"
       abi: VotingSystemUpgradeable
-      startBlock: 10267352
+      startBlock: 10267348
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
