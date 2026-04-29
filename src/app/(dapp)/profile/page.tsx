@@ -10,6 +10,7 @@ import { Pagination } from "@/components/Pagination";
 import { FaucetClaim } from "@/components/FaucetClaim";
 import {
   contracts,
+  fundingPoolAbi,
   governanceTokenAbi,
   ideaRegistryAbi,
   reputationSystemAbi,
@@ -17,14 +18,17 @@ import {
   voterProgressionAbi,
 } from "@/lib/contracts";
 import { formatTokenAmount, mapIdeaStatus } from "@/lib/dapp-onchain";
-import { fetchIdeasByAuthorFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
-
+import {
+  fetchAllIdeasByAuthorFromSubgraph,
+  hasSubgraphConfigured,
+} from "@/lib/subgraph";
 type UserIdea = {
   id: number;
   title: string;
   description: string;
   totalVotes: bigint;
   statusCode: bigint;
+  lockedStake: bigint;
 };
 
 function ProfilePageContent() {
@@ -41,11 +45,15 @@ function ProfilePageContent() {
   const [isReviewer, setIsReviewer] = useState(false);
   const [votesToCurator, setVotesToCurator] = useState<bigint>(0n);
   const [votesToReviewer, setVotesToReviewer] = useState<bigint>(0n);
+  const [requiredIdeaStake, setRequiredIdeaStake] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const pageSize = 15;
   const totalVotes = ideas.reduce((sum, idea) => sum + idea.totalVotes, 0n);
+  const totalLockedStake = ideas.reduce((sum, idea) => sum + idea.lockedStake, 0n);
+  const activeGrantIdeas = ideas.filter((idea) => idea.statusCode === 3n || idea.statusCode === 6n).length;
+  const completedGrantIdeas = ideas.filter((idea) => idea.statusCode === 5n).length;
 
   useEffect(() => {
     setMounted(true);
@@ -68,6 +76,7 @@ function ProfilePageContent() {
         setIsReviewer(false);
         setVotesToCurator(0n);
         setVotesToReviewer(0n);
+        setRequiredIdeaStake(0n);
         return;
       }
       const readContract = (config: Record<string, unknown>) =>
@@ -77,23 +86,9 @@ function ProfilePageContent() {
       setLoadError(null);
 
       try {
-        let rows: UserIdea[] = [];
-        if (hasSubgraphConfigured()) {
-          try {
-            const subgraphIdeas = await fetchIdeasByAuthorFromSubgraph(displayAddress, 2000, 0);
-            rows = subgraphIdeas.map((idea) => ({
-              id: Number(idea.id),
-              title: idea.title,
-              description: idea.description,
-              totalVotes: BigInt(idea.totalVotes || "0"),
-              statusCode: BigInt(idea.status || "0"),
-            }));
-          } catch {
-            rows = [];
-          }
-        }
+        let rows: Omit<UserIdea, "lockedStake">[] = [];
 
-        if (!rows.length) {
+        try {
           const ideaIds = (await readContract({
             address: contracts.ideaRegistry,
             abi: ideaRegistryAbi,
@@ -116,11 +111,54 @@ function ProfilePageContent() {
                 description: idea[3],
                 totalVotes: idea[6],
                 statusCode: idea[7],
-              } satisfies UserIdea;
+              };
             })
           );
+        } catch {
+          if (hasSubgraphConfigured()) {
+            const subgraphIdeas = await fetchAllIdeasByAuthorFromSubgraph(displayAddress);
+            rows = subgraphIdeas.map((idea) => ({
+              id: Number(idea.id),
+              title: idea.title,
+              description: idea.description,
+              totalVotes: BigInt(idea.totalVotes || "0"),
+              statusCode: BigInt(idea.status || "0"),
+            }));
+          }
         }
+
         rows.sort((a, b) => b.id - a.id);
+
+        const [requiredStakeRaw, stakesByIdea] = await Promise.all([
+          readContract({
+            address: contracts.ideaRegistry,
+            abi: ideaRegistryAbi,
+            functionName: "authorMinStake",
+          }).catch(() => 0n),
+          contracts.fundingPool
+            ? Promise.all(
+                rows.map(async (idea) => {
+                  try {
+                    const lockedStake = (await readContract({
+                      address: contracts.fundingPool!,
+                      abi: fundingPoolAbi,
+                      functionName: "authorStakeByIdea",
+                      args: [BigInt(idea.id)],
+                    })) as bigint;
+                    return [idea.id, lockedStake] as const;
+                  } catch {
+                    return [idea.id, 0n] as const;
+                  }
+                })
+              )
+            : Promise.resolve(rows.map((idea) => [idea.id, 0n] as const)),
+        ]);
+
+        const stakeMap = new Map<number, bigint>(stakesByIdea);
+        const rowsWithStake: UserIdea[] = rows.map((idea) => ({
+          ...idea,
+          lockedStake: stakeMap.get(idea.id) ?? 0n,
+        }));
 
         let nextBtk = "0";
         if (contracts.governanceToken) {
@@ -136,8 +174,9 @@ function ProfilePageContent() {
         }
 
         if (!cancelled) {
-          setIdeas(rows);
+          setIdeas(rowsWithStake);
           setBtkBalance(nextBtk);
+          setRequiredIdeaStake(requiredStakeRaw as bigint);
         }
 
         if (contracts.votingSystem) {
@@ -167,7 +206,7 @@ function ProfilePageContent() {
                 .filter((id) => id > 0n)
                 .map((id) => id.toString())
             );
-            nextWonIdeasCount = rows.filter((idea) => winningIds.has(BigInt(idea.id).toString())).length;
+            nextWonIdeasCount = rowsWithStake.filter((idea) => winningIds.has(BigInt(idea.id).toString())).length;
           }
 
           if (!cancelled) setWonIdeasCount(nextWonIdeasCount);
@@ -229,9 +268,9 @@ function ProfilePageContent() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-6 md:p-8">
+      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">User Cabinet</p>
-        <h1 className="mt-3 font-[var(--font-display)] text-4xl text-white md:text-6xl">
+        <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">
           {connected && displayAddress ? "Connected Wallet" : "Profile"}
         </h1>
         <p className="mt-2 break-all text-sm text-slate-400">{displayAddress || "Wallet not connected"}</p>
@@ -243,7 +282,7 @@ function ProfilePageContent() {
         </p>
       ) : (
         <>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Ideas submitted</p>
               <p className="mt-2 text-3xl font-semibold text-white">{ideas.length}</p>
@@ -283,13 +322,39 @@ function ProfilePageContent() {
                 Reviewer: {isReviewer ? "Yes" : `${votesToReviewer.toString()} left`}
               </p>
             </div>
+            <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Required idea stake</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{formatTokenAmount(requiredIdeaStake)} BTK</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Locked stake</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{formatTokenAmount(totalLockedStake)} BTK</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Grants in progress</p>
+              <p className="mt-2 text-3xl font-semibold text-white">{activeGrantIdeas}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Completed grants</p>
+              <p className="mt-2 text-3xl font-semibold text-white">{completedGrantIdeas}</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 md:p-6">
+            <h2 className="font-[var(--font-display)] text-3xl text-white">Grant release flow</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              Funded ideas now move through a staged payout pipeline: 30% after grant claim, 40% after in-process proof approval, and the final 30% after launch proof approval.
+            </p>
+            <p className="mt-2 text-sm text-slate-400">
+              Use each idea page to submit proof materials and, if you have Reviewer role, validate milestone requests.
+            </p>
           </div>
 
           <FaucetClaim />
 
           <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 md:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-[var(--font-display)] text-3xl text-white">My ideas</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-[var(--font-display)] text-2xl text-white sm:text-3xl">My ideas</h2>
               <Link href="/ideas/new" className="rounded-lg bg-[#3b82f6] px-4 py-2 text-sm font-semibold text-white">
                 Create idea
               </Link>
@@ -316,9 +381,10 @@ function ProfilePageContent() {
                           Idea #{idea.id}
                         </p>
                       </div>
-                      <div className="mt-2 grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                      <div className="mt-2 grid gap-2 text-sm text-slate-300 xl:grid-cols-3">
                         <p>Status: {mapIdeaStatus(idea.statusCode)}</p>
                         <p>Total votes: {formatTokenAmount(idea.totalVotes)} BTK</p>
+                        <p>Locked stake: {formatTokenAmount(idea.lockedStake)} BTK</p>
                       </div>
                     </Link>
                   ))

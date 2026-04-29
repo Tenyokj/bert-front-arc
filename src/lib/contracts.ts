@@ -1,4 +1,4 @@
-import type { Address, Abi } from "viem";
+import type { Address, Abi, AbiFunction } from "viem";
 
 import FundingPoolArtifact from "@/abi/DAO/FundingPoolUpgradeable.sol/FundingPoolUpgradeable.json";
 import GovernanceTokenArtifact from "@/abi/DAO/GovernanceTokenUpgradeable.sol/GovernanceTokenUpgradeable.json";
@@ -16,10 +16,128 @@ function toAddress(value: string | undefined): Address | undefined {
   return value as Address;
 }
 
-export const fundingPoolAbi = (FundingPoolArtifact as { abi: Abi }).abi;
+function replaceAbiFunctions(abi: Abi, replacements: readonly AbiFunction[]) {
+  const names = new Set(replacements.map((item) => item.name));
+  return [
+    ...abi.filter((item) => item.type !== "function" || !names.has(item.name)),
+    ...replacements,
+  ] as Abi;
+}
+
+const ideaRegistryPatches = [
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "createIdea",
+    inputs: [
+      { name: "_title", type: "string", internalType: "string" },
+      { name: "_description", type: "string", internalType: "string" },
+      { name: "_link", type: "string", internalType: "string" },
+      { name: "_amount", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "authorMinStake",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "fundingPool",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+  },
+] as const satisfies readonly AbiFunction[];
+
+const grantManagerPatches = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "getGrantPayout",
+    inputs: [{ name: "roundId", type: "uint256", internalType: "uint256" }],
+    outputs: [
+      { name: "ideaId", type: "uint256", internalType: "uint256" },
+      { name: "author", type: "address", internalType: "address" },
+      { name: "totalGrant", type: "uint256", internalType: "uint256" },
+      { name: "released", type: "uint256", internalType: "uint256" },
+      { name: "initialClaimed", type: "bool", internalType: "bool" },
+      { name: "inProcessPaid", type: "bool", internalType: "bool" },
+      { name: "completionPaid", type: "bool", internalType: "bool" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "getMilestoneRequest",
+    inputs: [
+      { name: "roundId", type: "uint256", internalType: "uint256" },
+      { name: "stage", type: "uint8", internalType: "uint8" },
+    ],
+    outputs: [
+      { name: "requestId", type: "uint256", internalType: "uint256" },
+      { name: "metadataURI", type: "string", internalType: "string" },
+      { name: "details", type: "string", internalType: "string" },
+      { name: "submittedAt", type: "uint256", internalType: "uint256" },
+      { name: "lastRejectedAt", type: "uint256", internalType: "uint256" },
+      { name: "approvals", type: "uint8", internalType: "uint8" },
+      { name: "rejections", type: "uint8", internalType: "uint8" },
+      { name: "maxReviewers", type: "uint8", internalType: "uint8" },
+      { name: "approvalThreshold", type: "uint8", internalType: "uint8" },
+      { name: "active", type: "bool", internalType: "bool" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "submitMilestoneProof",
+    inputs: [
+      { name: "roundId", type: "uint256", internalType: "uint256" },
+      { name: "stage", type: "uint8", internalType: "uint8" },
+      { name: "metadataURI", type: "string", internalType: "string" },
+      { name: "details", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "reviewMilestoneProof",
+    inputs: [
+      { name: "roundId", type: "uint256", internalType: "uint256" },
+      { name: "stage", type: "uint8", internalType: "uint8" },
+      { name: "approved", type: "bool", internalType: "bool" },
+    ],
+    outputs: [],
+  },
+] as const satisfies readonly AbiFunction[];
+
+const fundingPoolPatches = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "authorStakeByIdea",
+    inputs: [{ name: "ideaId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+  },
+] as const satisfies readonly AbiFunction[];
+
+export const fundingPoolAbi = replaceAbiFunctions(
+  (FundingPoolArtifact as { abi: Abi }).abi,
+  fundingPoolPatches
+);
 export const governanceTokenAbi = (GovernanceTokenArtifact as { abi: Abi }).abi;
-export const grantManagerAbi = (GrantManagerArtifact as { abi: Abi }).abi;
-export const ideaRegistryAbi = (IdeaRegistryArtifact as { abi: Abi }).abi;
+export const grantManagerAbi = replaceAbiFunctions(
+  (GrantManagerArtifact as { abi: Abi }).abi,
+  grantManagerPatches
+);
+export const ideaRegistryAbi = replaceAbiFunctions(
+  (IdeaRegistryArtifact as { abi: Abi }).abi,
+  ideaRegistryPatches
+);
 export const votingSystemAbi = (VotingSystemArtifact as { abi: Abi }).abi;
 export const brtfaucetAbi = (BRTFaucetArtifact as { abi: Abi }).abi;
 export const reputationSystemAbi = (ReputationSystemArtifact as { abi: Abi }).abi;

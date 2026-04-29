@@ -9,7 +9,7 @@ import { Pagination } from "@/components/Pagination";
 import { AddressIdentity } from "@/components/AddressIdentity";
 import { contracts, ideaRegistryAbi } from "@/lib/contracts";
 import { formatTokenAmount, mapIdeaStatus } from "@/lib/dapp-onchain";
-import { fetchIdeasPageFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
+import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 type OnChainIdea = {
   id: number;
@@ -49,7 +49,7 @@ function IdeasPageContent() {
       try {
         if (hasSubgraphConfigured()) {
           try {
-            const subgraphRows = await fetchIdeasPageFromSubgraph(2000, 0);
+            const subgraphRows = await fetchAllIdeasFromSubgraph();
             const mapped = subgraphRows.map((idea) => ({
               id: Number(idea.id),
               author: idea.author,
@@ -69,8 +69,15 @@ function IdeasPageContent() {
               );
             }
             return;
-          } catch {
-            // Subgraph fallback to direct RPC reads below.
+          } catch (error) {
+            if (!cancelled) {
+              setLoadError(
+                error instanceof Error ? error.message : "Failed to load ideas from subgraph"
+              );
+              setIdeas([]);
+              setIsLoading(false);
+            }
+            return;
           }
         }
 
@@ -177,9 +184,9 @@ function IdeasPageContent() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-6 md:p-8">
+      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Idea Registry</p>
-        <h1 className="mt-3 font-[var(--font-display)] text-4xl text-white md:text-6xl">Ideas</h1>
+        <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Ideas</h1>
       </div>
 
       {!contracts.ideaRegistry ? (
@@ -193,14 +200,14 @@ function IdeasPageContent() {
       ) : visibleIdeas.length === 0 ? (
         <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">No ideas on-chain yet.</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           {visibleIdeas.map((idea) => (
             <Link
               key={idea.id}
               href={`/ideas/${idea.id}`}
-              className="rounded-2xl border border-white/10 bg-[#313443] p-5 transition-colors duration-300 hover:border-cyan-400/40"
+              className="rounded-2xl border border-white/10 bg-[#313443] p-4 sm:p-5 transition-colors duration-300 hover:border-cyan-400/40"
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-slate-300">Idea #{idea.id}</p>
                 <div className="flex items-center gap-1.5">
                   {reviewedIdeas[idea.id] && (
@@ -213,9 +220,9 @@ function IdeasPageContent() {
                   </span>
                 </div>
               </div>
-              <h2 className="mt-3 text-2xl font-semibold text-white">{idea.title}</h2>
+              <h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">{idea.title}</h2>
               <p className="mt-2 line-clamp-2 text-sm text-slate-300">{idea.description}</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-300">
+              <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                 <p className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">
                   Total votes: {formatTokenAmount(idea.totalVotes)} BTK
                 </p>

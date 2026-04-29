@@ -9,7 +9,11 @@ import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteCont
 
 import { Pagination } from "@/components/Pagination";
 import { contracts, ideaRegistryAbi, votingSystemAbi } from "@/lib/contracts";
-import { fetchRoundsPageFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
+import {
+  fetchAllIdeasFromSubgraph,
+  fetchRoundsPageFromSubgraph,
+  hasSubgraphConfigured,
+} from "@/lib/subgraph";
 
 type OnChainRound = {
   id: number;
@@ -89,6 +93,10 @@ function RoundsPageContent() {
                 address: contracts.ideaRegistry,
                 abi: ideaRegistryAbi,
                 functionName: "totalIdeas",
+              }).catch(async () => {
+                if (!hasSubgraphConfigured()) return 0n;
+                const ideas = await fetchAllIdeasFromSubgraph();
+                return BigInt(ideas.length);
               })
             : Promise.resolve(0n),
           readContract({
@@ -202,10 +210,10 @@ function RoundsPageContent() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-6 md:p-8">
+      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">BERT Governance</p>
-        <h1 className="mt-3 font-[var(--font-display)] text-4xl text-white md:text-6xl">Voting Rounds</h1>
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Voting Rounds</h1>
+        <div className="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <button
             type="button"
             onClick={onStartRound}
@@ -249,7 +257,7 @@ function RoundsPageContent() {
       ) : visibleRounds.length === 0 ? (
         <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">No rounds on-chain yet.</p>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
           {visibleRounds.map((round) => {
             const isFinalized = round.ended;
             const isActive = !round.ended && round.active;
@@ -267,7 +275,7 @@ function RoundsPageContent() {
                 href={`/rounds/${round.id}`}
                 className="group rounded-[22px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40"
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badgeClass}`}>
                     <Icon className="text-[10px]" />
                     {label}
@@ -275,9 +283,9 @@ function RoundsPageContent() {
                   <span className="text-xs text-slate-400">{formatDateFromUnix(round.endsAt)}</span>
                 </div>
 
-                <h2 className="mt-4 text-2xl font-semibold text-white">Round #{round.id}</h2>
+                <h2 className="mt-4 text-xl font-semibold text-white sm:text-2xl">Round #{round.id}</h2>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-300">
+                <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
                   <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Votes: {formatBtk(round.totalVotes)} BTK</div>
                   <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Ideas: {round.ideaIds.length}</div>
                   <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">{durationHours(round.startsAt, round.endsAt)}h window</div>

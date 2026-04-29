@@ -19,7 +19,7 @@ import { formatDateTimeFromUnix, mapIdeaStatus, shortAddress } from "@/lib/dapp-
 import {
   fetchIdeasByIdsFromSubgraph,
   fetchRoundByIdFromSubgraph,
-  fetchVotesByRoundFromSubgraph,
+  fetchAllVotesByRoundFromSubgraph,
   hasSubgraphConfigured,
 } from "@/lib/subgraph";
 
@@ -64,6 +64,17 @@ function formatBtk(value: bigint | number | undefined) {
   return `${new Intl.NumberFormat("en-US", {
     maximumFractionDigits: asNumber >= 1000 ? 0 : 4,
   }).format(asNumber)} BTK`;
+}
+
+function prettyRoundError(message?: string) {
+  if (!message) return "";
+  if (message.includes("RoundNotEnded")) return "Round can only be ended after the voting window closes.";
+  if (message.includes("RoundAlreadyEnded")) return "This round has already been ended.";
+  if (message.includes("AlreadyDistributed")) return "Initial 30% has already been claimed for this winning idea.";
+  if (message.includes("NotAuthor")) return "Only the winning idea author can claim the initial 30%.";
+  if (message.includes("NoWinner")) return "There is no winning idea yet for this round.";
+  if (message.includes("Internal error")) return "Transaction reverted by contract rules. Check round state and wallet permissions.";
+  return message;
 }
 
 export default function RoundDetailsPage() {
@@ -208,7 +219,7 @@ export default function RoundDetailsPage() {
               const ideaIds = (subgraphRound.ideaIds || []).map((id) => Number(id));
               const [subgraphIdeas, subgraphVotes] = await Promise.all([
                 fetchIdeasByIdsFromSubgraph(ideaIds.map((id) => String(id))),
-                fetchVotesByRoundFromSubgraph(String(roundId), 5000),
+                fetchAllVotesByRoundFromSubgraph(String(roundId)),
               ]);
 
               const voteSumsByIdea = new Map<number, bigint>();
@@ -415,6 +426,8 @@ export default function RoundDetailsPage() {
 
   const canVote = isConnected && round.active && !round.ended && !Boolean(userHasVotedValue);
   const canEndRound = round.active && !round.ended && Math.floor(Date.now() / 1000) > Number(round.endTime);
+  const shouldShowEndRoundButton = round.active && !round.ended;
+  const shouldShowClaimButton = Boolean(contracts.grantManager && round.ended && round.winningIdeaId > 0n && canClaimByWallet);
 
   return (
     <section className="space-y-6">
@@ -423,10 +436,10 @@ export default function RoundDetailsPage() {
         Back to rounds
       </Link>
 
-      <article className="rounded-[28px] border border-white/10 bg-[#313443] p-5 shadow-[0_14px_30px_rgba(0,0,0,0.3)] md:p-7">
+      <article className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.3)] sm:p-5 md:p-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <h1 className="font-[var(--font-display)] text-4xl text-white md:text-5xl">Round #{round.id}</h1>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-5xl">Round #{round.id}</h1>
             <span className="rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-300">
               {round.ended ? "Ended" : round.active ? "Live" : "Scheduled"}
             </span>
@@ -439,29 +452,31 @@ export default function RoundDetailsPage() {
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <p className="text-sm text-slate-200">Total votes: {formatBtk(round.totalVotes)}</p>
-          <button
-            disabled={!isConnected || !canEndRound || isEndPending || isEndConfirming}
-            onClick={() =>
-              sendEndRound({
-                address: contracts.votingSystem!,
-                abi: votingSystemAbi,
-                functionName: "endVotingRound",
-                args: [BigInt(round.id)],
-                gas: 4_000_000n,
-              })
-            }
-            className="rounded-lg bg-indigo-500/90 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isEndPending ? "Awaiting signature..." : isEndConfirming ? "Ending..." : "End Round"}
-          </button>
+          {shouldShowEndRoundButton ? (
+            <button
+              disabled={!isConnected || !canEndRound || isEndPending || isEndConfirming}
+              onClick={() =>
+                sendEndRound({
+                  address: contracts.votingSystem!,
+                  abi: votingSystemAbi,
+                  functionName: "endVotingRound",
+                  args: [BigInt(round.id)],
+                  gas: 4_000_000n,
+                })
+              }
+              className="rounded-lg bg-indigo-500/90 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isEndPending ? "Awaiting signature..." : isEndConfirming ? "Ending..." : "End Round"}
+            </button>
+          ) : null}
           {round.winningIdeaId > 0n && (
             <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
               Winner: Idea #{round.winningIdeaId.toString()}
             </span>
           )}
-          {contracts.grantManager && (
+          {shouldShowClaimButton ? (
             <button
-              disabled={!isConnected || !canClaimByWallet || isClaimPending || isClaimConfirming}
+              disabled={!isConnected || isClaimPending || isClaimConfirming}
               onClick={() => {
                 sendClaim({
                   address: contracts.grantManager!,
@@ -473,9 +488,9 @@ export default function RoundDetailsPage() {
               }}
               className="rounded-lg bg-emerald-500/90 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isClaimPending ? "Awaiting signature..." : isClaimConfirming ? "Claiming..." : "Claim Grant"}
+              {isClaimPending ? "Awaiting signature..." : isClaimConfirming ? "Claiming..." : "Claim Initial 30%"}
             </button>
-          )}
+          ) : null}
         </div>
 
         {round.active && (
@@ -486,9 +501,9 @@ export default function RoundDetailsPage() {
         {!canEndRound && round.active && !round.ended && (
           <p className="mt-2 text-xs text-slate-300">Round can be ended only after `endTime`.</p>
         )}
-        {claimError?.message && <p className="mt-2 text-xs text-rose-300">{claimError.message}</p>}
+        {claimError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(claimError.message)}</p>}
         {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Claim tx: {claimTxHash}</p>}
-        {endError?.message && <p className="mt-2 text-xs text-rose-300">{endError.message}</p>}
+        {endError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(endError.message)}</p>}
         {endTxHash && <p className="mt-2 break-all text-xs text-slate-300">End round tx: {endTxHash}</p>}
         {contracts.grantManager && (
           <p className="mt-2 text-xs text-slate-300">
@@ -500,6 +515,11 @@ export default function RoundDetailsPage() {
                 : ""}
           </p>
         )}
+        {round.winningIdeaId > 0n && (
+          <p className="mt-2 text-xs text-slate-300">
+            New payout flow: claim 30% here, then submit and review milestone proofs on the winning idea page for the 40% in-process and final 30% release.
+          </p>
+        )}
         {contracts.governanceToken && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
             Wallet balance: {formatBtk(tokenBalanceValue)} | Allowance to FundingPool: {formatBtk(allowanceValue)} | Min stake: {formatBtk(minStakeValue)}
@@ -507,7 +527,8 @@ export default function RoundDetailsPage() {
         )}
 
         <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#2a2d3a]">
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[460px] w-full text-left text-sm">
             <thead className="border-b border-white/10 text-xs uppercase tracking-[0.13em] text-slate-400">
               <tr>
                 <th className="px-4 py-3">Voter {voters.length}</th>
@@ -533,14 +554,15 @@ export default function RoundDetailsPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </article>
 
-      <section className="rounded-[28px] border border-white/10 bg-[#313443] p-5 shadow-[0_14px_30px_rgba(0,0,0,0.28)] md:p-7">
-        <h2 className="font-[var(--font-display)] text-3xl text-white md:text-4xl">Ideas in this round</h2>
+      <section className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.28)] sm:p-5 md:p-7">
+        <h2 className="font-[var(--font-display)] text-2xl text-white sm:text-3xl md:text-4xl">Ideas in this round</h2>
         <p className="mt-2 text-sm text-slate-300">On-chain `ideaIds`: {round.ideaIds.join(", ") || "-"}</p>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
           {ideas.map((idea) => {
             const amountInput = voteAmountByIdea[idea.id] ?? "";
             const parsedAmount = safeParseAmount(amountInput);
@@ -557,7 +579,7 @@ export default function RoundDetailsPage() {
                 className="rounded-2xl border border-white/10 bg-[#292c39] p-4 transition-colors duration-300 hover:border-cyan-400/40"
               >
                 <Link href={`/ideas/${idea.id}`} className="block">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-xl font-semibold text-white">Idea #{idea.id}</h3>
                   <div className="flex items-center gap-1.5">
                     {idea.isReviewed && (
@@ -573,7 +595,7 @@ export default function RoundDetailsPage() {
                 <p className="mt-2 text-base text-slate-100">{idea.title}</p>
                 <p className="mt-2 line-clamp-2 text-sm text-slate-300">{idea.description}</p>
 
-                <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-300">
+                <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                   <p className="rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
                     Round votes: {formatBtk(idea.roundVotes)}
                   </p>
@@ -649,9 +671,9 @@ export default function RoundDetailsPage() {
           })}
         </div>
 
-        {approveError?.message && <p className="mt-4 text-sm text-rose-300">{approveError.message}</p>}
+        {approveError?.message && <p className="mt-4 max-w-full overflow-hidden break-words text-sm text-rose-300">{prettyRoundError(approveError.message)}</p>}
         {approveTxHash && <p className="mt-2 break-all text-xs text-slate-300">Approve tx: {approveTxHash}</p>}
-        {voteError?.message && <p className="mt-4 text-sm text-rose-300">{voteError.message}</p>}
+        {voteError?.message && <p className="mt-4 max-w-full overflow-hidden break-words text-sm text-rose-300">{prettyRoundError(voteError.message)}</p>}
         {voteTxHash && <p className="mt-2 break-all text-xs text-slate-300">Vote tx: {voteTxHash}</p>}
       </section>
     </section>

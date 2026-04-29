@@ -10,6 +10,42 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
+export class AuthorMinStakeUpdated extends ethereum.Event {
+  get params(): AuthorMinStakeUpdated__Params {
+    return new AuthorMinStakeUpdated__Params(this);
+  }
+}
+
+export class AuthorMinStakeUpdated__Params {
+  _event: AuthorMinStakeUpdated;
+
+  constructor(event: AuthorMinStakeUpdated) {
+    this._event = event;
+  }
+
+  get newAuthorMinStake(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+}
+
+export class FundingPoolUpdated extends ethereum.Event {
+  get params(): FundingPoolUpdated__Params {
+    return new FundingPoolUpdated__Params(this);
+  }
+}
+
+export class FundingPoolUpdated__Params {
+  _event: FundingPoolUpdated;
+
+  constructor(event: FundingPoolUpdated) {
+    this._event = event;
+  }
+
+  get newFundingPool(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
 export class IdeaCreated extends ethereum.Event {
   get params(): IdeaCreated__Params {
     return new IdeaCreated__Params(this);
@@ -474,6 +510,40 @@ export class IdeaRegistryUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  authorMinStake(): BigInt {
+    let result = super.call("authorMinStake", "authorMinStake():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_authorMinStake(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "authorMinStake",
+      "authorMinStake():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  fundingPool(): Address {
+    let result = super.call("fundingPool", "fundingPool():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_fundingPool(): ethereum.CallResult<Address> {
+    let result = super.tryCall("fundingPool", "fundingPool():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   getIdea(_ideaId: BigInt): IdeaRegistryUpgradeable__getIdeaResult {
@@ -962,6 +1032,10 @@ export class CreateIdeaCall__Inputs {
   get _link(): string {
     return this._call.inputValues[2].value.toString();
   }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[3].value.toBigInt();
+  }
 }
 
 export class CreateIdeaCall__Outputs {
@@ -1066,6 +1140,66 @@ export class MarkLowQualityCall__Outputs {
   _call: MarkLowQualityCall;
 
   constructor(call: MarkLowQualityCall) {
+    this._call = call;
+  }
+}
+
+export class SetAuthorMinStakeCall extends ethereum.Call {
+  get inputs(): SetAuthorMinStakeCall__Inputs {
+    return new SetAuthorMinStakeCall__Inputs(this);
+  }
+
+  get outputs(): SetAuthorMinStakeCall__Outputs {
+    return new SetAuthorMinStakeCall__Outputs(this);
+  }
+}
+
+export class SetAuthorMinStakeCall__Inputs {
+  _call: SetAuthorMinStakeCall;
+
+  constructor(call: SetAuthorMinStakeCall) {
+    this._call = call;
+  }
+
+  get _newAuthorMinStake(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetAuthorMinStakeCall__Outputs {
+  _call: SetAuthorMinStakeCall;
+
+  constructor(call: SetAuthorMinStakeCall) {
+    this._call = call;
+  }
+}
+
+export class SetFundingPoolCall extends ethereum.Call {
+  get inputs(): SetFundingPoolCall__Inputs {
+    return new SetFundingPoolCall__Inputs(this);
+  }
+
+  get outputs(): SetFundingPoolCall__Outputs {
+    return new SetFundingPoolCall__Outputs(this);
+  }
+}
+
+export class SetFundingPoolCall__Inputs {
+  _call: SetFundingPoolCall;
+
+  constructor(call: SetFundingPoolCall) {
+    this._call = call;
+  }
+
+  get _newFundingPool(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class SetFundingPoolCall__Outputs {
+  _call: SetFundingPoolCall;
+
+  constructor(call: SetFundingPoolCall) {
     this._call = call;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
 import {
@@ -13,7 +14,8 @@ import {
   votingSystemAbi,
 } from "@/lib/contracts";
 import ParticleText from "@/components/ParticleText";
-import { FaGithub, FaReddit, FaMailBulk } from "react-icons/fa";
+import { FaGithub, FaReddit, FaMailBulk, FaTelegramPlane } from "react-icons/fa";
+import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 function formatBtk(value?: bigint) {
   if (value === undefined) return "—";
@@ -41,6 +43,31 @@ function formatSeconds(value?: bigint) {
 }
 
 export default function ProtocolStatsPage() {
+  const [subgraphIdeaCount, setSubgraphIdeaCount] = useState<bigint | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSubgraphIdeaCount() {
+      if (!hasSubgraphConfigured()) {
+        if (!cancelled) setSubgraphIdeaCount(null);
+        return;
+      }
+
+      try {
+        const ideas = await fetchAllIdeasFromSubgraph();
+        if (!cancelled) setSubgraphIdeaCount(BigInt(ideas.length));
+      } catch {
+        if (!cancelled) setSubgraphIdeaCount(null);
+      }
+    }
+
+    void loadSubgraphIdeaCount();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const { data: totalPoolBalance } = useReadContract({
     address: contracts.fundingPool,
     abi: fundingPoolAbi,
@@ -160,6 +187,8 @@ export default function ProtocolStatsPage() {
     query: { enabled: Boolean(contracts.faucet) },
   });
   const currentRoundIdValue = currentRoundId as bigint | undefined;
+  const totalIdeasValue =
+    (totalIdeas as bigint | undefined) ?? subgraphIdeaCount ?? undefined;
   const totalRounds = currentRoundIdValue !== undefined && currentRoundIdValue > 1n ? currentRoundIdValue - 1n : 0n;
 
   return (
@@ -224,8 +253,8 @@ export default function ProtocolStatsPage() {
             </article>
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Total Ideas</p>
-              <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{formatInt(totalIdeas as bigint | undefined)}</p>
-              <p className="mt-1 text-xs text-slate-500">IdeaRegistry.totalIdeas()</p>
+              <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{formatInt(totalIdeasValue)}</p>
+              <p className="mt-1 text-xs text-slate-500">{totalIdeas ? "IdeaRegistry.totalIdeas()" : "Subgraph IdeaCreated index"}</p>
             </article>
           </section>
 
@@ -315,7 +344,21 @@ export default function ProtocolStatsPage() {
                             Live metrics come from on-chain reads and indexed sources where available. Some roadmap sections describe planned protocol direction.
                           </div>
                 
-                          <div className="mt-10 grid gap-10 border-b border-white/20 pb-10 lg:grid-cols-4">
+                          <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
+                            <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
+                              <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
+                              <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
+                              <a className="footer-link" href="/terms-of-use">Terms of Use</a>
+                            </div>
+                            <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                              <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                            </div>
+                          </div>
+
+                          <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
                             <div>
                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                                 BERT Products
@@ -366,20 +409,21 @@ export default function ProtocolStatsPage() {
                             </div>
                           </div>
                 
-                          <div className="mt-10 grid gap-10 lg:grid-cols-4">
+                          <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
                             <div>
-                                <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                  Social Links
-                              </h4>
-                              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                                <a href="https://github.com/tenyokj"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="https://www.reddit.com/user/PralineSeparate5261/"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="mailto:av7794257@gmail.com"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                Analytics
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Social Links
+              </h4>
+              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Analytics
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                 <a className="footer-link" href="/protocol-stats">Protocol stats</a>

@@ -7,12 +7,22 @@ export const IDEA_STATUS_LABELS = [
   "Funded",
   "Rejected",
   "Completed",
+  "InProcess",
 ] as const;
+
+export const MILESTONE_STAGE_LABELS: Record<number, string> = {
+  1: "In-process proof",
+  2: "Launch proof",
+};
 
 export function mapIdeaStatus(code: bigint | number | undefined) {
   if (code === undefined) return "Unknown";
   const idx = Number(code);
   return IDEA_STATUS_LABELS[idx] ?? "Unknown";
+}
+
+export function mapMilestoneStage(stage: number) {
+  return MILESTONE_STAGE_LABELS[stage] ?? `Stage ${stage}`;
 }
 
 export function formatNumber(value: number | bigint | undefined) {

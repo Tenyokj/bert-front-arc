@@ -36,6 +36,30 @@ type GraphQLResponse<T> = {
 };
 
 const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
+const SUBGRAPH_PAGE_SIZE = 1000;
+
+function clampSubgraphPageSize(first: number) {
+  if (!Number.isFinite(first) || first <= 0) return SUBGRAPH_PAGE_SIZE;
+  return Math.min(Math.floor(first), SUBGRAPH_PAGE_SIZE);
+}
+
+async function collectSubgraphPages<T>(
+  fetchPage: (first: number, skip: number) => Promise<T[]>,
+  pageSize = SUBGRAPH_PAGE_SIZE
+) {
+  const normalizedPageSize = clampSubgraphPageSize(pageSize);
+  const rows: T[] = [];
+  let skip = 0;
+
+  while (true) {
+    const page = await fetchPage(normalizedPageSize, skip);
+    rows.push(...page);
+    if (page.length < normalizedPageSize) break;
+    skip += page.length;
+  }
+
+  return rows;
+}
 
 export function hasSubgraphConfigured() {
   return Boolean(subgraphUrl);
@@ -86,7 +110,7 @@ const ROUNDS_QUERY = `
 
 export async function fetchRoundsPageFromSubgraph(first: number, skip: number) {
   const data = await fetchGraphQL<{ rounds: SubgraphRound[] }>(ROUNDS_QUERY, {
-    first,
+    first: clampSubgraphPageSize(first),
     skip,
   });
 
@@ -111,10 +135,16 @@ const IDEAS_QUERY = `
 
 export async function fetchIdeasPageFromSubgraph(first: number, skip: number) {
   const data = await fetchGraphQL<{ ideas: SubgraphIdea[] }>(IDEAS_QUERY, {
-    first,
+    first: clampSubgraphPageSize(first),
     skip,
   });
   return data.ideas;
+}
+
+export async function fetchAllIdeasFromSubgraph() {
+  return collectSubgraphPages((first, skip) =>
+    fetchIdeasPageFromSubgraph(first, skip)
+  );
 }
 
 const ROUND_BY_ID_QUERY = `
@@ -210,21 +240,28 @@ const IDEAS_BY_AUTHOR_QUERY = `
 
 export async function fetchIdeasByAuthorFromSubgraph(
   author: string,
-  first = 2000,
+  first = SUBGRAPH_PAGE_SIZE,
   skip = 0
 ) {
   const data = await fetchGraphQL<{ ideas: SubgraphIdea[] }>(IDEAS_BY_AUTHOR_QUERY, {
     author: author.toLowerCase(),
-    first,
+    first: clampSubgraphPageSize(first),
     skip,
   });
   return data.ideas;
 }
 
+export async function fetchAllIdeasByAuthorFromSubgraph(author: string) {
+  return collectSubgraphPages((first, skip) =>
+    fetchIdeasByAuthorFromSubgraph(author, first, skip)
+  );
+}
+
 const VOTES_BY_ROUND_QUERY = `
-  query VotesByRound($roundId: BigInt!, $first: Int!) {
+  query VotesByRound($roundId: BigInt!, $first: Int!, $skip: Int!) {
     votes(
       first: $first
+      skip: $skip
       where: { roundId: $roundId }
       orderBy: timestamp
       orderDirection: desc
@@ -239,18 +276,30 @@ const VOTES_BY_ROUND_QUERY = `
   }
 `;
 
-export async function fetchVotesByRoundFromSubgraph(roundId: string, first = 2000) {
+export async function fetchVotesByRoundFromSubgraph(
+  roundId: string,
+  first = SUBGRAPH_PAGE_SIZE,
+  skip = 0
+) {
   const data = await fetchGraphQL<{ votes: SubgraphVote[] }>(VOTES_BY_ROUND_QUERY, {
     roundId,
-    first,
+    first: clampSubgraphPageSize(first),
+    skip,
   });
   return data.votes;
 }
 
+export async function fetchAllVotesByRoundFromSubgraph(roundId: string) {
+  return collectSubgraphPages((first, skip) =>
+    fetchVotesByRoundFromSubgraph(roundId, first, skip)
+  );
+}
+
 const VOTES_BY_IDEA_QUERY = `
-  query VotesByIdea($ideaId: BigInt!, $first: Int!) {
+  query VotesByIdea($ideaId: BigInt!, $first: Int!, $skip: Int!) {
     votes(
       first: $first
+      skip: $skip
       where: { ideaId: $ideaId }
       orderBy: timestamp
       orderDirection: desc
@@ -265,12 +314,23 @@ const VOTES_BY_IDEA_QUERY = `
   }
 `;
 
-export async function fetchVotesByIdeaFromSubgraph(ideaId: string, first = 2000) {
+export async function fetchVotesByIdeaFromSubgraph(
+  ideaId: string,
+  first = SUBGRAPH_PAGE_SIZE,
+  skip = 0
+) {
   const data = await fetchGraphQL<{ votes: SubgraphVote[] }>(VOTES_BY_IDEA_QUERY, {
     ideaId,
-    first,
+    first: clampSubgraphPageSize(first),
+    skip,
   });
   return data.votes;
+}
+
+export async function fetchAllVotesByIdeaFromSubgraph(ideaId: string) {
+  return collectSubgraphPages((first, skip) =>
+    fetchVotesByIdeaFromSubgraph(ideaId, first, skip)
+  );
 }
 
 const SEARCH_QUERY = `

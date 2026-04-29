@@ -10,6 +10,7 @@ import {
   FaExternalLinkAlt,
   FaBook,
   FaReddit,
+  FaTelegramPlane,
 } from "react-icons/fa";
 
 type Topic = {
@@ -23,10 +24,10 @@ type Topic = {
 const topics: Topic[] = [
   {
     id: "flow",
-    nav: "BERT Flow",
-    title: "BERT Flow",
+    nav: "BERT Flow V2",
+    title: "BERT Flow V2",
     intro:
-      "How proposals move from idea to funded implementation in a deterministic on-chain lifecycle.",
+      "How proposals move from idea to funded implementation in the updated BERT Protocol V2 lifecycle.",
     links: [
       { href: "/rounds", label: "Open Rounds" },
       { href: "/ideas/new", label: "Create Idea" },
@@ -61,10 +62,10 @@ const topics: Topic[] = [
   },
   {
     id: "grants",
-    nav: "Grant Lifecycle",
-    title: "Grant Lifecycle",
+    nav: "Grant Lifecycle V2",
+    title: "Grant Lifecycle V2",
     intro:
-      "After voting, winning proposals move through payout and delivery stages with explicit status transitions.",
+      "After voting, winning proposals move through staged payout and delivery checkpoints with explicit review and milestone events.",
     links: [
       { href: "/rounds", label: "Round Outcomes" },
       { href: "/pool", label: "Funding Pool" },
@@ -100,14 +101,39 @@ const topics: Topic[] = [
 function FlowContent() {
   return (
     <div className="space-y-8 overflow-x-hidden text-base leading-relaxed text-slate-700 dark:text-slate-200">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600">Idea Entry</p>
+          <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">5000 BTK</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Minimum author stake required to create a new idea in V2.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600">Grant Rail</p>
+          <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">30 / 40 / 30</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Payout is split into initial claim, in-process proof, and final launch proof.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600">Validator Gates</p>
+          <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">3 then 2</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            In-process proof needs 3 approvals. Launch proof needs 2 approvals.
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-4 rounded-2xl border border-white/12 bg-white/[0.02] p-5">
         <p>
-          The flow starts in <strong>Idea Registry</strong>: an author submits a proposal, and the idea is stored with
-          <strong> Pending</strong> status. This is the protocol entry point.
+          <strong>BERT Protocol V2</strong> changed two major parts of the product flow: <strong>idea creation</strong> is no
+          longer free, and <strong>grant release</strong> is no longer a one-shot payout.
         </p>
         <p>
-          A round can be started by <strong>any participant</strong>, but only when the contract checks pass. The key rule is:
-          the amount of new ideas must reach <code>IDEAS_PER_ROUND</code>. If this condition is not met, round creation reverts.
+          The updated lifecycle is now explicit and technical: author stakes <code>5000 BTK</code>, idea enters
+          <strong> Pending</strong>, the idea can later move into a round, voting selects a winner, the winner claims the first
+          <code> 30%</code>, then validators unlock the next <code>40%</code> and final <code>30%</code> through milestone proof.
         </p>
       </div>
 
@@ -123,36 +149,64 @@ function FlowContent() {
       </div>
 
       <section className="space-y-3">
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Round Voting Logic</h3>
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Idea Creation in V2</h3>
         <p>
-          During voting, a user stakes <strong>BTK</strong> and votes in an active window. Contract checks enforce
-          <strong> minimum stake</strong>, <strong>one vote per address per round</strong>, and
-          <strong> no self-voting</strong>.
+          An author submits a title, description, link, and stake amount through <strong>Idea Registry</strong>. In V2 the
+          transaction only succeeds if the submitted stake is at least <strong>5000 BTK</strong>, the wallet has enough BTK
+          balance, and the wallet has approved enough allowance for <strong>Funding Pool</strong>.
         </p>
         <p>
-          This means governance is not a frontend convention. If a rule is violated, transaction fails on-chain and state
-          remains unchanged.
+          When the transaction succeeds, the idea is stored with <strong>Pending</strong> status and the author stake is locked
+          in the pool under that idea. This is an important V2 behavior change: proposal quality now starts with economic
+          commitment, not only with text submission.
         </p>
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Winner, Funding, Completion</h3>
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Round Voting Logic</h3>
         <p>
-          After round deadline, <strong>anyone</strong> can settle the round. The winner is selected by highest stake votes.
-          Then, payout path is executed through <strong>Funding Pool</strong> and <strong>Grant Manager</strong>.
+          A round can be started by <strong>any participant</strong>, but only when the contract checks pass. The protocol
+          still requires enough ideas to form a round, and voters must stake BTK to participate.
         </p>
         <p>
-          Final step: only the idea author can mark the proposal as <strong>Completed</strong> when it is in
-          <strong> Funded</strong> state. This closes the lifecycle with a public completion signal.
+          During voting, contract checks enforce <strong>minimum stake</strong>, <strong>one vote per address per round</strong>,
+          and <strong>no self-voting</strong>. These are on-chain rules, not UI hints.
+        </p>
+        <p>
+          After the round deadline, <strong>anyone</strong> can settle the round. The highest supported idea becomes the winner
+          and moves into the treasury execution path.
         </p>
       </section>
 
       <section className="space-y-3 rounded-2xl border border-white/12 bg-white/[0.02] p-5">
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Why This Matters</h3>
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">V2 Execution Path</h3>
         <p>
-          BERT separates responsibilities clearly: <strong>Idea Registry</strong> for statuses, <strong>Voting System</strong>
-          for rounds, <strong>Funding Pool</strong> for balances, and <strong>Grant Manager</strong> for distribution.
-          This keeps governance predictable, auditable, and easier to operate.
+          Winning a round no longer means receiving the full grant immediately. In V2, funding is released in
+          <strong> three parts</strong>:
+        </p>
+        <p>
+          <strong>1.</strong> Initial claim: the winner claims the first <strong>30%</strong> after the round is settled.
+        </p>
+        <p>
+          <strong>2.</strong> In-process milestone: the next <strong>40%</strong> unlocks only after validators confirm the
+          project is actively being implemented.
+        </p>
+        <p>
+          <strong>3.</strong> Launch milestone: the final <strong>30%</strong> unlocks only after validators confirm the
+          project is launched and working.
+        </p>
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Validator Rules and Milestone Checks</h3>
+        <p>
+          The in-process stage requires <strong>3 approvals out of up to 5 reviewer votes</strong>. The launch stage requires
+          <strong> 2 approvals out of up to 3 reviewer votes</strong>. If proof is rejected, the stage stays locked until a new
+          valid submission is reviewed again.
+        </p>
+        <p>
+          This makes the grant flow much more measurable. V1 funding was effectively a single treasury event. V2 turns it into
+          a monitored execution pipeline with proof, review, and explicit stage transitions.
         </p>
       </section>
     </div>
@@ -264,9 +318,36 @@ function GrantsContent() {
     <div className="space-y-8 text-base leading-relaxed text-slate-700 dark:text-slate-200">
       <section className="space-y-3 rounded-2xl border border-white/12 bg-white/[0.02] p-5">
         <p>
-          Grant lifecycle starts when a round is settled and a winning idea is identified. That outcome moves the proposal
-          from voting phase to treasury execution phase.
+          Grant lifecycle starts when a round is settled and a winning idea is identified. In V2 this is where treasury
+          execution begins, not where protocol logic ends.
         </p>
+        <p>
+          The core V2 change is simple and concrete: the author does <strong>not</strong> receive the full grant upfront.
+          Grant release now follows a staged payout rail with milestone proofs and validator approvals.
+        </p>
+      </section>
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Stage 1</p>
+          <h3 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">30% initial claim</h3>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Claimed by the winning author after round settlement.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Stage 2</p>
+          <h3 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">40% in-process proof</h3>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Released only after progress is validated by reviewers.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Stage 3</p>
+          <h3 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">30% launch proof</h3>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Released only after launch is validated and the product is live.
+          </p>
+        </div>
       </section>
       <section className="space-y-3">
         <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Funding Path</h3>
@@ -274,19 +355,33 @@ function GrantsContent() {
           <strong>Funding Pool</strong> holds balance state, while <strong>Grant Manager</strong> executes payout flow under
           role and eligibility checks.
         </p>
+        <p>
+          In V2, the winning author first claims the initial tranche, then submits milestone proof for later releases.
+          Reviewers validate these requests on-chain, which gives contributors and treasury observers a much clearer picture of
+          how a grant moves from approval to delivery.
+        </p>
       </section>
       <section className="space-y-3">
         <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Status Completion</h3>
         <p>
-          After successful funding, the author can mark the idea as <strong>Completed</strong>. This gives a clear endpoint
-          to proposal lifecycle and improves delivery transparency.
+          Status transitions are now more explicit. A winning idea goes through <strong>WonVoting</strong>,
+          <strong> Funded</strong>, <strong>InProcess</strong>, and finally <strong>Completed</strong>.
+        </p>
+        <p>
+          That means completion no longer sits directly after a treasury transfer. It now sits after a visible execution journey:
+          win, initial claim, in-process proof, launch proof, and then final completion.
         </p>
       </section>
       <section className="space-y-3 rounded-2xl border border-white/12 bg-white/[0.02] p-5">
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Edge Cases</h3>
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Technical Edge Cases</h3>
         <p>
-          If round has no valid winner signal, ideas may be rejected by settlement logic. If contract is paused, payout and
-          state-changing flows stop until admin resumes operations.
+          If a round has no valid winner, grant claim path cannot start. If contracts are paused, payout and milestone actions
+          stop until admin resumes operations.
+        </p>
+        <p>
+          V2 also introduces review-specific edge cases: milestone proof can be rejected, reviewer thresholds must be met,
+          the final 30% stays locked until launch proof is accepted, and rejected ideas can have locked author stake slashed
+          into protocol reserve.
         </p>
       </section>
     </div>
@@ -413,8 +508,8 @@ export default function HowItWorksPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <div className="mx-auto max-w-[1600px] px-6 py-8 md:px-10 lg:px-14">
-        <header className="flex items-center justify-between">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 md:px-8 lg:px-14">
+        <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
             <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
@@ -436,13 +531,13 @@ export default function HowItWorksPage() {
           </nav>
           <Link
             href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
+            className="rounded-full border border-white/60 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5 sm:px-5 sm:text-sm"
           >
             Launch App
           </Link>
         </header>
 
-        <div className="mt-8 grid gap-12 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-70px)]">
             <p className="text-xs uppercase tracking-[0.28em] text-teal-600">How It Works</p>
             <h1 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">Topics</h1>
@@ -474,9 +569,9 @@ export default function HowItWorksPage() {
           </aside>
 
           <main>
-            <section key={active.id} className="animate-[fadeIn_220ms_ease-out] space-y-6 border-t border-white/12 pt-8">
-              <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">{active.title}</h2>
-              <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-200">{active.intro}</p>
+            <section key={active.id} className="animate-[fadeIn_220ms_ease-out] space-y-6 border-t border-white/12 pt-6 sm:pt-8">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">{active.title}</h2>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200 sm:text-lg">{active.intro}</p>
 
               {active.id === "flow" ? <FlowContent /> : null}
               {active.id === "token" ? <TokenContent /> : null}
@@ -530,7 +625,21 @@ export default function HowItWorksPage() {
                                Live metrics come from on-chain reads and indexed sources where available. Some roadmap sections describe planned protocol direction.
                              </div>
                    
-                             <div className="mt-10 grid gap-10 border-b border-white/20 pb-10 lg:grid-cols-4">
+                             <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
+                               <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
+                                 <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
+                                 <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
+                                 <a className="footer-link" href="/terms-of-use">Terms of Use</a>
+                               </div>
+                               <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                                 <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                                 <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                                 <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                                 <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                               </div>
+                             </div>
+
+                             <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
                                <div>
                                  <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                                    BERT Products
@@ -581,20 +690,21 @@ export default function HowItWorksPage() {
                                </div>
                              </div>
                    
-                             <div className="mt-10 grid gap-10 lg:grid-cols-4">
+                             <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
                                <div>
-                                   <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                     Social Links
-                                 </h4>
-                                 <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                                   <a href="https://github.com/tenyokj"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                   <a href="https://www.reddit.com/user/PralineSeparate5261/"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                   <a href="mailto:av7794257@gmail.com"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                 </div>
-                               </div>
-                               <div>
-                                 <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                   Analytics
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Social Links
+              </h4>
+              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Analytics
                                  </h4>
                                  <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                    <a className="footer-link" href="/protocol-stats">Protocol stats</a>

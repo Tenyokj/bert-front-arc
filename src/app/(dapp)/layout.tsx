@@ -14,12 +14,12 @@ const navItems = [
 export default function DappLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#20232f] text-slate-100">
-      <div className="mx-auto min-h-screen max-w-[1200px] px-4 pb-12 pt-4 md:px-6">
-        <header className="sticky top-4 z-30 rounded-2xl border border-white/10 bg-[#2a2d3b]/95 px-4 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur md:px-5">
-          <div className="flex items-center gap-3">
+      <div className="mx-auto min-h-screen max-w-[1200px] px-4 pb-12 pt-3 sm:pt-4 md:px-6">
+        <header className="sticky top-3 z-30 rounded-2xl border border-white/10 bg-[#2a2d3b]/95 px-3 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur sm:top-4 sm:px-4 md:px-5">
+          <div className="flex flex-wrap items-center gap-3">
             <Link href="/" className="flex shrink-0 items-center gap-2">
               <div className="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.8)]" />
-              <span className="font-[var(--font-display)] text-sm uppercase tracking-[0.45em] text-slate-100">BERT</span>
+              <span className="font-[var(--font-display)] text-xs uppercase tracking-[0.38em] text-slate-100 sm:text-sm sm:tracking-[0.45em]">BERT</span>
             </Link>
 
             <nav className="hidden items-center gap-1 md:flex">
@@ -44,11 +44,27 @@ export default function DappLayout({ children }: { children: React.ReactNode }) 
               />
             </form>
 
-            <WalletConnectButton />
+            <div className="ml-auto sm:ml-0">
+              <WalletConnectButton />
+            </div>
+          </div>
+
+          <div className="mt-3 overflow-x-auto pb-1 no-scrollbar md:hidden">
+            <nav className="flex min-w-max gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] text-slate-300 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </header>
 
-        <main className="mt-8">{children}</main>
+        <main className="mt-6 sm:mt-8">{children}</main>
       </div>
     </div>
   );

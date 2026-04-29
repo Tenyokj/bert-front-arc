@@ -1,3 +1,18 @@
+type Account @entity(immutable: false) {
+  id: ID!
+  address: Bytes!
+  reputation: BigInt!
+  reputationInitialized: Boolean!
+  winningVotes: BigInt!
+  isCurator: Boolean!
+  isReviewer: Boolean!
+  votesToCurator: BigInt!
+  votesToReviewer: BigInt!
+  createdIdeaCount: BigInt!
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
 type Round @entity(immutable: false) {
   id: ID!
   startTime: BigInt!
@@ -6,7 +21,10 @@ type Round @entity(immutable: false) {
   ended: Boolean!
   totalVotes: BigInt!
   winningIdeaId: BigInt!
+  winningVotes: BigInt!
   ideaIds: [BigInt!]!
+  fundingReserved: BigInt!
+  distributedAmount: BigInt!
   createdAtBlock: BigInt!
   updatedAtBlock: BigInt!
 }
@@ -14,13 +32,18 @@ type Round @entity(immutable: false) {
 type Idea @entity(immutable: false) {
   id: ID!
   author: Bytes
+  authorAccount: Account
   title: String!
   description: String!
   link: String!
   createdAt: BigInt!
   totalVotes: BigInt!
   status: Int!
+  isLowQuality: Boolean!
+  authorStake: BigInt!
+  reviewCount: Int!
   roundId: BigInt
+  round: Round
   createdAtBlock: BigInt!
   updatedAtBlock: BigInt!
 }
@@ -30,6 +53,70 @@ type Vote @entity(immutable: true) {
   roundId: BigInt!
   ideaId: BigInt!
   voter: Bytes!
+  voterAccount: Account!
+  amount: BigInt!
+  txHash: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type Review @entity(immutable: true) {
+  id: ID!
+  ideaId: BigInt!
+  idea: Idea!
+  reviewer: Bytes!
+  reviewerAccount: Account!
+  comment: String!
+  txHash: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type GrantPayout @entity(immutable: false) {
+  id: ID!
+  roundId: BigInt!
+  round: Round!
+  ideaId: BigInt!
+  idea: Idea
+  author: Bytes
+  authorAccount: Account
+  totalGrant: BigInt!
+  released: BigInt!
+  initialClaimed: Boolean!
+  inProcessPaid: Boolean!
+  completionPaid: Boolean!
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type MilestoneRequest @entity(immutable: false) {
+  id: ID!
+  roundId: BigInt!
+  round: Round!
+  ideaId: BigInt!
+  idea: Idea
+  stage: Int!
+  requestId: BigInt!
+  metadataURI: String!
+  details: String!
+  submittedAt: BigInt!
+  lastRejectedAt: BigInt!
+  approvals: Int!
+  rejections: Int!
+  maxReviewers: Int!
+  approvalThreshold: Int!
+  active: Boolean!
+  lastReviewedAt: BigInt
+  lastReviewer: Bytes
+  lastReviewApproved: Boolean
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type Distribution @entity(immutable: true) {
+  id: ID!
+  roundId: BigInt!
+  ideaId: BigInt!
   amount: BigInt!
   txHash: Bytes!
   timestamp: BigInt!

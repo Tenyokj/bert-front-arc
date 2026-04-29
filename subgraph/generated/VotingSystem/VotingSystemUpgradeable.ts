@@ -504,25 +504,6 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  ROUND_COOLDOWN(): BigInt {
-    let result = super.call("ROUND_COOLDOWN", "ROUND_COOLDOWN():(uint256)", []);
-
-    return result[0].toBigInt();
-  }
-
-  try_ROUND_COOLDOWN(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "ROUND_COOLDOWN",
-      "ROUND_COOLDOWN():(uint256)",
-      [],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   VOTING_DURATION(): BigInt {
     let result = super.call(
       "VOTING_DURATION",

@@ -1,6 +1,6 @@
 import ParticleText from "@/components/ParticleText";
 import Link from "next/link";
-import { FaGithub, FaReddit, FaMailBulk } from "react-icons/fa";
+import { FaGithub, FaReddit, FaMailBulk, FaTelegramPlane } from "react-icons/fa";
 
 export default function GovernanceStackPage() {
   return (
@@ -63,6 +63,11 @@ export default function GovernanceStackPage() {
                 Conceptually, the stack has three big phases: <strong>state intake</strong> (ideas and votes), <strong>decision settlement</strong> (winner resolution),
                 and <strong>execution</strong> (grant distribution and completion tracking).
               </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                The current deployment should be understood as <strong>BERT Protocol V2</strong>: same modular foundation, but a more opinionated
+                post-vote execution layer. The upgrade focused on <strong>IdeaRegistry</strong>, <strong>FundingPool</strong>, and
+                <strong> GrantManager</strong> so proposal quality signals and treasury release logic could evolve without replacing the entire stack.
+              </p>
             </section>
 
             <section id="core" className="space-y-4">
@@ -75,6 +80,13 @@ export default function GovernanceStackPage() {
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Each core contract has clear scope to reduce hidden side effects and simplify reasoning about failures.
               </p>
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">V2 contract focus</p>
+                <p className="mt-3 text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                  <strong>IdeaRegistry</strong> now carries a richer moderation and review surface, <strong>FundingPool</strong> participates in a more
+                  explicit treasury flow, and <strong>GrantManager</strong> governs staged release rather than a simplified winner-only payout model.
+                </p>
+              </div>
             </section>
 
             <section id="control" className="space-y-4">
@@ -108,6 +120,22 @@ export default function GovernanceStackPage() {
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 The design goal is that every meaningful execution step is externally verifiable through state and events.
               </p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-2xl border border-white/15 bg-white/5 p-5">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">V1 execution profile</p>
+                  <p className="mt-3 text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                    Voting outcome primarily determined which idea won and whether the treasury should move funds. The public execution trail after
+                    the winner decision was comparatively narrow.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/5 p-5">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">V2 execution profile</p>
+                  <p className="mt-3 text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                    Voting still decides the winner, but the treasury path is now staged: initial claim, milestone proof submission, reviewer
+                    validation, later releases, and final completion. This better separates selection from delivery assurance.
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section id="upgrade" className="space-y-4">
@@ -118,6 +146,10 @@ export default function GovernanceStackPage() {
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Upgrades should be treated as governance events with explicit review notes, rollback planning, and audit trail.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                That is exactly how the V2 release should be read: not as a new protocol identity, but as a controlled proxy upgrade of critical
+                execution modules with the surrounding system left intact.
               </p>
             </section>
 
@@ -146,7 +178,21 @@ export default function GovernanceStackPage() {
                             Live metrics come from on-chain reads and indexed sources where available. Some roadmap sections describe planned protocol direction.
                           </div>
                 
-                          <div className="mt-10 grid gap-10 border-b border-white/20 pb-10 lg:grid-cols-4">
+                          <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
+                            <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
+                              <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
+                              <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
+                              <a className="footer-link" href="/terms-of-use">Terms of Use</a>
+                            </div>
+                            <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                              <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                            </div>
+                          </div>
+
+                          <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
                             <div>
                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                                 BERT Products
@@ -197,20 +243,21 @@ export default function GovernanceStackPage() {
                             </div>
                           </div>
                 
-                          <div className="mt-10 grid gap-10 lg:grid-cols-4">
+                          <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
                             <div>
-                                <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                  Social Links
-                              </h4>
-                              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                                <a href="https://github.com/tenyokj"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="https://www.reddit.com/user/PralineSeparate5261/"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="mailto:av7794257@gmail.com"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                Analytics
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Social Links
+              </h4>
+              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Analytics
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                 <a className="footer-link" href="/protocol-stats">Protocol stats</a>

@@ -140,8 +140,8 @@ export function HomeStrategyCards() {
   }, [client]);
 
   return (
-    <div className="mt-14 grid gap-10 lg:grid-cols-3">
-      <div className="group relative overflow-hidden rounded-[32px] border border-white/70 bg-white/80 p-11 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur">
+    <div className="mt-14 grid gap-6 lg:grid-cols-3 lg:gap-10">
+      <div className="group relative overflow-hidden rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur sm:p-8 xl:p-11">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_55%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="relative flex h-full flex-col gap-7">
           <div className="flex items-center justify-between">
@@ -149,13 +149,13 @@ export function HomeStrategyCards() {
               Strategy
             </span>
           </div>
-          <h3 className="font-[var(--font-display)] text-[34px] font-semibold leading-tight text-slate-900">Community Grants</h3>
-          <p className="text-lg text-slate-600">
+          <h3 className="font-[var(--font-display)] text-[28px] font-semibold leading-tight text-slate-900 sm:text-[32px] xl:text-[34px]">Community Grants</h3>
+          <p className="text-base text-slate-600 sm:text-lg">
             Route stake into high-signal proposals. Structured scoring, transparent quorum, and milestone-based payouts.
           </p>
-          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-6">
+          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total pool</p>
-            <p className="mt-3 text-5xl font-semibold text-slate-900">{formatBtk(stats.poolBalance)} BTK</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">{formatBtk(stats.poolBalance)} BTK</p>
             <p className="mt-1 text-xs text-slate-500">Available across active rounds</p>
           </div>
           <Link href="/pool" className="mt-auto w-fit rounded-full bg-slate-900 px-7 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-white">
@@ -164,7 +164,7 @@ export function HomeStrategyCards() {
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 p-11 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur">
+      <div className="group relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 p-6 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur sm:p-8 xl:p-11">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.2),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="relative flex h-full flex-col gap-7">
           <div className="flex items-center justify-between">
@@ -172,13 +172,13 @@ export function HomeStrategyCards() {
               Rewards
             </span>
           </div>
-          <h3 className="font-[var(--font-display)] text-[34px] font-semibold leading-tight text-slate-900">Voter Yield</h3>
-          <p className="text-lg text-slate-600">
+          <h3 className="font-[var(--font-display)] text-[28px] font-semibold leading-tight text-slate-900 sm:text-[32px] xl:text-[34px]">Voter Yield</h3>
+          <p className="text-base text-slate-600 sm:text-lg">
             Earn reputation boosts and voter rewards for consistent, high-quality participation across rounds.
           </p>
-          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-6">
+          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Active voters</p>
-            <p className="mt-3 text-5xl font-semibold text-slate-900">
+            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">
               {stats.activeVoters === undefined ? "..." : new Intl.NumberFormat("en-US").format(stats.activeVoters)}
             </p>
             <p className="mt-1 text-xs text-slate-500">
@@ -191,7 +191,7 @@ export function HomeStrategyCards() {
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 p-11 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur">
+      <div className="group relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 p-6 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur sm:p-8 xl:p-11">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(248,113,113,0.18),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="relative flex h-full flex-col gap-7">
           <div className="flex items-center justify-between">
@@ -199,13 +199,13 @@ export function HomeStrategyCards() {
               Treasury
             </span>
           </div>
-          <h3 className="font-[var(--font-display)] text-[34px] font-semibold leading-tight text-slate-900">Grant Treasury</h3>
-          <p className="text-lg text-slate-600">
+          <h3 className="font-[var(--font-display)] text-[28px] font-semibold leading-tight text-slate-900 sm:text-[32px] xl:text-[34px]">Grant Treasury</h3>
+          <p className="text-base text-slate-600 sm:text-lg">
             Consolidated funding pool with transparent distribution, milestone-based releases, and full audit history.
           </p>
-          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-6">
+          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Paid out</p>
-            <p className="mt-3 text-5xl font-semibold text-slate-900">{formatBtk(stats.paidOutTotal)} BTK</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">{formatBtk(stats.paidOutTotal)} BTK</p>
             <p className="mt-1 text-xs text-slate-500">
               Across {stats.distributionCount === undefined ? "..." : stats.distributionCount.toString()} funded proposals
             </p>

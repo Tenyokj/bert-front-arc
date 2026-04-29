@@ -13,6 +13,7 @@ import {
   FaShieldAlt,
   FaTerminal,
   FaMailBulk,
+  FaTelegramPlane,
 } from "react-icons/fa";
 
 type FaqItem = {
@@ -57,6 +58,11 @@ const sections: FaqSection[] = [
           "A contributor submits an idea, the DAO evaluates it in structured rounds, voting determines eligible winners, and the treasury distributes grants according to protocol rules. Role guards and upgrade controls protect critical operations.",
       },
       {
+        question: "What exactly changed in BERT Protocol V2?",
+        answer:
+          "Two core things changed. First, idea creation now requires a minimum 5000 BTK author stake. Second, grant payouts are no longer one-shot: the winner claims 30% first, then 40% unlocks after in-process proof approval, and the final 30% unlocks after launch proof approval.",
+      },
+      {
         question: "What is BTK?",
         answer:
           "BTK is the ecosystem token used for governance dynamics and participation incentives in the BERT model. Exact economics depend on your active token policy and network deployment configuration.",
@@ -86,6 +92,11 @@ const sections: FaqSection[] = [
         question: "How is stake used in voting?",
         answer:
           "Stake-weighted voting gives higher influence to participants with higher committed stake. To keep this fair, combine stake with quorum constraints, anti-spam mechanics, and reputation-based progression.",
+      },
+      {
+        question: "Why does idea creation now ask for 5000 BTK?",
+        answer:
+          "In V2, idea creation is stake-backed. The 5000 BTK minimum is there to reduce spam and force economic commitment before a proposal enters the governance pipeline. The transaction also requires enough wallet balance and allowance for FundingPool.",
       },
       {
         question: "Can voting rewards be abused?",
@@ -139,6 +150,11 @@ const sections: FaqSection[] = [
           "Only the owner of the relevant ProxyAdmin can upgrade. Confirm current owner on-chain and ensure the signer matches before executing upgrade transactions.",
       },
       {
+        question: "Why does createIdea revert even when MetaMask opens correctly?",
+        answer:
+          "The wallet popup only means signing is possible. The contract can still revert if author stake is below the current minimum, BTK allowance is too low, FundingPool wiring is wrong, or IdeaRegistry and FundingPool roles are incomplete after an upgrade.",
+      },
+      {
         question: "Is there a single ProxyAdmin for all contracts?",
         answer:
           "No in current deployment pattern. Each proxy has a dedicated ProxyAdmin. A shared-admin model requires architectural changes and migration planning.",
@@ -189,6 +205,16 @@ const sections: FaqSection[] = [
         question: "How do I confirm role wiring?",
         answer:
           "Run verification scripts and read `hasRole` on-chain for all critical actors. Validate proposer, upgrader, treasury executor, and emergency controls before enabling production flows.",
+      },
+      {
+        question: "Why can a winning author claim only 30% at first?",
+        answer:
+          "That is the V2 treasury rule. Winning unlocks only the initial 30% claim. The remaining 70% is deliberately held behind milestone validation so treasury release tracks real execution rather than only vote outcome.",
+      },
+      {
+        question: "What blocks the 40% and final 30% payouts?",
+        answer:
+          "The 40% in-process release needs validator approval that the project is actively being built. The final 30% needs validator approval that the project is launched and working. If proof is rejected or approvals are missing, those tranches remain locked.",
       },
       {
         question: "Why does ProxyAdmin ownership differ from deployer?",
@@ -358,8 +384,8 @@ export default function FaqPage() {
     <div className="relative min-h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <div className="hero-ambient absolute inset-0" />
 
-      <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-4">
-        <header className="flex items-center justify-between">
+      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pb-20">
+        <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
             <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
@@ -381,20 +407,20 @@ export default function FaqPage() {
           </nav>
           <Link
             href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
+            className="rounded-full border border-white/60 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5 sm:px-5 sm:text-sm"
           >
             Launch App
           </Link>
         </header>
 
-        <section className="mt-10 overflow-hidden rounded-[36px] border border-white/40 bg-white/20 backdrop-blur">
+        <section className="mt-8 overflow-hidden rounded-[28px] border border-white/40 bg-white/20 backdrop-blur sm:mt-10 sm:rounded-[36px]">
           <div className="grid lg:grid-cols-[1.5fr_1fr]">
-            <div className="border-b border-white/30 p-8 sm:p-12 lg:border-b-0 lg:border-r">
+            <div className="border-b border-white/30 p-5 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600">Knowledge Base</p>
-              <h1 className="mt-4 font-[var(--font-display)] text-6xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-7xl lg:text-8xl">
+              <h1 className="mt-4 font-[var(--font-display)] text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-8xl">
                 BERT FAQ
               </h1>
-              <p className="mt-4 max-w-2xl text-xl text-slate-600 dark:text-slate-300">
+              <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-300 sm:text-xl">
                 Operational answers for upgradeable contracts, governance roles, deployment safety, and troubleshooting.
               </p>
               <div className="mt-8">
@@ -412,39 +438,39 @@ export default function FaqPage() {
             <div className="grid border-white/30 sm:grid-cols-2 lg:grid-cols-1">
               <Link
                 href="#"
-                className="border-b border-l border-white/30 p-8 transition-colors hover:bg-white/20"
+                className="border-b border-l border-white/30 p-5 transition-colors hover:bg-white/20 sm:p-8"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-rose-500">
                   <FaQuestion />
                 </div>
-                <h2 className="mt-8 font-[var(--font-display)] text-3xl font-semibold text-slate-900 dark:text-slate-100">Help Center</h2>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
+                <h2 className="mt-6 font-[var(--font-display)] text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:mt-8 sm:text-3xl">Help Center</h2>
+                <p className="mt-3 text-base text-slate-600 dark:text-slate-300 sm:text-lg">
                   Core troubleshooting paths for deployment and upgrade failures.
                 </p>
               </Link>
 
               <Link
                 href="#"
-                className="border-b border-l border-white/30 p-8 transition-colors hover:bg-white/20"
+                className="border-b border-l border-white/30 p-5 transition-colors hover:bg-white/20 sm:p-8"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-blue-600">
                   <FaTerminal />
                 </div>
-                <h2 className="mt-8 font-[var(--font-display)] text-3xl font-semibold text-slate-900 dark:text-slate-100">Runbook</h2>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
+                <h2 className="mt-6 font-[var(--font-display)] text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:mt-8 sm:text-3xl">Runbook</h2>
+                <p className="mt-3 text-base text-slate-600 dark:text-slate-300 sm:text-lg">
                   Deployment, ownership, and recovery checklists for operators.
                 </p>
               </Link>
 
               <Link
                 href="#"
-                className="border-l border-white/30 p-8 transition-colors hover:bg-white/20"
+                className="border-l border-white/30 p-5 transition-colors hover:bg-white/20 sm:p-8"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-teal-600">
                   <FaShieldAlt />
                 </div>
-                <h2 className="mt-8 font-[var(--font-display)] text-3xl font-semibold text-slate-900 dark:text-slate-100">Security Notes</h2>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
+                <h2 className="mt-6 font-[var(--font-display)] text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:mt-8 sm:text-3xl">Security Notes</h2>
+                <p className="mt-3 text-base text-slate-600 dark:text-slate-300 sm:text-lg">
                   Current assumptions, planned audits, and risk boundaries.
                 </p>
               </Link>
@@ -465,7 +491,7 @@ export default function FaqPage() {
           </label>
         </section>
 
-        <section className="mt-10 grid gap-12 lg:grid-cols-[0.32fr_0.68fr]">
+        <section className="mt-10 grid gap-8 lg:grid-cols-[0.32fr_0.68fr] lg:gap-12">
           <aside className="lg:sticky lg:top-6 lg:self-start">
             <div className="relative overflow-hidden rounded-[28px] border border-white/40 bg-white/30 px-5 py-6 shadow-[0_20px_50px_rgba(15,23,42,0.1)] backdrop-blur">
               <div className="pointer-events-none absolute -left-8 top-2 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.28),transparent_65%)] blur-xl" />
@@ -473,7 +499,7 @@ export default function FaqPage() {
               <p className="mb-5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                 FAQ Sections
               </p>
-              <nav className="flex flex-col gap-3 font-[var(--font-display)] text-[32px] font-normal text-slate-700 dark:text-slate-300 lg:text-[34px]">
+              <nav className="flex flex-col gap-3 font-[var(--font-display)] text-[24px] font-normal text-slate-700 dark:text-slate-300 sm:text-[28px] lg:text-[34px]">
               {sections.map((section) => (
                 <button
                   key={section.id}
@@ -505,7 +531,7 @@ export default function FaqPage() {
           <div className="space-y-14">
             {filteredSections.map((section) => (
               <section id={section.id} key={section.id} className="scroll-mt-10 transition-opacity duration-500">
-                <h3 className="font-[var(--font-display)] text-4xl font-normal tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+                <h3 className="font-[var(--font-display)] text-3xl font-normal tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
                   {section.title}
                 </h3>
 
@@ -520,7 +546,7 @@ export default function FaqPage() {
                           onClick={() => setOpenItem(isOpen ? "" : key)}
                           className="flex w-full items-center justify-between gap-8 text-left"
                         >
-                          <span className="text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">
+                          <span className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl lg:text-3xl">
                             {item.question}
                           </span>
                           <span
@@ -564,7 +590,21 @@ export default function FaqPage() {
                             Live metrics come from on-chain reads and indexed sources where available. Some roadmap sections describe planned protocol direction.
                           </div>
                 
-                          <div className="mt-10 grid gap-10 border-b border-white/20 pb-10 lg:grid-cols-4">
+                          <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
+                            <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
+                              <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
+                              <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
+                              <a className="footer-link" href="/terms-of-use">Terms of Use</a>
+                            </div>
+                            <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                              <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                            </div>
+                          </div>
+
+                          <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
                             <div>
                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                                 BERT Products
@@ -615,20 +655,21 @@ export default function FaqPage() {
                             </div>
                           </div>
                 
-                          <div className="mt-10 grid gap-10 lg:grid-cols-4">
+                          <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
                             <div>
-                                <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                  Social Links
-                              </h4>
-                              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                                <a href="https://github.com/tenyokj"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="https://www.reddit.com/user/PralineSeparate5261/"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="mailto:av7794257@gmail.com"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                Analytics
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Social Links
+              </h4>
+              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Analytics
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                 <a className="footer-link" href="/protocol-stats">Protocol stats</a>

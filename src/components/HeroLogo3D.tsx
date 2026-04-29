@@ -344,7 +344,7 @@ export default function HeroLogo3D() {
       <div className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.28),transparent_60%)] blur-2xl" />
       <div
         ref={mountRef}
-        className="pointer-events-none h-[60vw] w-[60vw] max-h-[900px] max-w-[900px] min-h-[520px] min-w-[520px]"
+        className="pointer-events-none h-[72vw] w-[72vw] max-h-[900px] max-w-[900px] min-h-[280px] min-w-[280px] sm:h-[60vw] sm:w-[60vw] sm:min-h-[420px] sm:min-w-[420px] lg:min-h-[520px] lg:min-w-[520px]"
       />
     </div>
   );

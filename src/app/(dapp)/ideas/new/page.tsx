@@ -1,12 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSyncExternalStore } from "react";
+import { formatUnits, parseUnits } from "viem";
 import { FaArrowLeft } from "react-icons/fa";
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 
-import { contracts, ideaRegistryAbi } from "@/lib/contracts";
+import {
+  contracts,  governanceTokenAbi,
+  ideaRegistryAbi,
+} from "@/lib/contracts";
+import { formatTokenAmount } from "@/lib/dapp-onchain";
+
+function safeParseAmount(value: string) {
+  const input = value.trim();
+  if (!input) return 0n;
+  try {
+    return parseUnits(input, 18);
+  } catch {
+    return -1n;
+  }
+}
+
+function formatPlainAmount(value: bigint | undefined) {
+  if (value === undefined) return "";
+  return formatUnits(value, 18);
+}
+
+function prettyCreateIdeaError(message?: string) {
+  if (!message) return "";
+  if (message.toLowerCase().includes("gas limit too high")) {
+    return "The RPC rejected the automatic gas estimate. The dApp now sends a fixed gas limit for idea creation; retry the transaction.";
+  }
+  if (message.includes("FundingPoolNotConfigured")) {
+    return "IdeaRegistry is not wired to FundingPool yet. Re-run deployment wiring or call setFundingPool() on the deployed IdeaRegistry.";
+  }
+  if (message.includes("InsufficientStake")) {
+    return "Stake amount is below the contract minimum.";
+  }
+  if (message.includes("InsufficientTokenBalance")) {
+    return "Wallet balance is lower than the stake required for idea creation.";
+  }
+  if (message.includes("InsufficientAllowance")) {
+    return "FundingPool allowance is too low for the selected stake amount.";
+  }
+  if (message.includes("ExternalCallFailed") && message.includes("FundingPool")) {
+    return "FundingPool rejected the author stake deposit. This usually means the deployment wiring or contract roles are incomplete.";
+  }
+  if (message.includes("ExternalCallFailed") && message.includes("ReputationSystem")) {
+    return "Reputation system rejected author initialization. Check REPUTATION_MANAGER_ROLE wiring for IdeaRegistry.";
+  }
+  if (message.includes("Internal error")) {
+    return "Contract wiring looks incomplete. Most likely IdeaRegistry has no FundingPool configured on this deployment.";
+  }
+  return message;
+}
+
+function normalizeAddress(value?: string) {
+  return value?.toLowerCase();
+}
 
 export default function NewIdeaPage() {
   const hydrated = useSyncExternalStore(
@@ -14,16 +72,95 @@ export default function NewIdeaPage() {
     () => true,
     () => false
   );
-  const { isConnected } = useAccount();
-  const { data: txHash, isPending, error, writeContract } = useWriteContract();
-  const sendWrite = writeContract as unknown as (variables: Record<string, unknown>) => void;
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
+  const { address, isConnected } = useAccount();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
+  const [stakeAmount, setStakeAmount] = useState("");
+
+  const {
+    data: approveTxHash,
+    isPending: isApprovePending,
+    error: approveError,
+    writeContract: writeApprove,
+  } = useWriteContract();
+  const sendApprove = writeApprove as unknown as (variables: Record<string, unknown>) => void;
+  const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
+    hash: approveTxHash,
+  });
+
+  const {
+    data: createTxHash,
+    isPending: isCreatePending,
+    error: createError,
+    writeContract,
+  } = useWriteContract();
+  const sendWrite = writeContract as unknown as (variables: Record<string, unknown>) => void;
+  const { isLoading: isCreateConfirming, isSuccess: isCreateSuccess } = useWaitForTransactionReceipt({
+    hash: createTxHash,
+  });
+
+  const { data: authorMinStake } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "authorMinStake",
+    query: { enabled: Boolean(contracts.ideaRegistry) },
+  });
+
+  const { data: registryFundingPool } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "fundingPool",
+    query: { enabled: Boolean(contracts.ideaRegistry) },
+  });
+
+  const { data: allowance } = useReadContract({
+    address: contracts.governanceToken,
+    abi: governanceTokenAbi,
+    functionName: "allowance",
+    args: address && contracts.fundingPool ? [address, contracts.fundingPool] : undefined,
+    query: { enabled: Boolean(address && contracts.governanceToken && contracts.fundingPool) },
+  });
+
+  const { data: tokenBalance } = useReadContract({
+    address: contracts.governanceToken,
+    abi: governanceTokenAbi,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address && contracts.governanceToken) },
+  });
+
+  useEffect(() => {
+    if (!authorMinStake || stakeAmount.trim().length > 0) return;
+    setStakeAmount(formatPlainAmount(authorMinStake as bigint));
+  }, [authorMinStake, stakeAmount]);
+
+  const minStakeValue = authorMinStake as bigint | undefined;
+  const registryFundingPoolValue = registryFundingPool as string | undefined;
+  const allowanceValue = allowance as bigint | undefined;
+  const tokenBalanceValue = tokenBalance as bigint | undefined;
+  const parsedStake = useMemo(() => safeParseAmount(stakeAmount), [stakeAmount]);
+  const invalidStake = parsedStake <= 0n;
+  const belowMinStake = minStakeValue !== undefined && parsedStake > 0n && parsedStake < minStakeValue;
+  const insufficientBalance = (tokenBalanceValue ?? 0n) < parsedStake;
+  const needsApproval = parsedStake > 0n && (allowanceValue ?? 0n) < parsedStake;
+  const writeBusy = isApprovePending || isApproveConfirming || isCreatePending || isCreateConfirming;
+  const expectedFundingPool = contracts.fundingPool;
+  const hasFundingPoolMismatch =
+    Boolean(registryFundingPoolValue && expectedFundingPool) &&
+    normalizeAddress(registryFundingPoolValue) !== normalizeAddress(expectedFundingPool);
+  const hasInvalidMinStake = minStakeValue !== undefined && minStakeValue <= 0n;
+  const isRegistryWiringBroken = hasFundingPoolMismatch || hasInvalidMinStake;
+
+  const canApprove =
+    hydrated &&
+    isConnected &&
+    Boolean(contracts.governanceToken && contracts.fundingPool) &&
+    parsedStake > 0n &&
+    !insufficientBalance &&
+    !isRegistryWiringBroken &&
+    !writeBusy;
 
   const canSubmit =
     hydrated &&
@@ -31,8 +168,12 @@ export default function NewIdeaPage() {
     Boolean(contracts.ideaRegistry) &&
     title.trim().length > 0 &&
     description.trim().length > 0 &&
-    !isPending &&
-    !isConfirming;
+    !invalidStake &&
+    !belowMinStake &&
+    !insufficientBalance &&
+    !needsApproval &&
+    !isRegistryWiringBroken &&
+    !writeBusy;
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,7 +183,8 @@ export default function NewIdeaPage() {
       address: contracts.ideaRegistry,
       abi: ideaRegistryAbi,
       functionName: "createIdea",
-      args: [title.trim(), description.trim(), link.trim()],
+      args: [title.trim(), description.trim(), link.trim(), parsedStake],
+      gas: 1_200_000n,
     });
   };
 
@@ -56,16 +198,53 @@ export default function NewIdeaPage() {
         Back to ideas
       </Link>
 
-      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-6 md:p-8">
+      <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Create Idea</p>
-        <h1 className="mt-3 font-[var(--font-display)] text-4xl text-white md:text-6xl">
+        <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">
           Submit proposal
         </h1>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
+          Idea creation now requires a BTK stake. The amount is locked on-chain to reduce spam and align proposals with real commitment.
+        </p>
 
         {!contracts.ideaRegistry && (
           <p className="mt-4 rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
             Set <code>NEXT_PUBLIC_IDEA_REGISTRY_ADDRESS</code> in `.env` to enable idea creation.
           </p>
+        )}
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Required minimum stake</p>
+            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(minStakeValue)} BTK</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Wallet balance</p>
+            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(tokenBalanceValue)} BTK</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Allowance to FundingPool</p>
+            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(allowanceValue)} BTK</p>
+          </div>
+        </div>
+
+        {isRegistryWiringBroken && (
+          <div className="mt-6 rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-4 text-sm text-rose-100">
+            <p className="font-semibold">IdeaRegistry deployment is miswired on this network.</p>
+            {hasInvalidMinStake && (
+              <p className="mt-2">
+                `authorMinStake()` returned `0`, but the V2 create-idea flow expects a positive minimum stake.
+              </p>
+            )}
+            {hasFundingPoolMismatch && (
+              <p className="mt-2 break-all">
+                `IdeaRegistry.fundingPool()` points to `{registryFundingPoolValue}`, while the configured FundingPool is `{expectedFundingPool}`.
+              </p>
+            )}
+            <p className="mt-2">
+              Until the proxy wiring or upgrade state is fixed on-chain, idea submission will keep reverting.
+            </p>
+          </div>
         )}
 
         <form onSubmit={onSubmit} className="mt-6 grid gap-4">
@@ -84,7 +263,7 @@ export default function NewIdeaPage() {
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              className="min-h-36 rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
+              className="min-h-32 rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50 sm:min-h-36"
               placeholder="Describe your proposal in detail"
             />
           </label>
@@ -99,31 +278,87 @@ export default function NewIdeaPage() {
             />
           </label>
 
-          <div className="mt-2 flex flex-wrap gap-3">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-200">Stake amount</span>
+            <input
+              value={stakeAmount}
+              onChange={(event) => setStakeAmount(event.target.value)}
+              className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
+              placeholder="5000"
+            />
+            <p className="text-xs text-slate-400">
+              Contract currently requires at least {formatTokenAmount(minStakeValue)} BTK before idea creation can succeed.
+            </p>
+          </label>
+
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button
+              type="button"
+              disabled={!canApprove || !needsApproval}
+              onClick={() => {
+                if (!contracts.governanceToken || !contracts.fundingPool || parsedStake <= 0n) return;
+                sendApprove({
+                  address: contracts.governanceToken,
+                  abi: governanceTokenAbi,
+                  functionName: "approve",
+                  args: [contracts.fundingPool, parsedStake],
+                  gas: 200_000n,
+                });
+              }}
+              className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isApprovePending
+                ? "Awaiting signature..."
+                : isApproveConfirming
+                  ? "Approving..."
+                  : needsApproval
+                    ? "Approve stake"
+                    : "Stake approved"}
+            </button>
             <button
               type="submit"
               disabled={!canSubmit}
               className="rounded-lg bg-[#3b82f6] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isPending ? "Awaiting signature..." : isConfirming ? "Confirming..." : "Submit idea"}
+              {isCreatePending ? "Awaiting signature..." : isCreateConfirming ? "Confirming..." : "Submit idea"}
             </button>
           </div>
         </form>
 
         {hydrated && !isConnected && (
           <p className="mt-4 text-sm text-amber-100">
-            Connect wallet to create an on-chain idea.
+            Connect wallet to approve stake and create an on-chain idea.
           </p>
         )}
-        {error && <p className="mt-3 text-sm text-rose-300">{error.message}</p>}
-        {txHash && (
-          <p className="mt-3 break-all text-xs text-slate-300">
-            Tx: {txHash}
+        {invalidStake && stakeAmount.trim().length > 0 && <p className="mt-3 text-sm text-rose-300">Enter a valid BTK stake amount.</p>}
+        {belowMinStake && minStakeValue !== undefined && (
+          <p className="mt-3 text-sm text-rose-300">
+            Stake is below the current minimum of {formatTokenAmount(minStakeValue)} BTK.
           </p>
         )}
-        {isSuccess && (
+        {insufficientBalance && (
+          <p className="mt-3 text-sm text-rose-300">Wallet balance is too low for this stake amount.</p>
+        )}
+        {needsApproval && parsedStake > 0n && !insufficientBalance && (
+          <p className="mt-3 text-sm text-slate-300">
+            Approve FundingPool for at least {formatTokenAmount(parsedStake)} BTK before submitting the idea.
+          </p>
+        )}
+        {isRegistryWiringBroken && (
+          <p className="mt-3 text-sm text-rose-300">
+            Submission is blocked because the current IdeaRegistry deployment is not correctly wired to FundingPool.
+          </p>
+        )}
+        {approveError && <p className="mt-3 break-words text-sm text-rose-300">{approveError.message}</p>}
+        {approveTxHash && <p className="mt-3 break-all text-xs text-slate-300">Approve tx: {approveTxHash}</p>}
+        {isApproveSuccess && !needsApproval && (
+          <p className="mt-3 text-sm font-semibold text-emerald-300">Stake allowance confirmed.</p>
+        )}
+        {createError && <p className="mt-3 break-words text-sm text-rose-300">{prettyCreateIdeaError(createError.message)}</p>}
+        {createTxHash && <p className="mt-3 break-all text-xs text-slate-300">Create tx: {createTxHash}</p>}
+        {isCreateSuccess && (
           <p className="mt-3 text-sm font-semibold text-emerald-300">
-            Idea created successfully.
+            Idea created successfully and stake locked on-chain.
           </p>
         )}
       </div>

@@ -11,6 +11,7 @@ import {
   votingSystemAbi,
   ideaRegistryAbi,
 } from "@/lib/contracts";
+import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 type HomeStats = {
   poolBalance?: bigint;
@@ -132,7 +133,14 @@ export function HomeLiveStats() {
           })) as bigint;
           next.totalIdeas = totalIdeas;
         } catch {
-          // keep defaults
+          if (hasSubgraphConfigured()) {
+            try {
+              const ideas = await fetchAllIdeasFromSubgraph();
+              next.totalIdeas = BigInt(ideas.length);
+            } catch {
+              // keep defaults
+            }
+          }
         }
       }
 

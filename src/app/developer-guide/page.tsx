@@ -1,6 +1,6 @@
 import ParticleText from "@/components/ParticleText";
 import Link from "next/link";
-import { FaGithub, FaReddit, FaMailBulk } from "react-icons/fa";
+import { FaGithub, FaReddit, FaMailBulk, FaTelegramPlane } from "react-icons/fa";
 
 export default function DeveloperGuidePage() {
   return (
@@ -42,6 +42,7 @@ export default function DeveloperGuidePage() {
               Practical integration guide for frontend contributors, protocol integrators, and operators running BERT flows.
             </p>
             <div className="mt-7 space-y-2 border-l border-white/20 pl-4 text-sm text-slate-600 dark:text-slate-300">
+              <a href="#v2" className="block hover:text-slate-900 dark:hover:text-white">What Changed In V2</a>
               <a href="#quickstart" className="block hover:text-slate-900 dark:hover:text-white">Quick Start (5 min)</a>
               <a href="#entry" className="block hover:text-slate-900 dark:hover:text-white">Architecture Entry Points</a>
               <a href="#setup" className="block hover:text-slate-900 dark:hover:text-white">Local Setup</a>
@@ -58,6 +59,20 @@ export default function DeveloperGuidePage() {
           </aside>
 
           <main className="space-y-12 border-t border-white/12 pt-8">
+            <section id="v2" className="space-y-4">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">What Changed In V2</h2>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                <strong>BERT Protocol V2</strong> is not a full reset of the stack. It is a targeted upgrade of the modules
+                that shape execution quality after a vote. The main contract updates are <strong>IdeaRegistry</strong>,
+                <strong> FundingPool</strong>, and <strong>GrantManager</strong>.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                For integrators, the practical consequence is simple: round creation and voting stay conceptually familiar,
+                but the post-settlement path is now richer. Indexers, frontend pages, and operational runbooks should account
+                for review events, low-quality markers, staged payouts, milestone proof requests, and reviewer validation outcomes.
+              </p>
+            </section>
+
             <section id="quickstart" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Quick Start (5 min)</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
@@ -126,11 +141,13 @@ npm run dev`}
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">The Graph Integration</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 BERT frontend supports hybrid reads: direct on-chain RPC plus indexed reads from The Graph.
-                Set <code>NEXT_PUBLIC_SUBGRAPH_URL</code> to enable indexed queries for rounds, ideas, and votes pages.
+                In V2, indexed coverage matters more because the protocol now emits a broader execution trail than simple ideas
+                and votes. Set <code>NEXT_PUBLIC_SUBGRAPH_URL</code> to enable indexed queries for rounds, ideas, reviews,
+                milestone activity, and payout-related history.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Production recommendation: keep subgraph start blocks close to deployment blocks, monitor indexing status in Studio,
-                and keep RPC fallback enabled for critical reads.
+                Production recommendation: keep subgraph start blocks aligned with original proxy deployment blocks when using
+                upgradeable contracts, monitor indexing status in Studio, and keep RPC fallback enabled for critical live reads.
               </p>
             </section>
 
@@ -157,6 +174,11 @@ npm run dev`}
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Review/curation permissions are also status-bound and role-bound. Keep client-side validation aligned with contract guards to avoid confusing raw revert output.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                V2 adds another layer that frontend and indexer developers should model explicitly: grant execution has internal
+                checkpoints even when high-level idea status still looks familiar. Initial claim, milestone review state, and
+                later releases should be treated as first-class UI concepts rather than hidden side effects.
               </p>
             </section>
 
@@ -200,6 +222,7 @@ npm run dev`}
                   <li>Roles are wired: voting, grant, distributor, registry, reputation, progression.</li>
                   <li>Pause states are correct for FundingPool / VotingSystem / GrantManager.</li>
                   <li>Critical parameters validated: <code>minStake</code>, <code>IDEAS_PER_ROUND</code>, payout shares, faucet limits.</li>
+                  <li>V2-specific smoke checks pass: review flow, milestone proof flow, and staged payout visibility.</li>
                   <li>Smoke test done from non-admin wallet: claim faucet, create idea, vote, close round.</li>
                 </ul>
               </div>
@@ -233,7 +256,21 @@ npm run dev`}
                             Live metrics come from on-chain reads and indexed sources where available. Some roadmap sections describe planned protocol direction.
                           </div>
                 
-                          <div className="mt-10 grid gap-10 border-b border-white/20 pb-10 lg:grid-cols-4">
+                          <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
+                            <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
+                              <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
+                              <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
+                              <a className="footer-link" href="/terms-of-use">Terms of Use</a>
+                            </div>
+                            <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                              <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                              <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                            </div>
+                          </div>
+
+                          <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
                             <div>
                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                                 BERT Products
@@ -284,20 +321,21 @@ npm run dev`}
                             </div>
                           </div>
                 
-                          <div className="mt-10 grid gap-10 lg:grid-cols-4">
+                          <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
                             <div>
-                                <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                  Social Links
-                              </h4>
-                              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                                <a href="https://github.com/tenyokj"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="https://www.reddit.com/user/PralineSeparate5261/"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                                <a href="mailto:av7794257@gmail.com"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                Analytics
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Social Links
+              </h4>
+              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
+                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                Analytics
                               </h4>
                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
                                 <a className="footer-link" href="/protocol-stats">Protocol stats</a>

@@ -193,6 +193,12 @@ const managedContracts: ManagedContractConfig[] = [
     abi: ideaRegistryAbi,
     linked: [
       {
+        key: "fundingPool",
+        label: "fundingPool",
+        readFn: "fundingPool",
+        setterFn: "setFundingPool",
+      },
+      {
         key: "reputationSystem",
         label: "reputationSystem",
         readFn: "reputationSystem",
@@ -559,14 +565,14 @@ export default function AdminPage() {
 
   return (
     <section className="space-y-6">
-      <article className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#2a2d3b] p-6 md:p-8">
+      <article className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <div className="pointer-events-none absolute -top-20 right-0 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
 
         <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-slate-400">BERT Control Center</p>
-            <h1 className="mt-3 font-[var(--font-display)] text-4xl text-white md:text-6xl">Admin Panel</h1>
+            <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Admin Panel</h1>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-emerald-300">
             <FaShieldAlt />
@@ -574,7 +580,7 @@ export default function AdminPage() {
           </span>
         </div>
 
-        <div className="relative mt-5 grid gap-3 md:grid-cols-4">
+        <div className="relative mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
             <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Managed contracts</p>
             <p className="mt-2 text-3xl font-semibold text-white">{availableContracts.length}</p>
@@ -632,7 +638,7 @@ export default function AdminPage() {
         <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-xs break-all text-slate-300">Tx: {txHash}</p>
       )}
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid gap-4 2xl:grid-cols-2">
         {managedContracts.map((contract) => {
           const state = states[contract.key];
           const contractAddress = contract.address ?? "";
@@ -641,7 +647,7 @@ export default function AdminPage() {
 
           return (
             <article key={contract.key} className="rounded-2xl border border-white/10 bg-[#2a2d3b] p-5">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-[var(--font-display)] text-2xl text-white">{contract.name}</h2>
                 <span
                   className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -660,7 +666,7 @@ export default function AdminPage() {
                 <span className="text-xs uppercase tracking-[0.12em] text-slate-400">Contract address</span>
                 <input
                   value={contractAddress}
-                  className="rounded-lg border border-white/10 bg-[#313443] px-3 py-2 text-sm text-slate-100 outline-none"
+                  className="min-w-0 break-all rounded-lg border border-white/10 bg-[#313443] px-3 py-2 text-sm text-slate-100 outline-none"
                   readOnly
                 />
               </label>

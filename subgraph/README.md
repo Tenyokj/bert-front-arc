@@ -6,12 +6,32 @@ This folder now contains a working local setup (Hardhat + local graph-node) and 
 
 - `subgraph.local.yaml` - local Hardhat manifest.
 - `subgraph.yaml` - sepolia template manifest.
+- `abis/` - self-contained ABI copies used by the subgraph build.
 - `src/mapping.ts` - handlers for:
   - `VotingRoundStarted`
   - `VotingRoundEnded`
   - `VoteCast`
   - `IdeaCreated`
   - `IdeaStatusUpdated`
+  - `IdeaMarkedLowQuality`
+  - `ReviewAdded`
+  - `AuthorStakeDeposited`
+  - `AuthorStakeSlashed`
+  - `IdeaFundsReserved`
+  - `FundsDistributed`
+  - `RoundFunded`
+  - `MilestoneProofSubmitted`
+  - `MilestoneReviewed`
+  - `MilestoneRejected`
+  - `MilestoneApproved`
+  - `WinningVoteRegistered`
+  - `RoleGranted`
+  - `ProgressionReset`
+  - `ReputationInitialized`
+  - `ReputationIncreased`
+  - `ReputationDecreased`
+  - `ReputationSet`
+  - `ReputationDeinitialized`
 - `docker-compose.local.yml` - local IPFS + Postgres + graph-node.
 - `package.json` - graph CLI scripts.
 
@@ -54,6 +74,13 @@ npm run deploy:local
 graph auth --studio <DEPLOY_KEY>
 ```
 4. Put Sepolia contract addresses + start blocks into `subgraph.yaml`.
+   Replace all six protocol addresses:
+   - `VotingSystem`
+   - `IdeaRegistry`
+   - `FundingPool`
+   - `GrantManager`
+   - `VoterProgression`
+   - `ReputationSystem`
 5. Deploy:
 ```bash
 graph deploy --studio <SUBGRAPH_SLUG> subgraph.yaml
