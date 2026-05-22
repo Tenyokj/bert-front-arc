@@ -63,7 +63,7 @@
 
 **Recommended Workflow**
 1. Localhost upgrade rehearsal
-2. Sepolia upgrade rehearsal
+2. Arc testnet upgrade rehearsal
 3. Production upgrade with audit and review
 
 **Upgrade Flow Diagram (ASCII)**

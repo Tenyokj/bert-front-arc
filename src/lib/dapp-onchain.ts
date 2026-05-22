@@ -1,5 +1,7 @@
 import { formatUnits } from "viem";
 
+export const USDC_DECIMALS = 6;
+
 export const IDEA_STATUS_LABELS = [
   "Pending",
   "Voting",
@@ -32,7 +34,7 @@ export function formatNumber(value: number | bigint | undefined) {
 
 export function formatTokenAmount(
   value: bigint | number | undefined,
-  decimals = 18,
+  decimals = USDC_DECIMALS,
   maxFractionDigits = 4
 ) {
   if (value === undefined) return "-";

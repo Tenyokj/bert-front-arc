@@ -33,13 +33,13 @@
 1. Admin-only setters in upgradeable contracts
 2. Upgrades for new parameters or constraints
 
-**Recommended Defaults (Local/Sepolia)**
+**Recommended Defaults (Local/Arc Testnet)**
 1. `IDEAS_PER_ROUND = 30`
 2. `VOTING_DURATION = 1 day`
 3. `minStake = 3000 * 10**18`
 4. `authorSharePercent = 95`
 
 **Parameter Change Guidance**
-1. Prefer changes on Sepolia before any production environment
+1. Prefer changes on Arc testnet before any production environment
 2. Document changes and expected impact
 3. Re-run post-deploy checks after updates

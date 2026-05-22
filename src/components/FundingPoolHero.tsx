@@ -5,7 +5,8 @@ import * as THREE from "three";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { contracts, fundingPoolAbi, governanceTokenAbi } from "@/lib/contracts";
+import { contracts, fundingPoolAbi, usdcAbi } from "@/lib/contracts";
+import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 
 const RING_POINTS = 3000;
 const FLOW_POINTS = 1700;
@@ -60,7 +61,7 @@ export function FundingPoolHero() {
   const [amount, setAmount] = useState("");
 
   const fundingPool = contracts.fundingPool;
-  const token = contracts.governanceToken;
+  const token = contracts.usdc;
   const hasContracts = Boolean(fundingPool && token);
 
   const { data: totalPoolBalance } = useReadContract({
@@ -93,7 +94,7 @@ export function FundingPoolHero() {
 
   const { data: allowance } = useReadContract({
     address: token,
-    abi: governanceTokenAbi,
+    abi: usdcAbi,
     functionName: "allowance",
     args: address && fundingPool ? [address, fundingPool] : undefined,
     query: { enabled: Boolean(token && fundingPool && address) },
@@ -101,7 +102,7 @@ export function FundingPoolHero() {
 
   const { data: balance } = useReadContract({
     address: token,
-    abi: governanceTokenAbi,
+    abi: usdcAbi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
     query: { enabled: Boolean(token && address) },
@@ -125,7 +126,7 @@ export function FundingPoolHero() {
 
   const parsedAmount = useMemo(() => {
     try {
-      return amount.trim() ? parseUnits(amount.trim(), 18) : 0n;
+      return amount.trim() ? parseUnits(amount.trim(), USDC_DECIMALS) : 0n;
     } catch {
       return -1n;
     }
@@ -145,10 +146,10 @@ export function FundingPoolHero() {
     isDepositConfirming ||
     Boolean(poolPausedValue);
 
-  const formatBtk = (value?: bigint) => {
+  const formatUsdc = (value?: bigint) => {
     if (value === undefined) return "...";
-    const asNumber = Number(formatUnits(value, 18));
-    if (!Number.isFinite(asNumber)) return formatUnits(value, 18);
+    const asNumber = Number(formatUnits(value, USDC_DECIMALS));
+    if (!Number.isFinite(asNumber)) return formatUnits(value, USDC_DECIMALS);
     return new Intl.NumberFormat("en-US", {
       maximumFractionDigits: asNumber >= 1000 ? 0 : 4,
     }).format(asNumber);
@@ -358,18 +359,18 @@ export function FundingPoolHero() {
       <div className="relative z-10 flex min-h-[78vh] flex-col items-center justify-center px-6 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-slate-100">Funding Pool</p>
         <h1 className="mt-4 font-[var(--font-display)] text-5xl leading-none text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.42)] md:text-8xl">
-          {formatBtk(totalPoolBalance as bigint | undefined)} BTK
+          {formatUsdc(totalPoolBalance as bigint | undefined)} USDC
         </h1>
         <p className="mt-4 max-w-2xl text-base text-slate-100/90 md:text-lg">Total balance currently available for DAO grant distribution.</p>
         <p className="mt-2 text-sm text-slate-200/90">
           Distributions: {distributionCount === undefined ? "..." : String(distributionCount)} | My deposits:{" "}
-          {formatBtk(donorBalance as bigint | undefined)} BTK
+          {formatUsdc(donorBalance as bigint | undefined)} USDC
         </p>
         <div className="mt-5 flex w-full max-w-lg items-center gap-2">
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            placeholder="Amount in BTK"
+            placeholder="Amount in USDC"
             className="min-w-0 flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300"
           />
           {needApprove ? (
@@ -380,7 +381,7 @@ export function FundingPoolHero() {
                 if (!token || !fundingPool || parsedAmount <= 0n) return;
                 sendApprove({
                   address: token,
-                  abi: governanceTokenAbi,
+                  abi: usdcAbi,
                   functionName: "approve",
                   args: [fundingPool, parsedAmount],
                   gas: 200_000n,
@@ -410,7 +411,7 @@ export function FundingPoolHero() {
             </button>
           )}
         </div>
-        {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient BTK balance.</p>}
+        {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance.</p>}
         {poolPausedValue && <p className="mt-2 text-xs text-amber-200">FundingPool is paused by admin.</p>}
         {!hasContracts && (
           <p className="mt-2 text-xs text-amber-200">Set `NEXT_PUBLIC_FUNDING_POOL_ADDRESS` and `NEXT_PUBLIC_GOVERNANCE_TOKEN_ADDRESS` in `.env`.</p>

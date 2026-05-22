@@ -5,14 +5,15 @@ import { formatUnits } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 
 import { contracts, fundingPoolAbi } from "@/lib/contracts";
+import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 
-function formatBtk(value?: bigint) {
+function formatUsdc(value?: bigint) {
   if (value === undefined) return "-";
-  const asNumber = Number(formatUnits(value, 18));
-  if (!Number.isFinite(asNumber)) return `${formatUnits(value, 18)} BTK`;
+  const asNumber = Number(formatUnits(value, USDC_DECIMALS));
+  if (!Number.isFinite(asNumber)) return `${formatUnits(value, USDC_DECIMALS)} USDC`;
   return `${new Intl.NumberFormat("en-US", {
     maximumFractionDigits: asNumber >= 1000 ? 0 : 2,
-  }).format(asNumber)} BTK`;
+  }).format(asNumber)} USDC`;
 }
 
 export function PoolStats() {
@@ -68,8 +69,8 @@ export function PoolStats() {
 
   const shareOfPool = useMemo(() => {
     if (!donorBalanceValue || !totalPoolBalanceValue || totalPoolBalanceValue === 0n) return "0.00%";
-    const donor = Number(formatUnits(donorBalanceValue, 18));
-    const total = Number(formatUnits(totalPoolBalanceValue, 18));
+    const donor = Number(formatUnits(donorBalanceValue, USDC_DECIMALS));
+    const total = Number(formatUnits(totalPoolBalanceValue, USDC_DECIMALS));
     if (!Number.isFinite(donor) || !Number.isFinite(total) || total === 0) return "0.00%";
     const pct = (donor / total) * 100;
     if (!Number.isFinite(pct)) return "0.00%";
@@ -118,7 +119,7 @@ export function PoolStats() {
 
         <article className="group rounded-2xl border border-white/10 bg-[#2a2d3b] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/35">
           <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Protocol reserve</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-100">{formatBtk(protocolReserveValue)}</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-100">{formatUsdc(protocolReserveValue)}</p>
           <p className="mt-2 text-sm text-slate-300">Source: FundingPool.`protocolReserve()`</p>
           <div className="mt-4 inline-flex rounded-full border border-yellow-300/40 bg-yellow-300/10 px-3 py-1 text-xs font-semibold text-yellow-200">
             Reserved liquidity buffer
@@ -135,8 +136,8 @@ export function PoolStats() {
 
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-black/15 p-4">
-            <p className="text-xs uppercase tracking-[0.08em] text-slate-400">Your deposited BTK</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-100">{formatBtk(donorBalanceValue)}</p>
+            <p className="text-xs uppercase tracking-[0.08em] text-slate-400">Your deposited USDC</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-100">{formatUsdc(donorBalanceValue)}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-black/15 p-4">
             <p className="text-xs uppercase tracking-[0.08em] text-slate-400">Share of pool</p>
@@ -147,7 +148,7 @@ export function PoolStats() {
             <p className="mt-2 break-all text-sm font-semibold text-slate-200">
               {hydrated ? address || "Not connected" : "Not connected"}
             </p>
-            <p className="mt-2 text-xs text-slate-400">Pool balance: {formatBtk(totalPoolBalanceValue)}</p>
+            <p className="mt-2 text-xs text-slate-400">Pool balance: {formatUsdc(totalPoolBalanceValue)}</p>
           </div>
         </div>
       </article>

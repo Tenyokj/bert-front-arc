@@ -8,7 +8,6 @@ import {
   ReviewAdded,
 } from "../generated/IdeaRegistry/IdeaRegistryUpgradeable";
 import {
-  FundingPoolUpgradeable,
   AuthorStakeDeposited,
   AuthorStakeSlashed,
   FundsDistributed,

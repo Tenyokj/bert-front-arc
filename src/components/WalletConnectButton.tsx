@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 
 import { defaultChain, supportedChains } from "@/lib/web3";
@@ -19,6 +19,7 @@ export function WalletConnectButton() {
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain, isPending: isSwitchPending } = useSwitchChain();
+  const autoSwitchAttemptedRef = useRef<number | null>(null);
 
   const preferredConnector = useMemo(
     () => {
@@ -36,6 +37,22 @@ export function WalletConnectButton() {
     [connectors]
   );
 
+  const isSupported = chain
+    ? supportedChains.some((supportedChain) => supportedChain.id === chain.id)
+    : false;
+  const isOnDefaultChain = chain?.id === defaultChain.id;
+
+  useEffect(() => {
+    if (!hydrated || !isConnected || !chain || !switchChain) return;
+    if (chain.id === defaultChain.id) {
+      autoSwitchAttemptedRef.current = null;
+      return;
+    }
+    if (autoSwitchAttemptedRef.current === chain.id) return;
+    autoSwitchAttemptedRef.current = chain.id;
+    switchChain({ chainId: defaultChain.id });
+  }, [chain, hydrated, isConnected, switchChain]);
+
   if (!hydrated || !isConnected) {
     return (
       <button
@@ -49,30 +66,25 @@ export function WalletConnectButton() {
     );
   }
 
-  const isSupported = chain
-    ? supportedChains.some((supportedChain) => supportedChain.id === chain.id)
-    : false;
-  const isOnDefaultChain = chain?.id === defaultChain.id;
-
   return (
     <div className="flex items-center gap-2">
-      {(!isSupported || !isOnDefaultChain) && (
-        <button
-          type="button"
-          onClick={() => switchChain({ chainId: defaultChain.id })}
-          disabled={isSwitchPending}
-          className="rounded-lg border border-amber-300/45 bg-amber-300/10 px-3 py-2 text-xs font-semibold text-amber-100 transition-colors hover:border-amber-300/70 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSwitchPending ? "Switching..." : `Switch to ${defaultChain.name}`}
-        </button>
-      )}
       <button
         type="button"
         onClick={() => disconnect()}
-        className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-cyan-300/45"
+        className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+          !isSupported || !isOnDefaultChain
+            ? "border-amber-300/45 bg-amber-300/10 text-amber-100"
+            : "border-white/15 bg-white/5 text-slate-100 hover:border-cyan-300/45"
+        }`}
         title={chain ? `${chain.name} (${chain.id})` : undefined}
       >
-        {address ? shortAddress(address) : "Connected"}
+        {!isSupported || !isOnDefaultChain
+          ? isSwitchPending
+            ? "Switching to Arc..."
+            : "Arc required"
+          : address
+            ? shortAddress(address)
+            : "Connected"}
       </button>
     </div>
   );

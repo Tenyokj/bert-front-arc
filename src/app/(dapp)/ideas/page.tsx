@@ -224,7 +224,7 @@ function IdeasPageContent() {
               <p className="mt-2 line-clamp-2 text-sm text-slate-300">{idea.description}</p>
               <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                 <p className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">
-                  Total votes: {formatTokenAmount(idea.totalVotes)} BTK
+                  Total votes: {formatTokenAmount(idea.totalVotes)} USDC
                 </p>
                 <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">
                   <p className="mb-1 text-slate-300">Author:</p>

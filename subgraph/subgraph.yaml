@@ -5,11 +5,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: VotingSystem
-    network: sepolia
+    network: arc-testnet
     source:
-      address: "0x34B611EFEc9ce93d5443Bfcf1fc7D10640cfb943"
+      address: "0xD008fC96902A9680FF77305881Ad6C6C075e7a68"
       abi: VotingSystemUpgradeable
-      startBlock: 10267348
+      startBlock: 43491899
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -31,11 +31,11 @@ dataSources:
 
   - kind: ethereum
     name: IdeaRegistry
-    network: sepolia
+    network: arc-testnet
     source:
-      address: "0xFf4F0AEeCe93847d68E0FF169142E64f613850BE"
+      address: "0xE6563acfdc194Ba3861EfD928Bd8B1B33a5D29d5"
       abi: IdeaRegistryUpgradeable
-      startBlock: 10267341
+      startBlock: 43491885
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -59,11 +59,11 @@ dataSources:
 
   - kind: ethereum
     name: FundingPool
-    network: sepolia
+    network: arc-testnet
     source:
-      address: "0x822e853dB65B288FE01Ca76Ed6e8B4895070F32D"
+      address: "0x5eDdccd772a9E0F079cC6646b529C20e3D46e585"
       abi: FundingPoolUpgradeable
-      startBlock: 10267346
+      startBlock: 43491892
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -87,11 +87,11 @@ dataSources:
 
   - kind: ethereum
     name: GrantManager
-    network: sepolia
+    network: arc-testnet
     source:
-      address: "0x0efEF5542f41e705cdf402070268C42473281FEA"
+      address: "0xA110baB4562d59d8bb7eDA4a05E53F40c678ccB2"
       abi: GrantManagerUpgradeable
-      startBlock: 10267350
+      startBlock: 43491905
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -117,11 +117,11 @@ dataSources:
 
   - kind: ethereum
     name: VoterProgression
-    network: sepolia
+    network: arc-testnet
     source:
-      address: "0x4f654ED420Bd2F8EB01060f48b9bE8fAb787c94f"
+      address: "0xF6EB65957bb5e363FCD6B84AAdf76E41Ba754E14"
       abi: VoterProgressionUpgradeable
-      startBlock: 10267339
+      startBlock: 43491879
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -142,11 +142,11 @@ dataSources:
 
   - kind: ethereum
     name: ReputationSystem
-    network: sepolia
+    network: arc-testnet
     source:
-      address: "0x51d08e9871e06763E7f34BCea4D359DC217DC6A5"
+      address: "0x3594C46983460733F6470f7b61De2f3bB2918a81"
       abi: ReputationSystemUpgradeable
-      startBlock: 10267337
+      startBlock: 43491873
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

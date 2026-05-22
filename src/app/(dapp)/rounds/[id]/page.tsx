@@ -10,12 +10,12 @@ import { useAccount, usePublicClient, useReadContract, useWaitForTransactionRece
 import { AddressIdentity } from "@/components/AddressIdentity";
 import {
   contracts,
-  governanceTokenAbi,
   grantManagerAbi,
   ideaRegistryAbi,
+  usdcAbi,
   votingSystemAbi,
 } from "@/lib/contracts";
-import { formatDateTimeFromUnix, mapIdeaStatus, shortAddress } from "@/lib/dapp-onchain";
+import { formatDateTimeFromUnix, mapIdeaStatus, shortAddress, USDC_DECIMALS } from "@/lib/dapp-onchain";
 import {
   fetchIdeasByIdsFromSubgraph,
   fetchRoundByIdFromSubgraph,
@@ -50,20 +50,20 @@ function safeParseAmount(value: string) {
   const input = value.trim();
   if (!input) return 0n;
   try {
-    return parseUnits(input, 18);
+    return parseUnits(input, USDC_DECIMALS);
   } catch {
     return -1n;
   }
 }
 
-function formatBtk(value: bigint | number | undefined) {
+function formatUsdc(value: bigint | number | undefined) {
   if (value === undefined) return "-";
   const raw = typeof value === "bigint" ? value : BigInt(value);
-  const asNumber = Number(formatUnits(raw, 18));
-  if (!Number.isFinite(asNumber)) return `${formatUnits(raw, 18)} BTK`;
+  const asNumber = Number(formatUnits(raw, USDC_DECIMALS));
+  if (!Number.isFinite(asNumber)) return `${formatUnits(raw, USDC_DECIMALS)} USDC`;
   return `${new Intl.NumberFormat("en-US", {
     maximumFractionDigits: asNumber >= 1000 ? 0 : 4,
-  }).format(asNumber)} BTK`;
+  }).format(asNumber)} USDC`;
 }
 
 function prettyRoundError(message?: string) {
@@ -145,23 +145,23 @@ export default function RoundDetailsPage() {
   });
 
   const { data: allowance } = useReadContract({
-    address: contracts.governanceToken,
-    abi: governanceTokenAbi,
+    address: contracts.usdc,
+    abi: usdcAbi,
     functionName: "allowance",
     args:
       address && contracts.fundingPool ? [address, contracts.fundingPool] : undefined,
     query: {
-      enabled: Boolean(address && contracts.governanceToken && contracts.fundingPool),
+      enabled: Boolean(address && contracts.usdc && contracts.fundingPool),
     },
   });
 
   const { data: tokenBalance } = useReadContract({
-    address: contracts.governanceToken,
-    abi: governanceTokenAbi,
+    address: contracts.usdc,
+    abi: usdcAbi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
     query: {
-      enabled: Boolean(address && contracts.governanceToken),
+      enabled: Boolean(address && contracts.usdc),
     },
   });
 
@@ -451,7 +451,7 @@ export default function RoundDetailsPage() {
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <p className="text-sm text-slate-200">Total votes: {formatBtk(round.totalVotes)}</p>
+          <p className="text-sm text-slate-200">Total votes: {formatUsdc(round.totalVotes)}</p>
           {shouldShowEndRoundButton ? (
             <button
               disabled={!isConnected || !canEndRound || isEndPending || isEndConfirming}
@@ -520,9 +520,9 @@ export default function RoundDetailsPage() {
             New payout flow: claim 30% here, then submit and review milestone proofs on the winning idea page for the 40% in-process and final 30% release.
           </p>
         )}
-        {contracts.governanceToken && contracts.fundingPool && (
+        {contracts.usdc && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
-            Wallet balance: {formatBtk(tokenBalanceValue)} | Allowance to FundingPool: {formatBtk(allowanceValue)} | Min stake: {formatBtk(minStakeValue)}
+            Wallet balance: {formatUsdc(tokenBalanceValue)} | Allowance to FundingPool: {formatUsdc(allowanceValue)} | Min stake: {formatUsdc(minStakeValue)}
           </p>
         )}
 
@@ -597,13 +597,13 @@ export default function RoundDetailsPage() {
 
                 <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                   <p className="rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
-                    Round votes: {formatBtk(idea.roundVotes)}
+                    Round votes: {formatUsdc(idea.roundVotes)}
                   </p>
                   <p className="rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
                     Voters: {idea.votersCount}
                   </p>
                   <p className="col-span-2 rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
-                    All-time votes: {formatBtk(idea.totalVotesOverall)}
+                    All-time votes: {formatUsdc(idea.totalVotesOverall)}
                   </p>
                   <div className="col-span-2 rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
                     <p className="mb-1 text-slate-300">Author:</p>
@@ -622,17 +622,17 @@ export default function RoundDetailsPage() {
                       }));
                     }}
                     className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#232632] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60"
-                    placeholder="Vote amount in BTK"
+                    placeholder="Vote amount in USDC"
                   />
                   {needApprove ? (
                     <button
                       type="button"
-                      disabled={!isConnected || parsedAmount <= 0n || isApprovePending || isApproveConfirming || !contracts.governanceToken || !contracts.fundingPool || isOwnIdea}
+                      disabled={!isConnected || parsedAmount <= 0n || isApprovePending || isApproveConfirming || !contracts.usdc || !contracts.fundingPool || isOwnIdea}
                       onClick={() => {
-                        if (!contracts.governanceToken || !contracts.fundingPool || parsedAmount <= 0n) return;
+                        if (!contracts.usdc || !contracts.fundingPool || parsedAmount <= 0n) return;
                         sendApprove({
-                          address: contracts.governanceToken,
-                          abi: governanceTokenAbi,
+                          address: contracts.usdc,
+                          abi: usdcAbi,
                           functionName: "approve",
                           args: [contracts.fundingPool, parsedAmount],
                           gas: 200_000n,
@@ -662,7 +662,7 @@ export default function RoundDetailsPage() {
                   </button>
                   )}
                 </div>
-                {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient BTK balance for this vote amount.</p>}
+                {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance for this vote amount.</p>}
                 {belowMinStake && <p className="mt-2 text-xs text-rose-300">Amount is below `minStake`.</p>}
                 {isOwnIdea && <p className="mt-2 text-xs text-rose-300">You cannot vote for your own idea.</p>}
                 {!isOwnIdea && userHasVotedValue && <p className="mt-2 text-xs text-rose-300">You already voted in this round (one vote per wallet per round).</p>}

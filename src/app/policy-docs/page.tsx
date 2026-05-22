@@ -7,15 +7,15 @@ import {
   contracts,
   votingSystemAbi,
   grantManagerAbi,
-  brtfaucetAbi,
   fundingPoolAbi,
 } from "@/lib/contracts";
-import { FaExternalLinkAlt, FaGithub, FaMailBulk, FaReddit, FaTelegramPlane } from "react-icons/fa";
-import ParticleText from "@/components/ParticleText";
+import { USDC_DECIMALS } from "@/lib/dapp-onchain";
+import { FaExternalLinkAlt } from "react-icons/fa";
+import SiteFooter from "@/components/SiteFooter";
 
-function formatBtk(value?: bigint) {
+function formatUsdc(value?: bigint) {
   if (value === undefined) return "—";
-  const num = Number(formatUnits(value, 18));
+  const num = Number(formatUnits(value, USDC_DECIMALS));
   if (!Number.isFinite(num)) return "—";
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(num);
 }
@@ -69,20 +69,6 @@ export default function PolicyDocsPage() {
     query: { enabled: Boolean(contracts.grantManager) },
   });
 
-  const { data: claimAmount } = useReadContract({
-    address: contracts.faucet,
-    abi: brtfaucetAbi,
-    functionName: "claimAmount",
-    query: { enabled: Boolean(contracts.faucet) },
-  });
-
-  const { data: faucetCooldown } = useReadContract({
-    address: contracts.faucet,
-    abi: brtfaucetAbi,
-    functionName: "cooldown",
-    query: { enabled: Boolean(contracts.faucet) },
-  });
-
   const { data: totalPoolBalance } = useReadContract({
     address: contracts.fundingPool,
     abi: fundingPoolAbi,
@@ -109,9 +95,9 @@ export default function PolicyDocsPage() {
             <Link href="/rounds" className="transition-colors hover:text-slate-900">
               Active rounds
             </Link>
-            <Link href="/faq" className="transition-colors hover:text-slate-900">
+            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
               Docs
-            </Link>
+            </a>
           </nav>
           <Link
             href="/rounds"
@@ -150,12 +136,10 @@ export default function PolicyDocsPage() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">IDEAS_PER_ROUND</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{ideasPerRound?.toString() ?? "—"}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">VOTING_DURATION</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatSeconds(votingDuration as bigint | undefined)}</p></div>
-                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">minStake</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatBtk(minStake as bigint | undefined)} BTK</p></div>
+                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">minStake</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(minStake as bigint | undefined)} USDC</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">MAX_VOTERS_PER_IDEA</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{maxVotersPerIdea?.toString() ?? "—"}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">authorSharePercent</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{authorSharePercent?.toString() ?? "—"}%</p></div>
-                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Pool Balance</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatBtk(totalPoolBalance as bigint | undefined)} BTK</p></div>
-                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Faucet claimAmount</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatBtk(claimAmount as bigint | undefined)} BTK</p></div>
-                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Faucet cooldown</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatSeconds(faucetCooldown as bigint | undefined)}</p></div>
+                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Pool Balance</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(totalPoolBalance as bigint | undefined)} USDC</p></div>
               </div>
             </section>
 
@@ -225,10 +209,10 @@ export default function PolicyDocsPage() {
             <section id="started" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Get Started Policy</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                First-time user sequence: connect wallet, verify network, claim test BTK, approve BTK spending, then create idea or vote in active round. If transactions fail, troubleshoot in this order: network alignment, addresses, pause state, role constraints.
+                First-time user sequence: connect wallet, verify network, fund the wallet with test USDC, approve USDC spending, then create an idea or vote in an active round. If transactions fail, troubleshoot in this order: network alignment, addresses, pause state, role constraints.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Team policy for rollout: prove flows locally first, then repeat on Sepolia with fresh addresses from one deployment session before wider release.
+                Team policy for rollout: prove flows locally first, then repeat on Arc testnet with fresh addresses from one deployment session before wider release.
               </p>
             </section>
 
@@ -239,111 +223,7 @@ export default function PolicyDocsPage() {
             </section>
           </main>
         </div>
-                        <footer className="relative mt-32 border-t border-white/20 pb-16 pt-12">
-                           <div className="pointer-events-none absolute -left-10 top-8 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.25),transparent_65%)] blur-2xl" />
-                           <div className="pointer-events-none absolute right-[-3rem] top-16 h-52 w-52 rounded-full bg-[radial-gradient(circle,rgba(244,63,94,0.22),transparent_65%)] blur-2xl" />
-                           <div className="text-sm text-slate-500">
-                             Live metrics come from on-chain reads and indexed sources where available. Some roadmap sections describe planned protocol direction.
-                           </div>
-                 
-                           <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
-                             <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
-                               <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
-                               <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
-                               <a className="footer-link" href="/terms-of-use">Terms of Use</a>
-                             </div>
-                             <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                               <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                               <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                               <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                               <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                             </div>
-                           </div>
-
-                           <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
-                             <div>
-                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                 BERT Products
-                               </h4>
-                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/IdeaRegistryUpgradeable.md">Idea Registry</a>
-                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/VotingSystemUpgradeable.md">Voting Rounds</a>
-                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/GrantManagerUpgradeable.md">Grant Engine</a>
-                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/ReputationSystemUpgradeable.md">Reputation Layer</a>
-                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/docs/UPGRADES.md">Upgrade Modules</a>
-                               </div>
-                             </div>
-                 
-                             <div>
-                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                 BERT DAO
-                               </h4>
-                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                 <a className="footer-link" href="/governance-stack">Governance stack</a>
-                                 <a className="footer-link" href="/policy-docs">Policy docs</a>
-                                 <a className="footer-link" href="/on-chain-votes">On-chain votes</a>
-                                 <a className="footer-link" href="/treasury-policies">Treasury policies</a>
-                               </div>
-                             </div>
-                 
-                             <div>
-                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                 Builders
-                               </h4>
-                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                 <a className="footer-link" href="https://bertdao-docs.vercel.app">Docs</a>
-                                 <a className="footer-link" href="/developer-guide">Developer guide</a>
-                                 <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/docs/CONTRACTS.md">Smart contracts</a>
-                               </div>
-                             </div>
-                 
-                             <div>
-                               <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                                 Resources
-                               </h4>
-                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                 <a className="footer-link" href="/how-it-works">How it works</a>
-                                 <a className="footer-link" href="/faq">FAQ</a>
-                                 <a className="footer-link" href="/sepolia-guide">Sepolia guide</a>
-                                 <a className="footer-link" href="/press-kit">Press kit</a>
-                                 <a className="footer-link" href="/build-dapps">Build dApps</a>
-                               </div>
-                             </div>
-                           </div>
-                 
-                           <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
-                             <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Social Links
-              </h4>
-              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Analytics
-                               </h4>
-                               <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                                 <a className="footer-link" href="/protocol-stats">Protocol stats</a>
-                                 <a className="footer-link" href="/treasury-policies#reporting">Treasury metrics</a>
-                               </div>
-                             </div>
-                             <div className="lg:col-span-2">
-                               <div className="flex flex-col gap-3 text-lg text-slate-500 dark:text-slate-300 lg:flex-row lg:items-center lg:justify-end">
-                                 <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
-                                 <a className="footer-link" href="/terms-of-use">Terms of Use</a>
-                                 <a className="footer-link" href="/security-roadmap">Security Roadmap</a>
-                               </div>
-                               <div className="mt-2 ml-auto w-fit">
-                                 <ParticleText text="BERT" width={680} height={160} />
-                               </div>
-                             </div>
-                           </div>
-                         </footer>
+                        <SiteFooter />
       </div>
     </div>
   );

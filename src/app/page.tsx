@@ -1,8 +1,8 @@
 import Link from "next/link";
-import HeroLogo3D from "@/components/HeroLogo3D";
+import HeroLogo3DClient from "@/components/HeroLogo3DClient";
 import { HomeLiveStats } from "@/components/HomeLiveStats";
 import { HomeStrategyCards } from "@/components/HomeStrategyCards";
-import ParticleText from "@/components/ParticleText";
+import SiteFooter from "@/components/SiteFooter";
 import {
   FaGithub,
   FaShieldAlt,
@@ -13,9 +13,6 @@ import {
   FaGavel,
   FaChartLine,
   FaUsers,
-  FaMailBulk,
-  FaReddit,
-  FaTelegramPlane,
   FaLock,
   FaCoins,
   FaCheckCircle,
@@ -26,7 +23,7 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <div className="hero-ambient absolute inset-0" />
-      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-16 pt-0 sm:px-6 sm:pb-20">
+      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
@@ -43,9 +40,9 @@ export default function Home() {
             <Link href="/rounds" className="transition-colors hover:text-slate-900">
               Active rounds
             </Link>
-            <Link href="/faq" className="transition-colors hover:text-slate-900">
+            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
               Docs
-            </Link>
+            </a>
           </nav>
           <Link
             href="/rounds"
@@ -58,7 +55,7 @@ export default function Home() {
         <main className="mt-10 grid flex-1 items-center gap-10 lg:mt-14 lg:gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="order-2 flex items-center justify-center lg:order-1 lg:justify-left">
             <div className="relative">
-              <HeroLogo3D />
+              <HeroLogo3DClient />
               <div className="absolute -bottom-4 left-1/2 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 gap-2 rounded-full border border-white/60 bg-white/80 px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.12)] sm:-bottom-6 sm:gap-3 sm:px-4 sm:text-xs">
                 <span className="text-teal-600">Live</span>
                 <span>Transparent distribution</span>
@@ -68,17 +65,16 @@ export default function Home() {
 
           <div className="order-1 lg:order-2">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-teal-600">
-              BERT Protocol V2
+              BERT Protocol on Arc
             </p>
             <h1 className="mt-4 font-[var(--font-display)] text-4xl font-normal leading-tight text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-7xl">
               Turn community proposals into funded outcomes with verifiable
               voting.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-slate-600 dark:text-slate-300 sm:mt-6 sm:text-xl">
-              BERT Protocol V2 extends the original grant engine with stronger
-              review signals, milestone-based delivery checks, and a more
-              explicit treasury execution path while preserving the same
-              modular, upgradeable architecture.
+              BERT is programmable USDC-native funding infrastructure for Arc.
+              It combines stake-backed proposal intake, stablecoin voting, and
+              milestone-based grant release inside a modular upgradeable stack.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
@@ -110,8 +106,10 @@ export default function Home() {
                   What changed in BERT Protocol V2
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg text-slate-700 dark:text-slate-200">
-                  V2 turns proposal funding into a stricter execution flow: <span className="font-semibold text-slate-900">5000 BTK</span> to create,
-                  then a <span className="font-semibold text-slate-900">30 / 40 / 30</span> release rail with validator checkpoints.
+                  Proposal funding now runs on a stablecoin-native execution
+                  path: <span className="font-semibold text-slate-900">50 USDC</span> to create,
+                  <span className="font-semibold text-slate-900"> 10 USDC</span> minimum to vote,
+                  and a <span className="font-semibold text-slate-900">30 / 40 / 30</span> release rail with validator checkpoints.
                 </p>
               </div>
               <Link
@@ -134,7 +132,7 @@ export default function Home() {
                         Proposal entry
                       </p>
                       <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-                        Minimum stake is now 5000 BTK
+                        Minimum idea deposit is now 50 USDC
                       </h3>
                       <p className="mt-3 text-base text-slate-700 dark:text-slate-200">
                         New ideas must be backed by real stake before they ever reach a round.
@@ -156,7 +154,7 @@ export default function Home() {
                         Funding now moves in 30 / 40 / 30
                       </h3>
                       <p className="mt-3 text-base text-slate-700 dark:text-slate-200">
-                        Winning no longer triggers a blind lump-sum treasury release.
+                        Winning ideas enter a staged release rail instead of a single treasury payout.
                       </p>
                     </div>
                   </div>
@@ -292,7 +290,7 @@ export default function Home() {
               <p className="mt-6 max-w-2xl text-2xl text-slate-600 dark:text-slate-300">
                 Each strategy combines the Idea Registry, voting logic, and
                 on-chain distribution into a single flow. Contributors see where
-                funds go, voters see impact, and DAO operators get a trusted
+                funds go, voters see impact, and treasury operators get a trusted
                 execution layer.
               </p>
             </div>
@@ -313,7 +311,7 @@ export default function Home() {
               BERT Grant Engine
             </p>
             <h2 className="mt-5 font-[var(--font-display)] text-4xl font-normal leading-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-8xl">
-              A transparent funding layer for DAOs, built to scale outcomes.
+              A transparent funding layer for onchain builder programs, built to scale outcomes.
             </h2>
             <p className="mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300 sm:text-xl lg:text-2xl">
               From proposal intake to on-chain payouts, BERT keeps every step
@@ -350,8 +348,8 @@ export default function Home() {
                     Integrations
                   </p>
                   <p className="mt-4 text-3xl text-slate-700 dark:text-slate-200 sm:text-4xl lg:text-5xl">
-                    Available wherever you need it with integrations across DAO
-                    stacks, treasury tooling, and governance dashboards.
+                    Available wherever you need it with integrations across
+                    treasury tooling, builder workflows, and governance dashboards.
                   </p>
                   <Link href="/how-it-works" className="mt-5 inline-block rounded-full bg-slate-900 px-6 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white">
                     View ecosystem
@@ -375,7 +373,7 @@ export default function Home() {
                   </p>
                   <p className="mt-4 text-3xl text-slate-700 dark:text-slate-200 sm:text-4xl lg:text-5xl">
                     Role-based permissions, upgradeable modules, and policy
-                    controls tailored to your DAO’s risk profile.
+                    controls tailored to your program’s risk profile.
                   </p>
                   <Link href="/governance-stack" className="mt-5 inline-block rounded-full bg-slate-900 px-6 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white">
                     Learn more
@@ -421,7 +419,7 @@ export default function Home() {
               Trust by Design
             </p>
             <h2 className="mt-5 font-[var(--font-display)] text-4xl font-semibold leading-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-8xl">
-              Uncompromised transparency for DAO‑grade grants.
+              Uncompromised transparency for stablecoin-native grants.
             </h2>
             <p className="mt-6 max-w-2xl text-lg text-slate-700 dark:text-slate-200 sm:text-xl lg:text-2xl">
               BERT is engineered for verifiable governance. Every action is
@@ -644,11 +642,11 @@ export default function Home() {
                 Ecosystem Roadmap
               </p>
               <h2 className="mt-6 font-[var(--font-display)] text-4xl font-semibold leading-tight text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-7xl">
-                Integration phases for a DAO‑native stack.
+                Integration phases for a stablecoin-native funding stack.
               </h2>
               <p className="mt-6 text-lg text-slate-700 dark:text-slate-200 sm:text-xl lg:text-2xl">
                 We’re rolling out integrations in waves. Each phase unlocks new
-                capabilities for contributors, treasury operators, and governance
+                capabilities for contributors, treasury operators, and grant
                 teams without locking us into specific partners too early.
               </p>
             </div>
@@ -677,7 +675,7 @@ export default function Home() {
                     Wallet + Voting
                   </h3>
                   <p className="mt-4 text-base text-slate-700 dark:text-slate-200 sm:text-lg">
-                    Core wallet onboarding, stake‑weighted voting, and proposal
+                    Core wallet onboarding, USDC-weighted voting, and proposal
                     submission flows.
                   </p>
                   <div className="mt-6 rounded-2xl border border-white/30 bg-white/30 p-4 text-sm text-slate-600 dark:text-slate-300">
@@ -734,111 +732,7 @@ export default function Home() {
           </div>
         </section>
 
-        <footer className="relative mt-32 border-t border-white/20 pb-16 pt-12">
-          <div className="pointer-events-none absolute -left-10 top-8 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.25),transparent_65%)] blur-2xl" />
-          <div className="pointer-events-none absolute right-[-3rem] top-16 h-52 w-52 rounded-full bg-[radial-gradient(circle,rgba(244,63,94,0.22),transparent_65%)] blur-2xl" />
-          <div className="text-sm text-slate-500">
-            Live cards use on-chain and indexed data where available. Roadmap and strategy blocks describe planned scope and may evolve.
-          </div>
-
-          <div className="mt-10 grid gap-4 border-b border-white/20 pb-8 md:hidden">
-            <div className="flex flex-wrap gap-3 text-base text-slate-600 dark:text-slate-300">
-              <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
-              <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
-              <a className="footer-link" href="/terms-of-use">Terms of Use</a>
-            </div>
-            <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
-              <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-              <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-              <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-              <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-            </div>
-          </div>
-
-          <div className="mt-10 hidden gap-10 border-b border-white/20 pb-10 md:grid lg:grid-cols-4">
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                BERT Products
-              </h4>
-              <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/IdeaRegistryUpgradeable.md">Idea Registry</a>
-                <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/VotingSystemUpgradeable.md">Voting Rounds</a>
-                <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/GrantManagerUpgradeable.md">Grant Engine</a>
-                <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/contracts/BERT/docs_contracts/ReputationSystemUpgradeable.md">Reputation Layer</a>
-                <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/docs/UPGRADES.md">Upgrade Modules</a>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                BERT DAO
-              </h4>
-              <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                <a className="footer-link" href="/governance-stack">Governance stack</a>
-                <a className="footer-link" href="/policy-docs">Policy docs</a>
-                <a className="footer-link" href="/on-chain-votes">On-chain votes</a>
-                <a className="footer-link" href="/treasury-policies">Treasury policies</a>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Builders
-              </h4>
-              <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                <a className="footer-link" href="https://bertdao-docs.vercel.app/">Docs</a>
-                <a className="footer-link" href="/developer-guide">Developer guide</a>
-                <a className="footer-link" href="https://github.com/Tenyokj/bert-core/blob/main/docs/CONTRACTS.md">Smart contracts</a>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Resources
-              </h4>
-              <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                <a className="footer-link" href="/how-it-works">How it works</a>
-                <a className="footer-link" href="/faq">FAQ</a>
-                        <a className="footer-link" href="/sepolia-guide">Sepolia guide</a>
-                <a className="footer-link" href="/press-kit">Press kit</a>
-                        <a className="footer-link" href="/build-dapps">Build dApps</a>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 hidden gap-10 md:grid lg:grid-cols-4">
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Social Links
-              </h4>
-              <div className="mt-6 flex items-center gap-5 text-slate-600 dark:text-slate-300">
-                <a href="https://github.com/tenyokj" aria-label="GitHub"><FaGithub className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                <a href="https://www.reddit.com/user/PralineSeparate5261/" aria-label="Reddit"><FaReddit className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram"><FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-                <a href="mailto:av7794257@gmail.com" aria-label="Email"><FaMailBulk className="text-2xl transition-transform duration-300 hover:-translate-y-1" /></a>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Analytics
-              </h4>
-              <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-                <a className="footer-link" href="/protocol-stats">Protocol stats</a>
-                <a className="footer-link" href="/treasury-policies#reporting">Treasury metrics</a>
-              </div>
-            </div>
-            <div className="lg:col-span-2">
-              <div className="flex flex-col gap-3 text-lg text-slate-500 dark:text-slate-300 lg:flex-row lg:items-center lg:justify-end">
-                <a className="footer-link" href="/privacy-notice">Privacy Notice</a>
-                <a className="footer-link" href="/terms-of-use">Terms of Use</a>
-                <a className="footer-link" href="/security-roadmap">Security Roadmap</a>
-              </div>
-              <div className="mt-2 ml-auto w-fit">
-                <ParticleText text="BERT" width={680} height={160} />
-              </div>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
     </div>
   );

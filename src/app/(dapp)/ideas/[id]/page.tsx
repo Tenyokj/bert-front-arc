@@ -698,7 +698,7 @@ export default function IdeaDetailsPage() {
             Created: {formatDateTimeFromUnix(idea.createdAt)}
           </p>
           <p className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
-            Total votes: {formatTokenAmount(idea.totalVotes)} BTK
+            Total votes: {formatTokenAmount(idea.totalVotes)} USDC
           </p>
           <p className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
             Status code: {String(idea.statusCode)}
@@ -719,8 +719,8 @@ export default function IdeaDetailsPage() {
             <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 xl:grid-cols-4">
               <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Round: #{roundId}</p>
               <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Claimable: {canClaimGrant ? "Yes" : "No"}</p>
-              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Total grant: {formatTokenAmount(payout?.totalGrant)} BTK</p>
-              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Released: {formatTokenAmount(payout?.released)} BTK</p>
+              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Total grant: {formatTokenAmount(payout?.totalGrant)} USDC</p>
+              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Released: {formatTokenAmount(payout?.released)} USDC</p>
             </div>
 
             <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
@@ -1014,7 +1014,7 @@ export default function IdeaDetailsPage() {
             )}
             {isAuthor && (
               <p className="text-xs text-slate-300">
-                Completion is no longer triggered manually by the author. Final completion now unlocks automatically after stage 2 proof approval.
+                Final completion unlocks automatically after stage 2 proof approval.
               </p>
             )}
             {reviewError && <p className="max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyTxError(reviewError.message)}</p>}

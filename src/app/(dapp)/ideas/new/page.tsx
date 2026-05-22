@@ -13,16 +13,17 @@ import {
 } from "wagmi";
 
 import {
-  contracts,  governanceTokenAbi,
+  contracts,
   ideaRegistryAbi,
+  usdcAbi,
 } from "@/lib/contracts";
-import { formatTokenAmount } from "@/lib/dapp-onchain";
+import { formatTokenAmount, USDC_DECIMALS } from "@/lib/dapp-onchain";
 
 function safeParseAmount(value: string) {
   const input = value.trim();
   if (!input) return 0n;
   try {
-    return parseUnits(input, 18);
+    return parseUnits(input, USDC_DECIMALS);
   } catch {
     return -1n;
   }
@@ -30,7 +31,7 @@ function safeParseAmount(value: string) {
 
 function formatPlainAmount(value: bigint | undefined) {
   if (value === undefined) return "";
-  return formatUnits(value, 18);
+  return formatUnits(value, USDC_DECIMALS);
 }
 
 function prettyCreateIdeaError(message?: string) {
@@ -116,19 +117,19 @@ export default function NewIdeaPage() {
   });
 
   const { data: allowance } = useReadContract({
-    address: contracts.governanceToken,
-    abi: governanceTokenAbi,
+    address: contracts.usdc,
+    abi: usdcAbi,
     functionName: "allowance",
     args: address && contracts.fundingPool ? [address, contracts.fundingPool] : undefined,
-    query: { enabled: Boolean(address && contracts.governanceToken && contracts.fundingPool) },
+    query: { enabled: Boolean(address && contracts.usdc && contracts.fundingPool) },
   });
 
   const { data: tokenBalance } = useReadContract({
-    address: contracts.governanceToken,
-    abi: governanceTokenAbi,
+    address: contracts.usdc,
+    abi: usdcAbi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: Boolean(address && contracts.governanceToken) },
+    query: { enabled: Boolean(address && contracts.usdc) },
   });
 
   useEffect(() => {
@@ -156,7 +157,7 @@ export default function NewIdeaPage() {
   const canApprove =
     hydrated &&
     isConnected &&
-    Boolean(contracts.governanceToken && contracts.fundingPool) &&
+    Boolean(contracts.usdc && contracts.fundingPool) &&
     parsedStake > 0n &&
     !insufficientBalance &&
     !isRegistryWiringBroken &&
@@ -204,7 +205,7 @@ export default function NewIdeaPage() {
           Submit proposal
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
-          Idea creation now requires a BTK stake. The amount is locked on-chain to reduce spam and align proposals with real commitment.
+          Idea creation now requires a USDC deposit. The amount is locked on-chain to reduce spam and align proposals with real commitment.
         </p>
 
         {!contracts.ideaRegistry && (
@@ -216,15 +217,15 @@ export default function NewIdeaPage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
             <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Required minimum stake</p>
-            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(minStakeValue)} BTK</p>
+            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(minStakeValue)} USDC</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
             <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Wallet balance</p>
-            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(tokenBalanceValue)} BTK</p>
+            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(tokenBalanceValue)} USDC</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
             <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Allowance to FundingPool</p>
-            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(allowanceValue)} BTK</p>
+            <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(allowanceValue)} USDC</p>
           </div>
         </div>
 
@@ -284,10 +285,10 @@ export default function NewIdeaPage() {
               value={stakeAmount}
               onChange={(event) => setStakeAmount(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
-              placeholder="5000"
+              placeholder="50"
             />
             <p className="text-xs text-slate-400">
-              Contract currently requires at least {formatTokenAmount(minStakeValue)} BTK before idea creation can succeed.
+              Contract currently requires at least {formatTokenAmount(minStakeValue)} USDC before idea creation can succeed.
             </p>
           </label>
 
@@ -296,10 +297,10 @@ export default function NewIdeaPage() {
               type="button"
               disabled={!canApprove || !needsApproval}
               onClick={() => {
-                if (!contracts.governanceToken || !contracts.fundingPool || parsedStake <= 0n) return;
+                if (!contracts.usdc || !contracts.fundingPool || parsedStake <= 0n) return;
                 sendApprove({
-                  address: contracts.governanceToken,
-                  abi: governanceTokenAbi,
+                  address: contracts.usdc,
+                  abi: usdcAbi,
                   functionName: "approve",
                   args: [contracts.fundingPool, parsedStake],
                   gas: 200_000n,
@@ -330,18 +331,18 @@ export default function NewIdeaPage() {
             Connect wallet to approve stake and create an on-chain idea.
           </p>
         )}
-        {invalidStake && stakeAmount.trim().length > 0 && <p className="mt-3 text-sm text-rose-300">Enter a valid BTK stake amount.</p>}
+        {invalidStake && stakeAmount.trim().length > 0 && <p className="mt-3 text-sm text-rose-300">Enter a valid USDC amount.</p>}
         {belowMinStake && minStakeValue !== undefined && (
           <p className="mt-3 text-sm text-rose-300">
-            Stake is below the current minimum of {formatTokenAmount(minStakeValue)} BTK.
+            Deposit is below the current minimum of {formatTokenAmount(minStakeValue)} USDC.
           </p>
         )}
         {insufficientBalance && (
-          <p className="mt-3 text-sm text-rose-300">Wallet balance is too low for this stake amount.</p>
+          <p className="mt-3 text-sm text-rose-300">Wallet balance is too low for this USDC deposit.</p>
         )}
         {needsApproval && parsedStake > 0n && !insufficientBalance && (
           <p className="mt-3 text-sm text-slate-300">
-            Approve FundingPool for at least {formatTokenAmount(parsedStake)} BTK before submitting the idea.
+            Approve FundingPool for at least {formatTokenAmount(parsedStake)} USDC before submitting the idea.
           </p>
         )}
         {isRegistryWiringBroken && (

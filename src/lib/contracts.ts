@@ -1,11 +1,9 @@
 import type { Address, Abi, AbiFunction } from "viem";
 
 import FundingPoolArtifact from "@/abi/DAO/FundingPoolUpgradeable.sol/FundingPoolUpgradeable.json";
-import GovernanceTokenArtifact from "@/abi/DAO/GovernanceTokenUpgradeable.sol/GovernanceTokenUpgradeable.json";
 import GrantManagerArtifact from "@/abi/DAO/GrantManagerUpgradeable.sol/GrantManagerUpgradeable.json";
 import IdeaRegistryArtifact from "@/abi/DAO/IdeaRegistryUpgradeable.sol/IdeaRegistryUpgradeable.json";
 import VotingSystemArtifact from "@/abi/DAO/VotingSystemUpgradeable.sol/VotingSystemUpgradeable.json";
-import BRTFaucetArtifact from "@/abi/extensions/BRTFaucet.sol/BRTFaucet.json";
 import ReputationSystemArtifact from "@/abi/extensions/ReputationSystemUpgradeable.sol/ReputationSystemUpgradeable.json";
 import RolesRegistryArtifact from "@/abi/extensions/Roles/RolesRegistryUpgradeable.sol/RolesRegistryUpgradeable.json";
 import VoterProgressionArtifact from "@/abi/extensions/VoterProgressionUpgradeable.sol/VoterProgressionUpgradeable.json";
@@ -119,17 +117,81 @@ const fundingPoolPatches = [
   {
     type: "function",
     stateMutability: "view",
+    name: "usdc",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "contract IERC20" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "setUsdc",
+    inputs: [{ name: "_newUsdc", type: "address", internalType: "address" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
     name: "authorStakeByIdea",
     inputs: [{ name: "ideaId", type: "uint256", internalType: "uint256" }],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
   },
 ] as const satisfies readonly AbiFunction[];
 
+export const usdcAbi = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "symbol",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "decimals",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "totalSupply",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "balanceOf",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "allowance",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "approve",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const satisfies Abi;
+
 export const fundingPoolAbi = replaceAbiFunctions(
   (FundingPoolArtifact as { abi: Abi }).abi,
   fundingPoolPatches
 );
-export const governanceTokenAbi = (GovernanceTokenArtifact as { abi: Abi }).abi;
 export const grantManagerAbi = replaceAbiFunctions(
   (GrantManagerArtifact as { abi: Abi }).abi,
   grantManagerPatches
@@ -139,19 +201,17 @@ export const ideaRegistryAbi = replaceAbiFunctions(
   ideaRegistryPatches
 );
 export const votingSystemAbi = (VotingSystemArtifact as { abi: Abi }).abi;
-export const brtfaucetAbi = (BRTFaucetArtifact as { abi: Abi }).abi;
 export const reputationSystemAbi = (ReputationSystemArtifact as { abi: Abi }).abi;
 export const rolesRegistryAbi = (RolesRegistryArtifact as { abi: Abi }).abi;
 export const voterProgressionAbi = (VoterProgressionArtifact as { abi: Abi }).abi;
 
 export const contracts = {
   fundingPool: toAddress(process.env.NEXT_PUBLIC_FUNDING_POOL_ADDRESS),
-  governanceToken: toAddress(process.env.NEXT_PUBLIC_GOVERNANCE_TOKEN_ADDRESS),
   grantManager: toAddress(process.env.NEXT_PUBLIC_GRANT_MANAGER_ADDRESS),
   ideaRegistry: toAddress(process.env.NEXT_PUBLIC_IDEA_REGISTRY_ADDRESS),
   reputationSystem: toAddress(process.env.NEXT_PUBLIC_REPUTATION_SYSTEM_ADDRESS),
   rolesRegistry: toAddress(process.env.NEXT_PUBLIC_ROLES_REGISTRY_ADDRESS),
+  usdc: toAddress(process.env.NEXT_PUBLIC_USDC_ADDRESS),
   votingSystem: toAddress(process.env.NEXT_PUBLIC_VOTING_SYSTEM_ADDRESS),
   voterProgression: toAddress(process.env.NEXT_PUBLIC_VOTER_PROGRESSION_ADDRESS),
-  faucet: toAddress(process.env.NEXT_PUBLIC_FAUCET_ADDRESS),
 };

@@ -20,7 +20,7 @@
 **System Flow**
 1. Users submit ideas in `IdeaRegistryUpgradeable`
 2. Voting rounds are started in `VotingSystemUpgradeable`
-3. Votes stake governance tokens through `FundingPoolUpgradeable`
+3. Votes commit USDC through `FundingPoolUpgradeable`
 4. Winners are determined, reputation and progression are updated
 5. `GrantManagerUpgradeable` finalizes payouts and updates idea status
 
@@ -106,4 +106,3 @@ FundingPoolUpgradeable
   v
 GrantManagerUpgradeable -----> IdeaRegistryUpgradeable (funded status)
 ```
-

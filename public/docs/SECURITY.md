@@ -40,7 +40,7 @@
 
 **Upgrade Safety**
 1. Review storage layout before any upgrade
-2. Use upgrade rehearsals on localhost and Sepolia
+2. Use upgrade rehearsals on localhost and Arc testnet
 3. Store deployment and upgrade artifacts for auditability
 4. Prefer multi-step reviews for production upgrades
 5. Validate new implementation bytecode before upgrade

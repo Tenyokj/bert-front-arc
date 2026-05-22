@@ -9,6 +9,7 @@ import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteCont
 
 import { Pagination } from "@/components/Pagination";
 import { contracts, ideaRegistryAbi, votingSystemAbi } from "@/lib/contracts";
+import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 import {
   fetchAllIdeasFromSubgraph,
   fetchRoundsPageFromSubgraph,
@@ -53,10 +54,10 @@ function RoundsPageContent() {
   const pageSize = 30;
   const canStartByIdeas = missingIdeas === 0;
 
-  const formatBtk = (value?: bigint) => {
+  const formatUsdc = (value?: bigint) => {
     if (value === undefined) return "-";
-    const asNumber = Number(formatUnits(value, 18));
-    if (!Number.isFinite(asNumber)) return formatUnits(value, 18);
+    const asNumber = Number(formatUnits(value, USDC_DECIMALS));
+    if (!Number.isFinite(asNumber)) return formatUnits(value, USDC_DECIMALS);
     return new Intl.NumberFormat("en-US", {
       maximumFractionDigits: asNumber >= 1000 ? 0 : 4,
     }).format(asNumber);
@@ -211,7 +212,7 @@ function RoundsPageContent() {
   return (
     <section className="space-y-6">
       <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">BERT Governance</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Stablecoin Voting</p>
         <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Voting Rounds</h1>
         <div className="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <button
@@ -286,7 +287,7 @@ function RoundsPageContent() {
                 <h2 className="mt-4 text-xl font-semibold text-white sm:text-2xl">Round #{round.id}</h2>
 
                 <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
-                  <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Votes: {formatBtk(round.totalVotes)} BTK</div>
+                  <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Votes: {formatUsdc(round.totalVotes)} USDC</div>
                   <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Ideas: {round.ideaIds.length}</div>
                   <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">{durationHours(round.startsAt, round.endsAt)}h window</div>
                 </div>

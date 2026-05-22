@@ -14,9 +14,9 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "BERT — DAO Grants Engine",
+  title: "BERT — USDC-Native Funding Infrastructure",
   description:
-    "BERT turns community proposals into funded outcomes with transparent voting and grants.",
+    "BERT is programmable USDC-native funding infrastructure for Arc with transparent treasury coordination and milestone-based grants.",
   icons: {
     icon: "/bert-logo.png",
     apple: "/bert-logo.png",

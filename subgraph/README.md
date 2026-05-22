@@ -1,11 +1,11 @@
 # BERT Subgraph
 
-This folder now contains a working local setup (Hardhat + local graph-node) and a sepolia template.
+This folder contains a working local setup (Hardhat + local graph-node) and an Arc testnet manifest.
 
-## What changed
+## Layout
 
 - `subgraph.local.yaml` - local Hardhat manifest.
-- `subgraph.yaml` - sepolia template manifest.
+- `subgraph.yaml` - Arc testnet manifest.
 - `abis/` - self-contained ABI copies used by the subgraph build.
 - `src/mapping.ts` - handlers for:
   - `VotingRoundStarted`
@@ -65,27 +65,32 @@ NEXT_PUBLIC_SUBGRAPH_URL=http://127.0.0.1:8000/subgraphs/name/bert-local
 npm run deploy:local
 ```
 
-## The Graph Studio (later, sepolia)
+## The Graph Studio (Arc testnet)
 
 1. Register/login at The Graph Studio.
-2. Create a subgraph.
+2. Create a new subgraph for the Arc deployment.
 3. Install graph-cli and authenticate:
 ```bash
 graph auth --studio <DEPLOY_KEY>
 ```
-4. Put Sepolia contract addresses + start blocks into `subgraph.yaml`.
-   Replace all six protocol addresses:
+4. Put Arc proxy addresses + start blocks into `subgraph.yaml`.
+   Use the six live proxy addresses:
    - `VotingSystem`
    - `IdeaRegistry`
    - `FundingPool`
    - `GrantManager`
    - `VoterProgression`
    - `ReputationSystem`
-5. Deploy:
+5. Run:
+```bash
+npm run codegen:arc
+npm run build:arc
+```
+6. Deploy:
 ```bash
 graph deploy --studio <SUBGRAPH_SLUG> subgraph.yaml
 ```
-6. Create API key in Studio and use query URL in frontend:
+7. Create API key in Studio and use query URL in frontend:
 ```env
 NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/<QUERY_ID>/<SUBGRAPH_NAME>/version/latest
 ```
@@ -100,4 +105,4 @@ NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/<QUERY_ID>/<SUBGR
 
 - First 100,000 requests/month are free.
 - Above that - usage billing.
-- GraphQL queries do not spend Sepolia gas.
+- GraphQL queries do not spend Arc gas.

@@ -15,7 +15,6 @@ import { useChainId } from "wagmi";
 
 import {
   contracts,
-  brtfaucetAbi,
   fundingPoolAbi,
   grantManagerAbi,
   ideaRegistryAbi,
@@ -24,7 +23,7 @@ import {
   voterProgressionAbi,
   votingSystemAbi,
 } from "@/lib/contracts";
-import { shortAddress } from "@/lib/dapp-onchain";
+import { shortAddress, USDC_DECIMALS } from "@/lib/dapp-onchain";
 
 type LinkedAddressConfig = {
   key: string;
@@ -54,7 +53,7 @@ type NumericParamConfig = {
   label: string;
   readFn: string;
   setterFn: string;
-  unit: "raw" | "token18";
+  unit: "raw" | "token6";
   min?: bigint;
   max?: bigint;
   hint?: string;
@@ -124,9 +123,9 @@ const managedContracts: ManagedContractConfig[] = [
         label: "Minimum stake",
         readFn: "minStake",
         setterFn: "setMinStake",
-        unit: "token18",
+        unit: "token6",
         min: 1n,
-        hint: "BTK",
+        hint: "USDC",
       },
       {
         key: "ideasPerRound",
@@ -139,37 +138,6 @@ const managedContracts: ManagedContractConfig[] = [
     ],
   },
   {
-    key: "faucet",
-    name: "BRTFaucet",
-    address: contracts.faucet,
-    abi: brtfaucetAbi,
-    stateFn: "isPaused",
-    linked: [
-      { key: "token", label: "token", readFn: "token" },
-      { key: "roles", label: "rolesRegistry", readFn: "roles" },
-    ],
-    params: [
-      {
-        key: "claimAmount",
-        label: "Claim amount",
-        readFn: "claimAmount",
-        setterFn: "setClaimAmount",
-        unit: "token18",
-        min: 1n,
-        hint: "BTK",
-      },
-      {
-        key: "cooldown",
-        label: "Cooldown",
-        readFn: "cooldown",
-        setterFn: "setCooldown",
-        unit: "raw",
-        min: 1n,
-        hint: "seconds",
-      },
-    ],
-  },
-  {
     key: "fundingPool",
     name: "FundingPool",
     address: contracts.fundingPool,
@@ -177,10 +145,10 @@ const managedContracts: ManagedContractConfig[] = [
     stateFn: "isPaused",
     linked: [
       {
-        key: "governanceToken",
-        label: "governanceToken",
-        readFn: "governanceToken",
-        setterFn: "setGovernanceToken",
+        key: "usdc",
+        label: "usdc",
+        readFn: "usdc",
+        setterFn: "setUsdc",
       },
       { key: "ideaRegistry", label: "ideaRegistry", readFn: "ideaRegistry", setterFn: "setIdeaRegistry" },
       { key: "roles", label: "rolesRegistry", readFn: "roles" },
@@ -238,7 +206,7 @@ function inputKey(contractKey: string, linkKey: string) {
 }
 
 function formatParamInput(value: bigint, unit: NumericParamConfig["unit"]) {
-  if (unit === "token18") return formatUnits(value, 18);
+  if (unit === "token6") return formatUnits(value, USDC_DECIMALS);
   return value.toString();
 }
 
@@ -246,7 +214,7 @@ function parseParamInput(value: string, unit: NumericParamConfig["unit"]) {
   const cleaned = value.trim();
   if (!cleaned) return null;
   try {
-    return unit === "token18" ? parseUnits(cleaned, 18) : BigInt(cleaned);
+    return unit === "token6" ? parseUnits(cleaned, USDC_DECIMALS) : BigInt(cleaned);
   } catch {
     return null;
   }
@@ -748,10 +716,10 @@ export default function AdminPage() {
                     const currentLabel =
                       current === undefined
                         ? "-"
-                        : param.unit === "token18"
+                        : param.unit === "token6"
                           ? `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(
-                              Number(formatUnits(current, 18))
-                            )} BTK`
+                              Number(formatUnits(current, USDC_DECIMALS))
+                            )} USDC`
                           : current.toString();
 
                     return (

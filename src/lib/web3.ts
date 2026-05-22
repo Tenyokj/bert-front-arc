@@ -1,50 +1,43 @@
-import { createConfig, fallback, http } from "wagmi";
-import { hardhat, sepolia } from "wagmi/chains";
+import { createConfig, http } from "wagmi";
 import { injected } from "wagmi/connectors";
+import { defineChain } from "viem";
 
-const hardhatRpcUrl =
-  process.env.NEXT_PUBLIC_HARDHAT_RPC_URL || "http://127.0.0.1:8545";
-const sepoliaRpcUrl =
-  process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
-const preferredNetwork = process.env.NEXT_PUBLIC_DEFAULT_CHAIN?.toLowerCase();
-const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL?.toLowerCase() ?? "";
+const arcRpcUrl =
+  process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
 
-function resolveDefaultChainName() {
-  if (preferredNetwork === "sepolia" || preferredNetwork === "hardhat") {
-    return preferredNetwork;
-  }
+export const arcTestnet = defineChain({
+  id: 5042002,
+  name: "Arc Testnet",
+  nativeCurrency: {
+    name: "Ether",
+    symbol: "ETH",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: { http: [arcRpcUrl] },
+    public: { http: [arcRpcUrl] },
+  },
+  blockExplorers: {
+    default: {
+      name: "Arc Explorer",
+      url:
+        process.env.NEXT_PUBLIC_ARC_EXPLORER_URL ||
+        "https://explorer.testnet.arc.network",
+    },
+  },
+  testnet: true,
+});
 
-  // When `.env` contains Sepolia deployments but `NEXT_PUBLIC_DEFAULT_CHAIN`
-  // is omitted, defaulting to Hardhat makes every contract read hit localhost
-  // and return `0x`. Use the subgraph target as a safe deployment hint.
-  if (subgraphUrl.includes("sepolia")) {
-    return "sepolia";
-  }
-
-  return "hardhat";
-}
-
-const resolvedDefaultChain = resolveDefaultChainName();
-
-export const defaultChain =
-  resolvedDefaultChain === "sepolia" ? sepolia : hardhat;
-export const secondaryChain = defaultChain.id === hardhat.id ? sepolia : hardhat;
-export const supportedChains = [defaultChain, secondaryChain] as const;
+export const defaultChain = arcTestnet;
+export const supportedChains = [arcTestnet] as const;
 
 export const web3Config = createConfig({
-  // Reads without explicit `chainId` use the first configured chain.
-  // We resolve that default from env hints so Sepolia deployments do not
-  // accidentally get queried through a local Hardhat RPC.
   chains: [...supportedChains],
   connectors: [
     injected({ target: "metaMask" }),
     injected(),
   ],
   transports: {
-    [hardhat.id]: fallback([
-      http(hardhatRpcUrl),
-      http("http://127.0.0.1:8545"),
-    ]),
-    [sepolia.id]: http(sepoliaRpcUrl),
+    [arcTestnet.id]: http(arcRpcUrl),
   },
 });

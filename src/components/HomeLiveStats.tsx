@@ -7,10 +7,11 @@ import { usePublicClient } from "wagmi";
 import {
   contracts,
   fundingPoolAbi,
-  governanceTokenAbi,
+  usdcAbi,
   votingSystemAbi,
   ideaRegistryAbi,
 } from "@/lib/contracts";
+import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 type HomeStats = {
@@ -24,10 +25,10 @@ type HomeStats = {
   tokenSupply?: bigint;
 };
 
-function formatBtk(value?: bigint, maxFractionDigits = 2) {
+function formatUsdc(value?: bigint, maxFractionDigits = 2) {
   if (value === undefined) return "...";
-  const asNumber = Number(formatUnits(value, 18));
-  if (!Number.isFinite(asNumber)) return formatUnits(value, 18);
+  const asNumber = Number(formatUnits(value, USDC_DECIMALS));
+  if (!Number.isFinite(asNumber)) return formatUnits(value, USDC_DECIMALS);
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: asNumber >= 1000 ? Math.min(maxFractionDigits, 0) : maxFractionDigits,
   }).format(asNumber);
@@ -144,17 +145,17 @@ export function HomeLiveStats() {
         }
       }
 
-      if (contracts.governanceToken) {
+      if (contracts.usdc) {
         try {
           const [tokenSymbol, tokenSupply] = (await Promise.all([
             readContract({
-              address: contracts.governanceToken,
-              abi: governanceTokenAbi,
+              address: contracts.usdc,
+              abi: usdcAbi,
               functionName: "symbol",
             }),
             readContract({
-              address: contracts.governanceToken,
-              abi: governanceTokenAbi,
+              address: contracts.usdc,
+              abi: usdcAbi,
               functionName: "totalSupply",
             }),
           ])) as [string, bigint];
@@ -178,7 +179,7 @@ export function HomeLiveStats() {
     <div className="mt-10 grid gap-6 sm:grid-cols-2">
       <div className="rounded-2xl border border-white/70 bg-white/80 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Total in POOL</p>
-        <p className="mt-3 text-3xl font-semibold text-slate-900">{formatBtk(stats.poolBalance)} BTK</p>
+        <p className="mt-3 text-3xl font-semibold text-slate-900">{formatUsdc(stats.poolBalance)} USDC</p>
         <p className="mt-2 text-sm text-slate-500">
           Across {stats.fundedProposals === undefined ? "..." : stats.fundedProposals.toString()} funded proposals
         </p>
@@ -205,11 +206,11 @@ export function HomeLiveStats() {
       </div>
 
       <div className="rounded-2xl border border-white/50 bg-gradient-to-br from-white/80 to-slate-100/80 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Tokens</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Settlement Asset</p>
         <p className="mt-3 text-3xl font-semibold text-slate-900">
-          {stats.tokenSymbol ?? "BTK"} - BERT governance tokens
+          {stats.tokenSymbol ?? "USDC"} - stablecoin funding layer
         </p>
-        <p className="mt-2 text-sm text-slate-500">{formatBtk(stats.tokenSupply, 0)} {stats.tokenSymbol ?? "BTK"} in circulation</p>
+        <p className="mt-2 text-sm text-slate-500">{formatUsdc(stats.tokenSupply, 0)} {stats.tokenSymbol ?? "USDC"} available on network</p>
       </div>
     </div>
   );

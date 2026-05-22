@@ -19,8 +19,8 @@
   <polygon points="700,236 652,172 700,202 748,172" fill="#334155"/>
 
   <!-- text block -->
-  <text x="700" y="404" text-anchor="middle" class="t1">BTK</text>
-  <text x="700" y="466" text-anchor="middle" class="t2">BERT Token</text>
+  <text x="700" y="404" text-anchor="middle" class="t1">BERT</text>
+  <text x="700" y="466" text-anchor="middle" class="t2">Funding Layer</text>
 
   <!-- small standard badge -->
   <rect x="870" y="424" width="176" height="58" rx="29" fill="#f8fafc" stroke="#94a3b8" stroke-width="3"/>

@@ -170,9 +170,9 @@ export default function HeroLogo3D() {
     };
 
     const setup = async () => {
-      const [bertImg, btkImg] = await Promise.all([
+      const [bertImg, usdcImg] = await Promise.all([
         loadImage("/bert-logo.png"),
-        loadImage("/btk-logo.png"),
+        loadImage("/arc-logo.png"),
       ]);
 
       const ptsA = sampleImagePoints(bertImg, {
@@ -180,7 +180,7 @@ export default function HeroLogo3D() {
         threshold: 30,
         scale: 6.3,
       });
-      const ptsB = sampleImagePoints(btkImg, {
+      const ptsB = sampleImagePoints(usdcImg, {
         step: 4,
         threshold: 30,
         scale: 6.3,

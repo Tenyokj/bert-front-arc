@@ -53,7 +53,7 @@ export type UserProfile = {
   ideasSubmitted: number;
   ideasFunded: number;
   votesCast: number;
-  btkBalance: string;
+  usdcBalance: string;
 };
 
 const PRIMARY_USER_ADDRESS = "0xA92d4F4bAF7b2A9f1a11B6c4fD2A2B0E21f352b1";
@@ -154,7 +154,7 @@ const baseIdeas: Idea[] = [
     roundId: 11,
     author: "0x4F91...A95c",
     title: "Wallet Connectors for Multi-Network",
-    summary: "Reliable wallet connection layer for Hardhat and Sepolia paths.",
+    summary: "Reliable wallet connection layer for local Arc-style testing and stablecoin flows.",
     description:
       "Deliver robust wallet connectors with consistent network switching and safer transaction prompts across supported chains.",
     link: "https://example.com/ideas/204",
@@ -184,9 +184,9 @@ const baseIdeas: Idea[] = [
     roundId: 13,
     author: PRIMARY_USER_ADDRESS,
     title: "BERT Academy Launch",
-    summary: "Beginner learning track about DAO voting and grant process.",
+    summary: "Beginner learning track about stablecoin voting and grant execution.",
     description:
-      "Launch onboarding lessons and walkthrough missions that teach DAO grants, stake voting, and delivery reporting.",
+      "Launch onboarding lessons and walkthrough missions that teach builder grants, USDC voting, and delivery reporting.",
     link: "https://example.com/ideas/206",
     createdAt: "2026-02-11T08:20:00.000Z",
     totalVotes: 0,
@@ -257,44 +257,44 @@ export const userProfile: UserProfile = {
   ideasSubmitted: 9,
   ideasFunded: 3,
   votesCast: 87,
-  btkBalance: "48,500 BTK",
+  usdcBalance: "48,500 USDC",
 };
 
 export const roundVoteEntries: Record<number, VoteEntry[]> = {
   12: [
-    { address: "0xA92d...52b1", ideaId: 201, votingPower: "1.20M BTK", votes: 118, txHash: "0x8ac4...11f2" },
-    { address: "0xD10f...778a", ideaId: 202, votingPower: "980K BTK", votes: 96, txHash: "0x31be...442a" },
-    { address: "0x33bE...0Aef", ideaId: 203, votingPower: "740K BTK", votes: 72, txHash: "0x6fad...9c40" },
-    { address: "0x4C1a...A3c9", ideaId: 201, votingPower: "410K BTK", votes: 43, txHash: "0x90b1...b10e" },
-    { address: "0x8E02...661A", ideaId: 202, votingPower: "640K BTK", votes: 66, txHash: "0x7d2c...f8e3" },
-    { address: "0x772b...90Df", ideaId: 203, votingPower: "350K BTK", votes: 31, txHash: "0x2abc...0de1" },
+    { address: "0xA92d...52b1", ideaId: 201, votingPower: "1.20M USDC", votes: 118, txHash: "0x8ac4...11f2" },
+    { address: "0xD10f...778a", ideaId: 202, votingPower: "980K USDC", votes: 96, txHash: "0x31be...442a" },
+    { address: "0x33bE...0Aef", ideaId: 203, votingPower: "740K USDC", votes: 72, txHash: "0x6fad...9c40" },
+    { address: "0x4C1a...A3c9", ideaId: 201, votingPower: "410K USDC", votes: 43, txHash: "0x90b1...b10e" },
+    { address: "0x8E02...661A", ideaId: 202, votingPower: "640K USDC", votes: 66, txHash: "0x7d2c...f8e3" },
+    { address: "0x772b...90Df", ideaId: 203, votingPower: "350K USDC", votes: 31, txHash: "0x2abc...0de1" },
   ],
   11: [
-    { address: "0x7F10...c2d8", ideaId: 204, votingPower: "1.34M BTK", votes: 129, txHash: "0x1f77...2aa1" },
-    { address: "0x5e9A...d443", ideaId: 204, votingPower: "1.12M BTK", votes: 108, txHash: "0xab19...f77b" },
-    { address: "0x9912...EE0f", ideaId: 205, votingPower: "560K BTK", votes: 54, txHash: "0xaa62...7be1" },
+    { address: "0x7F10...c2d8", ideaId: 204, votingPower: "1.34M USDC", votes: 129, txHash: "0x1f77...2aa1" },
+    { address: "0x5e9A...d443", ideaId: 204, votingPower: "1.12M USDC", votes: 108, txHash: "0xab19...f77b" },
+    { address: "0x9912...EE0f", ideaId: 205, votingPower: "560K USDC", votes: 54, txHash: "0xaa62...7be1" },
   ],
   13: [],
 };
 
 export const ideaVoteEntries: Record<number, VoteEntry[]> = {
   201: [
-    { address: "0xA92d...52b1", ideaId: 201, votingPower: "1.20M BTK", votes: 118, txHash: "0x8ac4...11f2" },
-    { address: "0xD10f...778a", ideaId: 201, votingPower: "980K BTK", votes: 96, txHash: "0x31be...442a" },
-    { address: "0x4C1a...A3c9", ideaId: 201, votingPower: "410K BTK", votes: 43, txHash: "0x90b1...b10e" },
+    { address: "0xA92d...52b1", ideaId: 201, votingPower: "1.20M USDC", votes: 118, txHash: "0x8ac4...11f2" },
+    { address: "0xD10f...778a", ideaId: 201, votingPower: "980K USDC", votes: 96, txHash: "0x31be...442a" },
+    { address: "0x4C1a...A3c9", ideaId: 201, votingPower: "410K USDC", votes: 43, txHash: "0x90b1...b10e" },
   ],
   202: [
-    { address: "0x8E02...661A", ideaId: 202, votingPower: "640K BTK", votes: 66, txHash: "0x7d2c...f8e3" },
-    { address: "0x772b...90Df", ideaId: 202, votingPower: "350K BTK", votes: 31, txHash: "0x2abc...0de1" },
+    { address: "0x8E02...661A", ideaId: 202, votingPower: "640K USDC", votes: 66, txHash: "0x7d2c...f8e3" },
+    { address: "0x772b...90Df", ideaId: 202, votingPower: "350K USDC", votes: 31, txHash: "0x2abc...0de1" },
   ],
   203: [
-    { address: "0x33bE...0Aef", ideaId: 203, votingPower: "740K BTK", votes: 72, txHash: "0x6fad...9c40" },
+    { address: "0x33bE...0Aef", ideaId: 203, votingPower: "740K USDC", votes: 72, txHash: "0x6fad...9c40" },
   ],
   204: [
-    { address: "0x7F10...c2d8", ideaId: 204, votingPower: "1.34M BTK", votes: 129, txHash: "0x1f77...2aa1" },
-    { address: "0x5e9A...d443", ideaId: 204, votingPower: "1.12M BTK", votes: 108, txHash: "0xab19...f77b" },
+    { address: "0x7F10...c2d8", ideaId: 204, votingPower: "1.34M USDC", votes: 129, txHash: "0x1f77...2aa1" },
+    { address: "0x5e9A...d443", ideaId: 204, votingPower: "1.12M USDC", votes: 108, txHash: "0xab19...f77b" },
   ],
-  205: [{ address: "0x9912...EE0f", ideaId: 205, votingPower: "560K BTK", votes: 54, txHash: "0xaa62...7be1" }],
+  205: [{ address: "0x9912...EE0f", ideaId: 205, votingPower: "560K USDC", votes: 54, txHash: "0xaa62...7be1" }],
   206: [],
 };
 

@@ -171,7 +171,7 @@ function SearchPageContent() {
                     className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 transition-colors hover:border-cyan-400/40"
                   >
                     <p className="text-xl font-semibold text-white">Round #{round.id}</p>
-                    <p className="mt-1 text-sm text-slate-300">Votes: {formatTokenAmount(round.totalVotes)} BTK</p>
+                    <p className="mt-1 text-sm text-slate-300">Votes: {formatTokenAmount(round.totalVotes)} USDC</p>
                   </Link>
                 ))}
               </div>
@@ -192,7 +192,7 @@ function SearchPageContent() {
                   >
                     <p className="text-xl font-semibold text-white">Idea #{idea.id}</p>
                     <p className="mt-1 text-sm text-slate-200">{idea.title}</p>
-                    <p className="mt-1 text-xs text-slate-300">Votes: {formatTokenAmount(idea.totalVotes)} BTK</p>
+                    <p className="mt-1 text-xs text-slate-300">Votes: {formatTokenAmount(idea.totalVotes)} USDC</p>
                   </Link>
                 ))}
               </div>

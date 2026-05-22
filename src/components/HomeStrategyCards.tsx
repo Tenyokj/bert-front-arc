@@ -6,6 +6,7 @@ import { formatUnits } from "viem";
 import { usePublicClient } from "wagmi";
 
 import { contracts, fundingPoolAbi, votingSystemAbi } from "@/lib/contracts";
+import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 
 type StrategyStats = {
   poolBalance?: bigint;
@@ -15,10 +16,10 @@ type StrategyStats = {
   activeVoters?: number;
 };
 
-function formatBtk(value?: bigint, maxFractionDigits = 2) {
+function formatUsdc(value?: bigint, maxFractionDigits = 2) {
   if (value === undefined) return "...";
-  const asNumber = Number(formatUnits(value, 18));
-  if (!Number.isFinite(asNumber)) return formatUnits(value, 18);
+  const asNumber = Number(formatUnits(value, USDC_DECIMALS));
+  if (!Number.isFinite(asNumber)) return formatUnits(value, USDC_DECIMALS);
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: asNumber >= 1000 ? Math.min(maxFractionDigits, 0) : maxFractionDigits,
   }).format(asNumber);
@@ -155,7 +156,7 @@ export function HomeStrategyCards() {
           </p>
           <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total pool</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">{formatBtk(stats.poolBalance)} BTK</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">{formatUsdc(stats.poolBalance)} USDC</p>
             <p className="mt-1 text-xs text-slate-500">Available across active rounds</p>
           </div>
           <Link href="/pool" className="mt-auto w-fit rounded-full bg-slate-900 px-7 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-white">
@@ -205,7 +206,7 @@ export function HomeStrategyCards() {
           </p>
           <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Paid out</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">{formatBtk(stats.paidOutTotal)} BTK</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">{formatUsdc(stats.paidOutTotal)} USDC</p>
             <p className="mt-1 text-xs text-slate-500">
               Across {stats.distributionCount === undefined ? "..." : stats.distributionCount.toString()} funded proposals
             </p>

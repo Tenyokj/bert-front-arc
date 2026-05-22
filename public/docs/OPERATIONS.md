@@ -14,7 +14,7 @@
 
 **Upgrade Operations**
 1. Maintain a log of upgrades and tx hashes
-2. Rehearse upgrades on localhost and Sepolia
+2. Rehearse upgrades on localhost and Arc testnet
 3. Verify new implementation addresses after upgrade
 4. Capture pre- and post-upgrade parameters
 

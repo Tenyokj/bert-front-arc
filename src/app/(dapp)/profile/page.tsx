@@ -7,17 +7,16 @@ import { formatUnits } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 
 import { Pagination } from "@/components/Pagination";
-import { FaucetClaim } from "@/components/FaucetClaim";
 import {
   contracts,
   fundingPoolAbi,
-  governanceTokenAbi,
   ideaRegistryAbi,
   reputationSystemAbi,
+  usdcAbi,
   votingSystemAbi,
   voterProgressionAbi,
 } from "@/lib/contracts";
-import { formatTokenAmount, mapIdeaStatus } from "@/lib/dapp-onchain";
+import { formatTokenAmount, mapIdeaStatus, USDC_DECIMALS } from "@/lib/dapp-onchain";
 import {
   fetchAllIdeasByAuthorFromSubgraph,
   hasSubgraphConfigured,
@@ -37,7 +36,7 @@ function ProfilePageContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [ideas, setIdeas] = useState<UserIdea[]>([]);
-  const [btkBalance, setBtkBalance] = useState("0");
+  const [usdcBalance, setUsdcBalance] = useState("0");
   const [reputation, setReputation] = useState<bigint>(0n);
   const [wonIdeasCount, setWonIdeasCount] = useState(0);
   const [winningVotes, setWinningVotes] = useState<bigint>(0n);
@@ -68,7 +67,7 @@ function ProfilePageContent() {
     async function load() {
       if (!client || !displayAddress || !contracts.ideaRegistry) {
         setIdeas([]);
-        setBtkBalance("0");
+        setUsdcBalance("0");
         setReputation(0n);
         setWonIdeasCount(0);
         setWinningVotes(0n);
@@ -160,22 +159,22 @@ function ProfilePageContent() {
           lockedStake: stakeMap.get(idea.id) ?? 0n,
         }));
 
-        let nextBtk = "0";
-        if (contracts.governanceToken) {
+        let nextUsdc = "0";
+        if (contracts.usdc) {
           const rawBalance = (await readContract({
-            address: contracts.governanceToken,
-            abi: governanceTokenAbi,
+            address: contracts.usdc,
+            abi: usdcAbi,
             functionName: "balanceOf",
             args: [displayAddress],
           })) as bigint;
-          nextBtk = new Intl.NumberFormat("en-US", {
+          nextUsdc = new Intl.NumberFormat("en-US", {
             maximumFractionDigits: 2,
-          }).format(Number(formatUnits(rawBalance, 18)));
+          }).format(Number(formatUnits(rawBalance, USDC_DECIMALS)));
         }
 
         if (!cancelled) {
           setIdeas(rowsWithStake);
-          setBtkBalance(nextBtk);
+          setUsdcBalance(nextUsdc);
           setRequiredIdeaStake(requiredStakeRaw as bigint);
         }
 
@@ -294,12 +293,12 @@ function ProfilePageContent() {
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Total votes</p>
               <p className="mt-2 text-3xl font-semibold text-white">
-                {formatTokenAmount(totalVotes)} BTK
+                {formatTokenAmount(totalVotes)} USDC
               </p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">BTK</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{btkBalance} BTK</p>
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">USDC</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{usdcBalance} USDC</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Reputation</p>
@@ -324,11 +323,11 @@ function ProfilePageContent() {
             </div>
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Required idea stake</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{formatTokenAmount(requiredIdeaStake)} BTK</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{formatTokenAmount(requiredIdeaStake)} USDC</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Locked stake</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{formatTokenAmount(totalLockedStake)} BTK</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{formatTokenAmount(totalLockedStake)} USDC</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
               <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Grants in progress</p>
@@ -349,8 +348,6 @@ function ProfilePageContent() {
               Use each idea page to submit proof materials and, if you have Reviewer role, validate milestone requests.
             </p>
           </div>
-
-          <FaucetClaim />
 
           <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 md:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -383,8 +380,8 @@ function ProfilePageContent() {
                       </div>
                       <div className="mt-2 grid gap-2 text-sm text-slate-300 xl:grid-cols-3">
                         <p>Status: {mapIdeaStatus(idea.statusCode)}</p>
-                        <p>Total votes: {formatTokenAmount(idea.totalVotes)} BTK</p>
-                        <p>Locked stake: {formatTokenAmount(idea.lockedStake)} BTK</p>
+                        <p>Total votes: {formatTokenAmount(idea.totalVotes)} USDC</p>
+                        <p>Locked stake: {formatTokenAmount(idea.lockedStake)} USDC</p>
                       </div>
                     </Link>
                   ))
