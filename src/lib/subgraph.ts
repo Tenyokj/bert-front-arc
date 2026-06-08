@@ -38,6 +38,14 @@ type GraphQLResponse<T> = {
 const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
 const SUBGRAPH_PAGE_SIZE = 1000;
 
+function getSubgraphProxyUrl() {
+  if (typeof window !== "undefined") {
+    return "/api/subgraph";
+  }
+
+  return null;
+}
+
 function clampSubgraphPageSize(first: number) {
   if (!Number.isFinite(first) || first <= 0) return SUBGRAPH_PAGE_SIZE;
   return Math.min(Math.floor(first), SUBGRAPH_PAGE_SIZE);
@@ -70,7 +78,12 @@ export async function fetchGraphQL<T>(query: string, variables?: Record<string, 
     throw new Error("NEXT_PUBLIC_SUBGRAPH_URL is not set");
   }
 
-  const res = await fetch(subgraphUrl, {
+  const requestUrl = getSubgraphProxyUrl();
+  if (!requestUrl) {
+    throw new Error("Subgraph proxy route is unavailable in this environment");
+  }
+
+  const res = await fetch(requestUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ query, variables }),
@@ -78,7 +91,8 @@ export async function fetchGraphQL<T>(query: string, variables?: Record<string, 
   });
 
   if (!res.ok) {
-    throw new Error(`Subgraph request failed: ${res.status}`);
+    const text = await res.text();
+    throw new Error(`Subgraph request failed: ${res.status}${text ? ` ${text}` : ""}`);
   }
 
   const payload = (await res.json()) as GraphQLResponse<T>;

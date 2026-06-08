@@ -15,7 +15,9 @@ const defaultChainKey = (process.env.NEXT_PUBLIC_DEFAULT_CHAIN || "arc").toLower
 const hardhatRpcUrl = process.env.NEXT_PUBLIC_HARDHAT_RPC_URL || "http://127.0.0.1:8545";
 const arcRpcUrl = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
 const arcExplorerUrl = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app";
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "123456";
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+const effectiveWalletConnectProjectId =
+  walletConnectProjectId || "missing-walletconnect-project-id";
 
 export const hardhatLocalhost = defineChain({
   id: 31337,
@@ -83,7 +85,7 @@ const connectors = connectorsForWallets(
     appDescription: "Programmable USDC-native funding infrastructure on Arc.",
     appUrl: "https://bertdao.vercel.app",
     appIcon: "/bert-logo.png",
-    projectId: walletConnectProjectId,
+    projectId: effectiveWalletConnectProjectId,
   }
 );
 
@@ -92,7 +94,7 @@ export const web3Config = getDefaultConfig({
   appDescription: "Programmable USDC-native funding infrastructure on Arc.",
   appUrl: "https://bertdao.vercel.app",
   appIcon: "/bert-logo.png",
-  projectId: walletConnectProjectId,
+  projectId: effectiveWalletConnectProjectId,
   chains: [...supportedChains],
   connectors,
   ssr: true,
