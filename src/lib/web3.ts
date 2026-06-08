@@ -11,13 +11,32 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import { defineChain } from "viem";
 
-const arcRpcUrl =
-  process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
-const arcExplorerUrl =
-  process.env.NEXT_PUBLIC_ARC_EXPLORER_URL ||
-  "https://testnet.arcscan.app";
-const walletConnectProjectId =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "123456";
+const defaultChainKey = (process.env.NEXT_PUBLIC_DEFAULT_CHAIN || "arc").toLowerCase();
+const hardhatRpcUrl = process.env.NEXT_PUBLIC_HARDHAT_RPC_URL || "http://127.0.0.1:8545";
+const arcRpcUrl = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
+const arcExplorerUrl = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app";
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "123456";
+
+export const hardhatLocalhost = defineChain({
+  id: 31337,
+  name: "Hardhat Localhost",
+  nativeCurrency: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: { http: [hardhatRpcUrl] },
+    public: { http: [hardhatRpcUrl] },
+  },
+  blockExplorers: {
+    default: {
+      name: "Localhost",
+      url: hardhatRpcUrl,
+    },
+  },
+  testnet: true,
+});
 
 export const arcTestnet = defineChain({
   id: 5042002,
@@ -40,8 +59,8 @@ export const arcTestnet = defineChain({
   testnet: true,
 });
 
-export const defaultChain = arcTestnet;
-export const supportedChains = [arcTestnet] as const;
+export const defaultChain = defaultChainKey === "hardhat" ? hardhatLocalhost : arcTestnet;
+export const supportedChains = [defaultChain] as const;
 
 const connectors = connectorsForWallets(
   [
@@ -61,8 +80,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: "BERT",
-    appDescription:
-      "Programmable USDC-native funding infrastructure on Arc.",
+    appDescription: "Programmable USDC-native funding infrastructure on Arc.",
     appUrl: "https://bertdao.vercel.app",
     appIcon: "/bert-logo.png",
     projectId: walletConnectProjectId,
@@ -71,8 +89,7 @@ const connectors = connectorsForWallets(
 
 export const web3Config = getDefaultConfig({
   appName: "BERT",
-  appDescription:
-    "Programmable USDC-native funding infrastructure on Arc.",
+  appDescription: "Programmable USDC-native funding infrastructure on Arc.",
   appUrl: "https://bertdao.vercel.app",
   appIcon: "/bert-logo.png",
   projectId: walletConnectProjectId,

@@ -9,7 +9,7 @@ import { WagmiProvider, useAccount, useSwitchChain } from "wagmi";
 
 import { defaultChain, web3Config } from "@/lib/web3";
 
-function AutoSwitchArc() {
+function AutoSwitchDefaultChain() {
   const { chainId, isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
   const attemptedRef = useRef<number | null>(null);
@@ -46,7 +46,7 @@ export function Web3Providers({ children }: { children: React.ReactNode }) {
             overlayBlur: "small",
           })}
         >
-          <AutoSwitchArc />
+          <AutoSwitchDefaultChain />
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>
