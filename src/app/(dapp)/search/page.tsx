@@ -153,7 +153,10 @@ function SearchPageContent() {
       <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Search</p>
         <h1 className="mt-3 font-[var(--font-display)] text-4xl text-white md:text-6xl">Results</h1>
-        <p className="mt-2 text-sm text-slate-300">Query: {queryRaw || "empty"}</p>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
+          Use search when you already know an idea title, idea id, or round id and want to jump straight into the live on-chain record.
+        </p>
+        <p className="mt-2 text-sm text-slate-400">Query: {queryRaw || "empty"}</p>
       </div>
 
       {q ? (
@@ -161,7 +164,9 @@ function SearchPageContent() {
           <div className="space-y-3">
             <h2 className="font-[var(--font-display)] text-3xl text-white">Rounds</h2>
             {roundResults.length === 0 ? (
-              <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">No rounds found.</p>
+              <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">
+                No live rounds match this search yet. Try a round number, browse all rounds, or open the demo flow to see how voting works.
+              </p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {roundResults.map((round) => (
@@ -181,7 +186,9 @@ function SearchPageContent() {
           <div className="space-y-3">
             <h2 className="font-[var(--font-display)] text-3xl text-white">Ideas</h2>
             {ideaResults.length === 0 ? (
-              <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">No ideas found.</p>
+              <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">
+                No live ideas match this search yet. Try an idea title, search by id, or browse the full registry to discover proposals.
+              </p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {ideaResults.map((idea) => (
@@ -198,11 +205,57 @@ function SearchPageContent() {
               </div>
             )}
           </div>
+
+          {roundResults.length === 0 && ideaResults.length === 0 && (
+            <div className="rounded-2xl border border-white/10 bg-[#313443] p-5 text-sm text-slate-300">
+              <p className="font-semibold text-white">Not sure what to search for?</p>
+              <p className="mt-2 leading-relaxed">
+                Start with <span className="text-slate-100">Ideas</span> if you want to review proposals, or open <span className="text-slate-100">Rounds</span> if you want to see how community funding is allocated.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  href="/ideas"
+                  className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
+                >
+                  Browse ideas
+                </Link>
+                <Link
+                  href="/rounds"
+                  className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
+                >
+                  Browse rounds
+                </Link>
+                <Link
+                  href="/demo"
+                  className="rounded-full border border-amber-300/35 bg-amber-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100 transition hover:border-amber-200/50 hover:bg-amber-400/15"
+                >
+                  Open demo mode
+                </Link>
+              </div>
+            </div>
+          )}
         </>
       ) : (
-        <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">
-          Enter an `id` or an idea title in the top search bar.
-        </p>
+        <div className="rounded-2xl border border-white/10 bg-[#313443] p-5 text-sm text-slate-300">
+          <p className="font-semibold text-white">Search the live registry</p>
+          <p className="mt-2 leading-relaxed">
+            Enter an idea title, idea id, or round id in the top search bar. If you are exploring BERT for the first time, start with the dashboard or demo instead of guessing ids.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/app"
+              className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
+            >
+              Open dashboard
+            </Link>
+            <Link
+              href="/demo"
+              className="rounded-full border border-amber-300/35 bg-amber-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100 transition hover:border-amber-200/50 hover:bg-amber-400/15"
+            >
+              Explore demo
+            </Link>
+          </div>
+        </div>
       )}
     </section>
   );

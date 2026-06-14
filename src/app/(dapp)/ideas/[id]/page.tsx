@@ -689,6 +689,18 @@ export default function IdeaDetailsPage() {
         <p className="mt-3 text-xl font-semibold text-slate-100 sm:text-2xl">{idea.title}</p>
         <p className="mt-3 text-sm leading-relaxed text-slate-300">{idea.description}</p>
 
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
+            1. Read the proposal and inspect vote traction.
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
+            2. Check whether the idea is active in a round, funded, or already in grant review.
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
+            3. If you have the right role, use this page for review or milestone validation.
+          </div>
+        </div>
+
         <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 xl:grid-cols-4">
           <div className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
             <p className="mb-1">Author:</p>
@@ -780,7 +792,7 @@ export default function IdeaDetailsPage() {
                   : claimGrantReason || "Claim will unlock once round settlement and eligibility checks pass."}
             </p>
             {claimError && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyTxError(claimError.message)}</p>}
-            {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Grant tx: {claimTxHash}</p>}
+            {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Grant transaction reference: {claimTxHash}</p>}
 
             <div className="mt-5 grid gap-4 2xl:grid-cols-2">
               <MilestoneCard
@@ -871,9 +883,9 @@ export default function IdeaDetailsPage() {
             </div>
 
             {milestoneSubmitError && <p className="mt-3 text-xs text-rose-300">{prettyTxError(milestoneSubmitError.message)}</p>}
-            {milestoneSubmitTxHash && <p className="mt-2 break-all text-xs text-slate-300">Proof tx: {milestoneSubmitTxHash}</p>}
+            {milestoneSubmitTxHash && <p className="mt-2 break-all text-xs text-slate-300">Proof transaction reference: {milestoneSubmitTxHash}</p>}
             {milestoneReviewError && <p className="mt-2 text-xs text-rose-300">{prettyTxError(milestoneReviewError.message)}</p>}
-            {milestoneReviewTxHash && <p className="mt-2 break-all text-xs text-slate-300">Review tx: {milestoneReviewTxHash}</p>}
+            {milestoneReviewTxHash && <p className="mt-2 break-all text-xs text-slate-300">Review transaction reference: {milestoneReviewTxHash}</p>}
             <p className="mt-3 text-xs text-slate-400">
               If a milestone proof is rejected, the author can submit a new request after a 48-hour cooldown.
             </p>
@@ -935,7 +947,7 @@ export default function IdeaDetailsPage() {
           </div>
 
           {reviews.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-300">No reviews yet.</p>
+            <p className="mt-3 text-sm text-slate-300">No reviewer feedback yet. Once a reviewer comments, this idea will start building evaluation history here.</p>
           ) : (
             <div className="mt-3 grid gap-2">
               {reviews.map((entry, idx) => (
@@ -951,7 +963,7 @@ export default function IdeaDetailsPage() {
             <textarea
               value={reviewText}
               onChange={(event) => setReviewText(event.target.value)}
-              placeholder="Write review"
+              placeholder="What should the team improve, clarify, or ship next?"
               className="min-h-24 rounded-lg border border-white/10 bg-[#232632] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60"
             />
             <div className="flex flex-wrap gap-2">
@@ -975,7 +987,7 @@ export default function IdeaDetailsPage() {
                 }}
                 className="rounded-lg bg-indigo-500/90 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isReviewPending ? "Sign..." : isReviewConfirming ? "Submitting..." : "Add review"}
+              {isReviewPending ? "Sign..." : isReviewConfirming ? "Submitting..." : "Add review"}
               </button>
               <button
                 type="button"
@@ -997,14 +1009,14 @@ export default function IdeaDetailsPage() {
                 }}
                 className="rounded-lg border border-rose-300/45 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isMarkPending ? "Sign..." : isMarkConfirming ? "Marking..." : "Mark low quality"}
+              {isMarkPending ? "Sign..." : isMarkConfirming ? "Marking..." : "Mark low quality"}
               </button>
             </div>
             {!hasReviewerRole && (
-              <p className="text-xs text-slate-300">Only reviewer role can submit review.</p>
+              <p className="text-xs text-slate-300">Review submission is available only to wallets with reviewer permissions.</p>
             )}
             {!hasCuratorRole && (
-              <p className="text-xs text-slate-300">Only curator role can mark low quality.</p>
+              <p className="text-xs text-slate-300">Low-quality flagging is available only to wallets with curator permissions.</p>
             )}
             {hasReviewerRole && (
               <p className="text-xs text-slate-300">Contract rule: review is allowed only while idea status is Voting.</p>
@@ -1035,7 +1047,7 @@ export default function IdeaDetailsPage() {
               {voters.length === 0 ? (
                 <tr>
                   <td className="px-4 py-4 text-slate-300" colSpan={2}>
-                    No on-chain voters found for this idea.
+                    No on-chain voters found for this idea yet.
                   </td>
                 </tr>
               ) : (

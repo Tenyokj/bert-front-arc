@@ -90,13 +90,13 @@ export function PoolStats() {
 
   return (
     <>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <article className="group rounded-2xl border border-white/10 bg-[#2a2d3b] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/35">
-          <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Contract state</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Treasury status</p>
           <p className="mt-2 text-3xl font-semibold text-slate-100">
             {isPausedValue === undefined ? "..." : isPausedValue ? "Paused" : "Active"}
           </p>
-          <p className="mt-2 text-sm text-slate-300">Source: FundingPool.`isPaused()`</p>
+          <p className="mt-2 text-sm text-slate-300">Whether contributors can actively move capital into the pool right now.</p>
           <div className="mt-4 h-2 rounded-full bg-slate-800">
             <div
               className={`h-full rounded-full transition-all duration-700 ${
@@ -107,20 +107,20 @@ export function PoolStats() {
         </article>
 
         <article className="group rounded-2xl border border-white/10 bg-[#2a2d3b] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/35">
-          <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Distribution count</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Projects funded</p>
           <p className="mt-2 text-3xl font-semibold text-slate-100">
             {distributionCountValue === undefined ? "..." : String(distributionCountValue)}
           </p>
-          <p className="mt-2 text-sm text-slate-300">Source: FundingPool.`getDistributionCount()`</p>
+          <p className="mt-2 text-sm text-slate-300">How many grant distributions have already moved through the treasury.</p>
           <div className="mt-4 inline-flex rounded-full border border-yellow-300/40 bg-yellow-300/10 px-3 py-1 text-xs font-semibold text-yellow-200">
             Total historical payouts
           </div>
         </article>
 
         <article className="group rounded-2xl border border-white/10 bg-[#2a2d3b] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/35">
-          <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Protocol reserve</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Reserve available</p>
           <p className="mt-2 text-3xl font-semibold text-slate-100">{formatUsdc(protocolReserveValue)}</p>
-          <p className="mt-2 text-sm text-slate-300">Source: FundingPool.`protocolReserve()`</p>
+          <p className="mt-2 text-sm text-slate-300">Capital intentionally held back as a liquidity and safety buffer.</p>
           <div className="mt-4 inline-flex rounded-full border border-yellow-300/40 bg-yellow-300/10 px-3 py-1 text-xs font-semibold text-yellow-200">
             Reserved liquidity buffer
           </div>
@@ -131,10 +131,10 @@ export function PoolStats() {
         <header>
           <p className="text-xs uppercase tracking-[0.12em] text-slate-400">My Deposits</p>
           <h2 className="mt-2 font-[var(--font-display)] text-3xl text-slate-100">Wallet Contribution</h2>
-          <p className="mt-1 text-sm text-slate-300">Source: FundingPool.`donorBalances(user)` + FundingPool.`totalPoolBalance()`</p>
+          <p className="mt-1 text-sm text-slate-300">How much treasury capital this wallet has contributed and what share of the pool it represents.</p>
         </header>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-black/15 p-4">
             <p className="text-xs uppercase tracking-[0.08em] text-slate-400">Your deposited USDC</p>
             <p className="mt-2 text-2xl font-semibold text-slate-100">{formatUsdc(donorBalanceValue)}</p>

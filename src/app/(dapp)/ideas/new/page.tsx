@@ -205,14 +205,35 @@ export default function NewIdeaPage() {
           Submit proposal
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
-          Idea creation now requires a USDC deposit. The amount is locked on-chain to reduce spam and align proposals with real commitment.
+          Share a funding proposal with the BERT community. Idea creation requires a USDC deposit that is locked on-chain to reduce spam and prove real commitment from the author.
         </p>
 
         {!contracts.ideaRegistry && (
           <p className="mt-4 rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-            Set <code>NEXT_PUBLIC_IDEA_REGISTRY_ADDRESS</code> in `.env` to enable idea creation.
+            Idea submission is not available in this environment yet because the live Idea Registry address has not been configured.
           </p>
         )}
+
+        <div className="mt-6 grid gap-3 xl:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">1. Describe the proposal</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+              Add a clear title, explain the problem, and include a reference link so reviewers can validate the idea fast.
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">2. Approve the deposit</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+              Your wallet grants FundingPool permission to move the exact USDC stake required for this submission.
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">3. Submit on-chain</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+              Once confirmed, the proposal becomes part of the live registry and can later enter community voting rounds.
+            </p>
+          </div>
+        </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
@@ -231,19 +252,19 @@ export default function NewIdeaPage() {
 
         {isRegistryWiringBroken && (
           <div className="mt-6 rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-4 text-sm text-rose-100">
-            <p className="font-semibold">IdeaRegistry deployment is miswired on this network.</p>
+            <p className="font-semibold">Live idea submission is temporarily blocked on this network.</p>
             {hasInvalidMinStake && (
               <p className="mt-2">
-                `authorMinStake()` returned `0`, but the V2 create-idea flow expects a positive minimum stake.
+                The registry is returning an invalid minimum deposit, so the form cannot safely submit a proposal.
               </p>
             )}
             {hasFundingPoolMismatch && (
               <p className="mt-2 break-all">
-                `IdeaRegistry.fundingPool()` points to `{registryFundingPoolValue}`, while the configured FundingPool is `{expectedFundingPool}`.
+                The Idea Registry is pointing to a different treasury contract than the dApp expects for this deployment.
               </p>
             )}
             <p className="mt-2">
-              Until the proxy wiring or upgrade state is fixed on-chain, idea submission will keep reverting.
+              Until the deployment wiring is fixed on-chain, transactions from this form will keep reverting.
             </p>
           </div>
         )}
@@ -255,7 +276,7 @@ export default function NewIdeaPage() {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
-              placeholder="Proposal title"
+              placeholder="AI healthcare coordination network"
             />
           </label>
 
@@ -265,7 +286,7 @@ export default function NewIdeaPage() {
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               className="min-h-32 rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50 sm:min-h-36"
-              placeholder="Describe your proposal in detail"
+              placeholder="Explain the problem, who benefits, what you want to build, and how the grant would be used."
             />
           </label>
 
@@ -288,9 +309,19 @@ export default function NewIdeaPage() {
               placeholder="50"
             />
             <p className="text-xs text-slate-400">
-              Contract currently requires at least {formatTokenAmount(minStakeValue)} USDC before idea creation can succeed.
+              The current live minimum is {formatTokenAmount(minStakeValue)} USDC. You can deposit more, but not less.
             </p>
           </label>
+
+          <div className="rounded-2xl border border-white/10 bg-[#313443] p-4">
+            <p className="text-sm font-semibold text-white">Before you submit</p>
+            <div className="mt-3 grid gap-2 text-sm text-slate-300">
+              <p>Use a title that explains the outcome, not just the category.</p>
+              <p>Write enough context so a reviewer understands the value in under a minute.</p>
+              <p>Include a public link to docs, deck, repo, or research if you have one.</p>
+              <p>Make sure your wallet has enough USDC for both the deposit and gas.</p>
+            </div>
+          </div>
 
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button
@@ -311,10 +342,10 @@ export default function NewIdeaPage() {
               {isApprovePending
                 ? "Awaiting signature..."
                 : isApproveConfirming
-                  ? "Approving..."
+                  ? "Approving USDC..."
                   : needsApproval
-                    ? "Approve stake"
-                    : "Stake approved"}
+                    ? "Approve USDC deposit"
+                    : "Deposit approved"}
             </button>
             <button
               type="submit"
@@ -328,38 +359,38 @@ export default function NewIdeaPage() {
 
         {hydrated && !isConnected && (
           <p className="mt-4 text-sm text-amber-100">
-            Connect wallet to approve stake and create an on-chain idea.
+            Connect your wallet to approve the deposit and publish an on-chain idea.
           </p>
         )}
         {invalidStake && stakeAmount.trim().length > 0 && <p className="mt-3 text-sm text-rose-300">Enter a valid USDC amount.</p>}
         {belowMinStake && minStakeValue !== undefined && (
           <p className="mt-3 text-sm text-rose-300">
-            Deposit is below the current minimum of {formatTokenAmount(minStakeValue)} USDC.
+            The deposit is below the current minimum of {formatTokenAmount(minStakeValue)} USDC.
           </p>
         )}
         {insufficientBalance && (
-          <p className="mt-3 text-sm text-rose-300">Wallet balance is too low for this USDC deposit.</p>
+          <p className="mt-3 text-sm text-rose-300">Your wallet balance is too low for this USDC deposit.</p>
         )}
         {needsApproval && parsedStake > 0n && !insufficientBalance && (
           <p className="mt-3 text-sm text-slate-300">
-            Approve FundingPool for at least {formatTokenAmount(parsedStake)} USDC before submitting the idea.
+            Approve the treasury contract for at least {formatTokenAmount(parsedStake)} USDC before you submit the idea.
           </p>
         )}
         {isRegistryWiringBroken && (
           <p className="mt-3 text-sm text-rose-300">
-            Submission is blocked because the current IdeaRegistry deployment is not correctly wired to FundingPool.
+            Submission is blocked because the live registry is not correctly connected to the treasury contract on this network.
           </p>
         )}
-        {approveError && <p className="mt-3 break-words text-sm text-rose-300">{approveError.message}</p>}
-        {approveTxHash && <p className="mt-3 break-all text-xs text-slate-300">Approve tx: {approveTxHash}</p>}
+        {approveError && <p className="mt-3 break-words text-sm text-rose-300">{prettyCreateIdeaError(approveError.message)}</p>}
+        {approveTxHash && <p className="mt-3 break-all text-xs text-slate-300">Approval transaction reference: {approveTxHash}</p>}
         {isApproveSuccess && !needsApproval && (
-          <p className="mt-3 text-sm font-semibold text-emerald-300">Stake allowance confirmed.</p>
+          <p className="mt-3 text-sm font-semibold text-emerald-300">USDC deposit approval confirmed.</p>
         )}
         {createError && <p className="mt-3 break-words text-sm text-rose-300">{prettyCreateIdeaError(createError.message)}</p>}
-        {createTxHash && <p className="mt-3 break-all text-xs text-slate-300">Create tx: {createTxHash}</p>}
+        {createTxHash && <p className="mt-3 break-all text-xs text-slate-300">Submission transaction reference: {createTxHash}</p>}
         {isCreateSuccess && (
           <p className="mt-3 text-sm font-semibold text-emerald-300">
-            Idea created successfully and stake locked on-chain.
+            Idea created successfully and the deposit is now locked on-chain.
           </p>
         )}
       </div>

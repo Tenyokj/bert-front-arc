@@ -44,6 +44,7 @@ function RoundsPageContent() {
   const { isConnected } = useAccount();
   const searchParams = useSearchParams();
   const [rounds, setRounds] = useState<OnChainRound[]>([]);
+  const [totalRoundsCount, setTotalRoundsCount] = useState(0);
   const [ideasPerRound, setIdeasPerRound] = useState<bigint | null>(null);
   const [missingIdeas, setMissingIdeas] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +54,9 @@ function RoundsPageContent() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
   const pageSize = 30;
   const canStartByIdeas = missingIdeas === 0;
+  const requestedPage = Number(searchParams.get("page") ?? "1");
+  const safeRequestedPage = Number.isFinite(requestedPage) ? Math.max(Math.floor(requestedPage), 1) : 1;
+  const start = (safeRequestedPage - 1) * pageSize;
 
   const formatUsdc = (value?: bigint) => {
     if (value === undefined) return "-";
@@ -108,6 +112,7 @@ function RoundsPageContent() {
         ])) as [bigint, bigint, bigint, bigint];
 
         const total = Number(currentRoundId);
+        if (!cancelled) setTotalRoundsCount(Math.max(total, 0));
         if (!cancelled) {
           const availableIdeas = Number(totalIdeas - lastUsedIdeaId);
           const ideaLimitNum = Number(ideaLimit);
@@ -121,7 +126,7 @@ function RoundsPageContent() {
 
         if (hasSubgraphConfigured()) {
           try {
-            const rows = await fetchRoundsPageFromSubgraph(1000, 0);
+            const rows = await fetchRoundsPageFromSubgraph(pageSize, start);
             const mapped = rows.map((row) => ({
               id: Number(row.id),
               ideaIds: (row.ideaIds || []).map((value) => Number(value)),
@@ -185,7 +190,7 @@ function RoundsPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [client, isSuccess]);
+  }, [client, isSuccess, pageSize, start]);
 
   const onStartRound = () => {
     if (!contracts.votingSystem) return;
@@ -198,42 +203,63 @@ function RoundsPageContent() {
     });
   };
 
-  const requestedPage = Number(searchParams.get("page") ?? "1");
-  const totalPages = Math.max(1, Math.ceil(rounds.length / pageSize));
-  const currentPage = Number.isFinite(requestedPage)
-    ? Math.min(Math.max(Math.floor(requestedPage), 1), totalPages)
-    : 1;
-  const start = (currentPage - 1) * pageSize;
-  const visibleRounds = useMemo(
-    () => rounds.slice(start, start + pageSize),
-    [rounds, start]
-  );
+  const totalPages = Math.max(1, Math.ceil(totalRoundsCount / pageSize));
+  const currentPage = Math.min(safeRequestedPage, totalPages);
+  const visibleRounds = useMemo(() => rounds, [rounds]);
 
   return (
     <section className="space-y-6">
       <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Stablecoin Voting</p>
         <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Voting Rounds</h1>
-        <div className="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <button
-            type="button"
-            onClick={onStartRound}
-            disabled={
-              !isConnected ||
-              !contracts.votingSystem ||
-              !canStartByIdeas ||
-              isPending ||
-              isConfirming ||
-              isLoading
-            }
-            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
+          A voting round groups multiple ideas into one decision window. Compare proposals, inspect current traction,
+          and back the strongest builder with stablecoin voting power.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/ideas"
+            className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"
           >
-            {isPending ? "Awaiting signature..." : isConfirming ? "Creating round..." : "Start voting round"}
-          </button>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-            {missingIdeas > 0 ? `Need ${missingIdeas || ideasPerRound?.toString() || "..."} ideas` : "Ready"}
-          </span>
-          {!isConnected && <span className="text-xs text-amber-200">Connect wallet to start a round.</span>}
+            Review ideas first
+          </Link>
+          <Link
+            href="/demo/rounds"
+            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+          >
+            Open demo flow
+          </Link>
+        </div>
+        <div className="mt-5 rounded-2xl border border-white/10 bg-[#313443] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Treasury operations</p>
+              <p className="mt-1 text-sm text-slate-300">
+                Starting a new round is an operator action. Regular users can still browse and evaluate all existing rounds below.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onStartRound}
+              disabled={
+                !isConnected ||
+                !contracts.votingSystem ||
+                !canStartByIdeas ||
+                isPending ||
+                isConfirming ||
+                isLoading
+              }
+              className="rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? "Awaiting signature..." : isConfirming ? "Creating round..." : "Start round"}
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
+              {missingIdeas > 0 ? `Need ${missingIdeas || ideasPerRound?.toString() || "..."} more ideas` : "Enough ideas to open a round"}
+            </span>
+            {!isConnected && <span className="text-xs text-amber-200">Connect wallet if you are the round operator.</span>}
+          </div>
         </div>
         {error?.message && (
           <p className="mt-3 text-xs text-rose-300">
@@ -256,7 +282,27 @@ function RoundsPageContent() {
       ) : loadError ? (
         <p className="rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{loadError}</p>
       ) : visibleRounds.length === 0 ? (
-        <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">No rounds on-chain yet.</p>
+        <div className="rounded-[24px] border border-white/10 bg-[#313443] p-5 sm:p-6">
+          <p className="text-lg font-semibold text-white">No rounds on-chain yet.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
+            This live environment is connected correctly, but there are no active rounds to inspect right now.
+            If you want to understand the BERT flow immediately, jump into the isolated demo.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/demo/rounds"
+              className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"
+            >
+              View demo rounds
+            </Link>
+            <Link
+              href="/app"
+              className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+            >
+              Back to dashboard
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
           {visibleRounds.map((round) => {
@@ -303,7 +349,7 @@ function RoundsPageContent() {
         </div>
       )}
 
-      <Pagination basePath="/rounds" currentPage={currentPage} totalItems={rounds.length} pageSize={pageSize} />
+      <Pagination basePath="/rounds" currentPage={currentPage} totalItems={totalRoundsCount} pageSize={pageSize} />
     </section>
   );
 }

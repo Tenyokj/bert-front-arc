@@ -20,43 +20,75 @@ import {
 } from "react-icons/fa";
 
 export default function Home() {
+  const firstVisitPaths = [
+    {
+      label: "For builders",
+      title: "Submit an idea and compete for funding",
+      description: "Create a proposal, join a round, and unlock grant capital if the community backs your work.",
+      href: "/ideas/new",
+    },
+    {
+      label: "For voters",
+      title: "Back the strongest proposals with USDC",
+      description: "Inspect live rounds, compare ideas, and allocate voting power to the teams you trust most.",
+      href: "/rounds",
+    },
+    {
+      label: "For judges",
+      title: "Understand the whole system in 60 seconds",
+      description: "Open the isolated demo dApp to inspect rounds, ideas, treasury flow, and milestone logic without setup.",
+      href: "/demo",
+    },
+  ];
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <div className="hero-ambient absolute inset-0" />
       <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
-        <header className="flex items-center justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
             <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
               <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
+                BERT
+              </Link>
             </span>
           </div>
           <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
             <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
               How it works
             </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
+            <Link href="/app" className="transition-colors hover:text-slate-900">
+              App dashboard
             </Link>
             <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
               Docs
             </a>
           </nav>
           <Link
-            href="/rounds"
+            href="/app"
             className="rounded-full border border-white/60 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5 sm:px-5 sm:text-sm"
           >
             Launch App
           </Link>
+          <nav className="flex w-full gap-2 overflow-x-auto pb-1 text-xs text-slate-600 no-scrollbar md:hidden">
+            <Link href="/how-it-works" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
+              How it works
+            </Link>
+            <Link href="/app" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
+              App dashboard
+            </Link>
+            <a href="https://bertdao-docs.vercel.app/" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
+              Docs
+            </a>
+          </nav>
         </header>
 
         <main className="mt-10 grid flex-1 items-center gap-10 lg:mt-14 lg:gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="order-2 flex items-center justify-center lg:order-1 lg:justify-left">
             <div className="relative">
               <HeroLogo3DClient />
-              <div className="absolute -bottom-4 left-1/2 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 gap-2 rounded-full border border-white/60 bg-white/80 px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.12)] sm:-bottom-6 sm:gap-3 sm:px-4 sm:text-xs">
+              <div className="absolute -bottom-4 left-1/2 flex max-w-[calc(100vw-2.5rem)] -translate-x-1/2 flex-wrap justify-center gap-2 rounded-full border border-white/60 bg-white/80 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.12)] sm:-bottom-6 sm:w-max sm:max-w-[calc(100vw-2rem)] sm:gap-3 sm:px-4 sm:text-xs">
                 <span className="text-teal-600">Live</span>
                 <span>Transparent distribution</span>
               </div>
@@ -76,22 +108,42 @@ export default function Home() {
               It combines stake-backed proposal intake, stablecoin voting, and
               milestone-based grant release inside a modular upgradeable stack.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
               <Link
-                href="/rounds"
-                className="rounded-full border bg-slate-900 px-7 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.25)] backdrop-blur transition hover:-translate-y-0.5"
+                href="/app"
+                className="rounded-full border bg-slate-900 px-7 py-3 text-center text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.25)] backdrop-blur transition hover:-translate-y-0.5"
               >
                 Launch App
               </Link>
               <Link
+                href="/demo"
+                className="rounded-full border border-cyan-200 bg-cyan-50/70 px-7 py-3 text-center text-sm font-semibold text-cyan-900 backdrop-blur transition hover:-translate-y-0.5"
+              >
+                Demo dApp
+              </Link>
+              <Link
                 href="/how-it-works"
-                className="rounded-full border border-slate-200 bg-white/70 px-7 py-3 text-sm font-semibold text-slate-900 backdrop-blur transition hover:-translate-y-0.5"
+                className="rounded-full border border-slate-200 bg-white/70 px-7 py-3 text-center text-sm font-semibold text-slate-900 backdrop-blur transition hover:-translate-y-0.5"
               >
                 How it works
               </Link>
             </div>
 
             <HomeLiveStats />
+
+            <div className="mt-8 grid gap-3 lg:max-w-3xl">
+              {firstVisitPaths.map((path) => (
+                <Link
+                  key={path.title}
+                  href={path.href}
+                  className="rounded-[22px] border border-slate-200/80 bg-white/70 p-4 transition hover:-translate-y-0.5 hover:border-cyan-300/60"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-teal-600">{path.label}</p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">{path.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{path.description}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         </main>
 

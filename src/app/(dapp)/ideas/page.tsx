@@ -9,7 +9,7 @@ import { Pagination } from "@/components/Pagination";
 import { AddressIdentity } from "@/components/AddressIdentity";
 import { contracts, ideaRegistryAbi } from "@/lib/contracts";
 import { formatTokenAmount, mapIdeaStatus } from "@/lib/dapp-onchain";
-import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
+import { fetchIdeasPageFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 type OnChainIdea = {
   id: number;
@@ -26,10 +26,14 @@ function IdeasPageContent() {
   const client = usePublicClient();
   const searchParams = useSearchParams();
   const [ideas, setIdeas] = useState<OnChainIdea[]>([]);
+  const [totalIdeasCount, setTotalIdeasCount] = useState(0);
   const [reviewedIdeas, setReviewedIdeas] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const pageSize = 15;
+  const requestedPage = Number(searchParams.get("page") ?? "1");
+  const safeRequestedPage = Number.isFinite(requestedPage) ? Math.max(Math.floor(requestedPage), 1) : 1;
+  const start = (safeRequestedPage - 1) * pageSize;
 
   useEffect(() => {
     let cancelled = false;
@@ -47,9 +51,18 @@ function IdeasPageContent() {
       setLoadError(null);
 
       try {
+        const totalPromise = readContract({
+          address: contracts.ideaRegistry,
+          abi: ideaRegistryAbi,
+          functionName: "totalIdeas",
+        }) as Promise<bigint>;
+
         if (hasSubgraphConfigured()) {
           try {
-            const subgraphRows = await fetchAllIdeasFromSubgraph();
+            const [totalIdeas, subgraphRows] = await Promise.all([
+              totalPromise,
+              fetchIdeasPageFromSubgraph(pageSize, start),
+            ]);
             const mapped = subgraphRows.map((idea) => ({
               id: Number(idea.id),
               author: idea.author,
@@ -62,6 +75,7 @@ function IdeasPageContent() {
             })) satisfies OnChainIdea[];
 
             if (!cancelled) {
+              setTotalIdeasCount(Number(totalIdeas));
               setIdeas(
                 mapped
                   .filter((entry) => Number.isFinite(entry.id) && entry.id > 0)
@@ -81,19 +95,19 @@ function IdeasPageContent() {
           }
         }
 
-        const total = (await readContract({
-          address: contracts.ideaRegistry,
-          abi: ideaRegistryAbi,
-          functionName: "totalIdeas",
-        })) as bigint;
+        const total = await totalPromise;
 
         const count = Number(total);
+        if (!cancelled) setTotalIdeasCount(count);
         if (!Number.isFinite(count) || count <= 0) {
           if (!cancelled) setIdeas([]);
           return;
         }
 
-        const ids = Array.from({ length: count }, (_, i) => i + 1).reverse();
+        const ids = Array.from(
+          { length: Math.min(pageSize, Math.max(count - start, 0)) },
+          (_, i) => count - start - i
+        ).filter((id) => id > 0);
         const results = await Promise.all(
           ids.map(async (id) => {
             const idea = (await readContract({
@@ -130,19 +144,12 @@ function IdeasPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [client]);
+  }, [client, pageSize, start]);
 
-  const requestedPage = Number(searchParams.get("page") ?? "1");
-  const totalPages = Math.max(1, Math.ceil(ideas.length / pageSize));
-  const currentPage = Number.isFinite(requestedPage)
-    ? Math.min(Math.max(Math.floor(requestedPage), 1), totalPages)
-    : 1;
-  const start = (currentPage - 1) * pageSize;
+  const totalPages = Math.max(1, Math.ceil(totalIdeasCount / pageSize));
+  const currentPage = Math.min(safeRequestedPage, totalPages);
 
-  const visibleIdeas = useMemo(
-    () => ideas.slice(start, start + pageSize),
-    [ideas, start]
-  );
+  const visibleIdeas = useMemo(() => ideas, [ideas]);
 
   useEffect(() => {
     let cancelled = false;
@@ -187,6 +194,24 @@ function IdeasPageContent() {
       <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 sm:p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Idea Registry</p>
         <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Ideas</h1>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
+          This is the proposal intake layer of BERT. Browse submissions, inspect authors and vote traction,
+          then decide which ideas deserve treasury support in a live round.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/ideas/new"
+            className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"
+          >
+            Submit an idea
+          </Link>
+          <Link
+            href="/rounds"
+            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+          >
+            See live rounds
+          </Link>
+        </div>
       </div>
 
       {!contracts.ideaRegistry ? (
@@ -198,7 +223,26 @@ function IdeasPageContent() {
       ) : loadError ? (
         <p className="rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{loadError}</p>
       ) : visibleIdeas.length === 0 ? (
-        <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">No ideas on-chain yet.</p>
+        <div className="rounded-[24px] border border-white/10 bg-[#313443] p-5 sm:p-6">
+          <p className="text-lg font-semibold text-white">No ideas on-chain yet.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
+            Live idea intake is empty at the moment. To understand how proposals look inside BERT, open the demo registry with realistic sample ideas.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/demo/ideas"
+              className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"
+            >
+              View demo ideas
+            </Link>
+            <Link
+              href="/app"
+              className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+            >
+              Back to dashboard
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {visibleIdeas.map((idea) => (
@@ -236,7 +280,7 @@ function IdeasPageContent() {
         </div>
       )}
 
-      <Pagination basePath="/ideas" currentPage={currentPage} totalItems={ideas.length} pageSize={pageSize} />
+      <Pagination basePath="/ideas" currentPage={currentPage} totalItems={totalIdeasCount} pageSize={pageSize} />
     </section>
   );
 }

@@ -12,7 +12,7 @@ import {
   ideaRegistryAbi,
 } from "@/lib/contracts";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
-import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
+import { fetchActiveRoundsPageFromSubgraph, fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 type HomeStats = {
   poolBalance?: bigint;
@@ -48,123 +48,111 @@ export function HomeLiveStats() {
 
       const next: HomeStats = {};
 
-      if (contracts.fundingPool) {
-        try {
-          const [poolBalance, fundedProposals] = (await Promise.all([
-            readContract({
-              address: contracts.fundingPool,
-              abi: fundingPoolAbi,
-              functionName: "totalPoolBalance",
-            }),
-            readContract({
-              address: contracts.fundingPool,
-              abi: fundingPoolAbi,
-              functionName: "getDistributionCount",
-            }),
-          ])) as [bigint, bigint];
-          next.poolBalance = poolBalance;
-          next.fundedProposals = fundedProposals;
-          next.ideasWithGrant = fundedProposals;
-        } catch {
-          // keep defaults
-        }
-      }
+      await Promise.all([
+        (async () => {
+          if (!contracts.fundingPool) return;
+          try {
+            const [poolBalance, fundedProposals] = (await Promise.all([
+              readContract({
+                address: contracts.fundingPool,
+                abi: fundingPoolAbi,
+                functionName: "totalPoolBalance",
+              }),
+              readContract({
+                address: contracts.fundingPool,
+                abi: fundingPoolAbi,
+                functionName: "getDistributionCount",
+              }),
+            ])) as [bigint, bigint];
+            next.poolBalance = poolBalance;
+            next.fundedProposals = fundedProposals;
+            next.ideasWithGrant = fundedProposals;
+          } catch {
+            // keep defaults
+          }
+        })(),
+        (async () => {
+          if (!contracts.votingSystem) return;
+          try {
+            if (hasSubgraphConfigured()) {
+              const activeRows = await fetchActiveRoundsPageFromSubgraph(1000, 0);
+              next.activeRounds = activeRows.length;
+              return;
+            }
 
-      if (contracts.votingSystem) {
-        try {
-          const currentRoundId = (await readContract({
-            address: contracts.votingSystem,
-            abi: votingSystemAbi,
-            functionName: "currentRoundId",
-          })) as bigint;
+            const currentRoundId = (await readContract({
+              address: contracts.votingSystem,
+              abi: votingSystemAbi,
+              functionName: "currentRoundId",
+            })) as bigint;
 
-          const totalRounds = currentRoundId > 1n ? Number(currentRoundId - 1n) : 0;
-          if (totalRounds > 0) {
-            const infos = await Promise.all(
-              Array.from({ length: totalRounds }, (_, idx) =>
-                readContract({
-                  address: contracts.votingSystem!,
-                  abi: votingSystemAbi,
-                  functionName: "getRoundInfo",
-                  args: [BigInt(idx + 1)],
-                })
-              )
-            );
-
-            const active = infos
-              .map((row) => row as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])
-              .filter((row) => row[4] && !row[5]);
-
-            next.activeRounds = active.length;
-
-            const voterSet = new Set<string>();
-            for (const round of active) {
-              for (const ideaId of round[1]) {
-                try {
-                  const voters = (await readContract({
+            const totalRounds = currentRoundId > 1n ? Number(currentRoundId - 1n) : 0;
+            if (totalRounds > 0) {
+              const infos = await Promise.all(
+                Array.from({ length: totalRounds }, (_, idx) =>
+                  readContract({
                     address: contracts.votingSystem!,
                     abi: votingSystemAbi,
-                    functionName: "getVotersForIdea",
-                    args: [round[0], ideaId],
-                  })) as string[];
-                  for (const voter of voters) {
-                    voterSet.add(voter.toLowerCase());
-                  }
-                } catch {
-                  // ignore per idea errors
-                }
+                    functionName: "getRoundInfo",
+                    args: [BigInt(idx + 1)],
+                  })
+                )
+              );
+
+              const active = infos
+                .map((row) => row as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])
+                .filter((row) => row[4] && !row[5]);
+
+              next.activeRounds = active.length;
+            } else {
+              next.activeRounds = 0;
+            }
+          } catch {
+            // keep defaults
+          }
+        })(),
+        (async () => {
+          if (!contracts.ideaRegistry) return;
+          try {
+            const totalIdeas = (await readContract({
+              address: contracts.ideaRegistry,
+              abi: ideaRegistryAbi,
+              functionName: "totalIdeas",
+            })) as bigint;
+            next.totalIdeas = totalIdeas;
+          } catch {
+            if (hasSubgraphConfigured()) {
+              try {
+                const ideas = await fetchAllIdeasFromSubgraph();
+                next.totalIdeas = BigInt(ideas.length);
+              } catch {
+                // keep defaults
               }
             }
-            next.activeVoters = voterSet.size;
-          } else {
-            next.activeRounds = 0;
-            next.activeVoters = 0;
           }
-        } catch {
-          // keep defaults
-        }
-      }
-
-      if (contracts.ideaRegistry) {
-        try {
-          const totalIdeas = (await readContract({
-            address: contracts.ideaRegistry,
-            abi: ideaRegistryAbi,
-            functionName: "totalIdeas",
-          })) as bigint;
-          next.totalIdeas = totalIdeas;
-        } catch {
-          if (hasSubgraphConfigured()) {
-            try {
-              const ideas = await fetchAllIdeasFromSubgraph();
-              next.totalIdeas = BigInt(ideas.length);
-            } catch {
-              // keep defaults
-            }
+        })(),
+        (async () => {
+          if (!contracts.usdc) return;
+          try {
+            const [tokenSymbol, tokenSupply] = (await Promise.all([
+              readContract({
+                address: contracts.usdc,
+                abi: usdcAbi,
+                functionName: "symbol",
+              }),
+              readContract({
+                address: contracts.usdc,
+                abi: usdcAbi,
+                functionName: "totalSupply",
+              }),
+            ])) as [string, bigint];
+            next.tokenSymbol = tokenSymbol;
+            next.tokenSupply = tokenSupply;
+          } catch {
+            // keep defaults
           }
-        }
-      }
-
-      if (contracts.usdc) {
-        try {
-          const [tokenSymbol, tokenSupply] = (await Promise.all([
-            readContract({
-              address: contracts.usdc,
-              abi: usdcAbi,
-              functionName: "symbol",
-            }),
-            readContract({
-              address: contracts.usdc,
-              abi: usdcAbi,
-              functionName: "totalSupply",
-            }),
-          ])) as [string, bigint];
-          next.tokenSymbol = tokenSymbol;
-          next.tokenSupply = tokenSupply;
-        } catch {
-          // keep defaults
-        }
-      }
+        })(),
+      ]);
 
       if (!cancelled) setStats(next);
     }
@@ -191,7 +179,7 @@ export function HomeLiveStats() {
           {stats.activeRounds === undefined ? "..." : `${stats.activeRounds} live`}
         </p>
         <p className="mt-2 text-sm text-slate-500">
-          {stats.activeVoters === undefined ? "..." : new Intl.NumberFormat("en-US").format(stats.activeVoters)} voters participating
+          Community voting is currently open across the active registry
         </p>
       </div>
 

@@ -7,6 +7,7 @@ import { usePublicClient } from "wagmi";
 
 import { contracts, fundingPoolAbi, votingSystemAbi } from "@/lib/contracts";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
+import { fetchActiveRoundsPageFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 
 type StrategyStats = {
   poolBalance?: bigint;
@@ -37,101 +38,100 @@ export function HomeStrategyCards() {
       const readContract = (config: Record<string, unknown>) =>
         (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
       const next: StrategyStats = {};
+      let distributionCountValue: bigint | undefined;
 
-      if (contracts.fundingPool) {
-        try {
-          const [poolBalance, distributionCount] = (await Promise.all([
-            readContract({
-              address: contracts.fundingPool,
-              abi: fundingPoolAbi,
-              functionName: "totalPoolBalance",
-            }),
-            readContract({
-              address: contracts.fundingPool,
-              abi: fundingPoolAbi,
-              functionName: "getDistributionCount",
-            }),
-          ])) as [bigint, bigint];
-
-          next.poolBalance = poolBalance;
-          next.distributionCount = distributionCount;
-
-          let paidOut = 0n;
-          const count = Number(distributionCount);
-          for (let i = 0; i < count; i += 1) {
-            try {
-              const distribution = (await readContract({
+      await Promise.all([
+        (async () => {
+          if (!contracts.fundingPool) return;
+          try {
+            const [poolBalance, distributionCount] = (await Promise.all([
+              readContract({
                 address: contracts.fundingPool,
+                abi: fundingPoolAbi,
+                functionName: "totalPoolBalance",
+              }),
+              readContract({
+                address: contracts.fundingPool,
+                abi: fundingPoolAbi,
+                functionName: "getDistributionCount",
+              }),
+            ])) as [bigint, bigint];
+
+            next.poolBalance = poolBalance;
+            next.distributionCount = distributionCount;
+            distributionCountValue = distributionCount;
+          } catch {
+            // keep defaults
+          }
+        })(),
+        (async () => {
+          if (!contracts.votingSystem) return;
+          try {
+            if (hasSubgraphConfigured()) {
+              const activeRows = await fetchActiveRoundsPageFromSubgraph(1000, 0);
+              next.activeRounds = activeRows.length;
+              return;
+            }
+
+            const currentRoundId = (await readContract({
+              address: contracts.votingSystem,
+              abi: votingSystemAbi,
+              functionName: "currentRoundId",
+            })) as bigint;
+
+            const totalRounds = currentRoundId > 1n ? Number(currentRoundId - 1n) : 0;
+            if (totalRounds > 0) {
+              const infos = await Promise.all(
+                Array.from({ length: totalRounds }, (_, idx) =>
+                  readContract({
+                    address: contracts.votingSystem!,
+                    abi: votingSystemAbi,
+                    functionName: "getRoundInfo",
+                    args: [BigInt(idx + 1)],
+                  })
+                )
+              );
+
+              const active = infos
+                .map((row) => row as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])
+                .filter((row) => row[4] && !row[5]);
+              next.activeRounds = active.length;
+            } else {
+              next.activeRounds = 0;
+            }
+          } catch {
+            // keep defaults
+          }
+        })(),
+      ]);
+
+      if (!cancelled) setStats((prev) => ({ ...prev, ...next }));
+
+      if (contracts.fundingPool && distributionCountValue && distributionCountValue > 0n) {
+        try {
+          const distributions = await Promise.all(
+            Array.from({ length: Number(distributionCountValue) }, (_, i) =>
+              readContract({
+                address: contracts.fundingPool!,
                 abi: fundingPoolAbi,
                 functionName: "getDistribution",
                 args: [BigInt(i)],
-              })) as readonly [bigint, bigint, bigint, bigint];
-              paidOut += distribution[2];
-            } catch {
-              // ignore single failed item
-            }
-          }
-          next.paidOutTotal = paidOut;
-        } catch {
-          // keep defaults
-        }
-      }
+              }).catch(() => null)
+            )
+          );
 
-      if (contracts.votingSystem) {
-        try {
-          const currentRoundId = (await readContract({
-            address: contracts.votingSystem,
-            abi: votingSystemAbi,
-            functionName: "currentRoundId",
-          })) as bigint;
+          const paidOut = distributions.reduce((sum, distribution) => {
+            if (!distribution) return sum;
+            return sum + (distribution as readonly [bigint, bigint, bigint, bigint])[2];
+          }, 0n);
 
-          const totalRounds = currentRoundId > 1n ? Number(currentRoundId - 1n) : 0;
-          if (totalRounds > 0) {
-            const infos = await Promise.all(
-              Array.from({ length: totalRounds }, (_, idx) =>
-                readContract({
-                  address: contracts.votingSystem!,
-                  abi: votingSystemAbi,
-                  functionName: "getRoundInfo",
-                  args: [BigInt(idx + 1)],
-                })
-              )
-            );
-
-            const active = infos
-              .map((row) => row as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])
-              .filter((row) => row[4] && !row[5]);
-            next.activeRounds = active.length;
-
-            const voterSet = new Set<string>();
-            for (const round of active) {
-              for (const ideaId of round[1]) {
-                try {
-                  const voters = (await readContract({
-                    address: contracts.votingSystem!,
-                    abi: votingSystemAbi,
-                    functionName: "getVotersForIdea",
-                    args: [round[0], ideaId],
-                  })) as string[];
-                  for (const voter of voters) {
-                    voterSet.add(voter.toLowerCase());
-                  }
-                } catch {
-                  // ignore per idea errors
-                }
-              }
-            }
-            next.activeVoters = voterSet.size;
-          } else {
-            next.activeRounds = 0;
-            next.activeVoters = 0;
+          if (!cancelled) {
+            setStats((prev) => ({ ...prev, paidOutTotal: paidOut }));
           }
         } catch {
           // keep defaults
         }
       }
-
-      if (!cancelled) setStats(next);
     }
 
     void load();
@@ -178,12 +178,12 @@ export function HomeStrategyCards() {
             Earn reputation boosts and voter rewards for consistent, high-quality participation across rounds.
           </p>
           <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Active voters</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Active rounds</p>
             <p className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl xl:text-5xl">
-              {stats.activeVoters === undefined ? "..." : new Intl.NumberFormat("en-US").format(stats.activeVoters)}
+              {stats.activeRounds === undefined ? "..." : new Intl.NumberFormat("en-US").format(stats.activeRounds)}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              In {stats.activeRounds === undefined ? "..." : stats.activeRounds.toString()} live rounds
+              Live rounds open for community voting right now
             </p>
           </div>
           <Link href="/rounds" className="mt-auto w-fit rounded-full bg-slate-900 px-7 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-white">

@@ -37,6 +37,8 @@ type GraphQLResponse<T> = {
 
 const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
 const SUBGRAPH_PAGE_SIZE = 1000;
+const SUBGRAPH_CACHE_TTL_MS = 15_000;
+const subgraphCache = new Map<string, { expiresAt: number; data: unknown }>();
 
 function getSubgraphProxyUrl() {
   if (typeof window !== "undefined") {
@@ -78,6 +80,13 @@ export async function fetchGraphQL<T>(query: string, variables?: Record<string, 
     throw new Error("NEXT_PUBLIC_SUBGRAPH_URL is not set");
   }
 
+  const cacheKey = JSON.stringify([query, variables ?? null]);
+  const now = Date.now();
+  const cached = subgraphCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    return cached.data as T;
+  }
+
   const requestUrl = getSubgraphProxyUrl();
   if (!requestUrl) {
     throw new Error("Subgraph proxy route is unavailable in this environment");
@@ -103,6 +112,11 @@ export async function fetchGraphQL<T>(query: string, variables?: Record<string, 
   if (!payload.data) {
     throw new Error("Subgraph response has no data");
   }
+
+  subgraphCache.set(cacheKey, {
+    expiresAt: now + SUBGRAPH_CACHE_TTL_MS,
+    data: payload.data,
+  });
 
   return payload.data;
 }
@@ -345,6 +359,28 @@ export async function fetchAllVotesByIdeaFromSubgraph(ideaId: string) {
   return collectSubgraphPages((first, skip) =>
     fetchVotesByIdeaFromSubgraph(ideaId, first, skip)
   );
+}
+
+const ACTIVE_ROUNDS_QUERY = `
+  query ActiveRounds($first: Int!, $skip: Int!) {
+    rounds(
+      first: $first
+      skip: $skip
+      where: { active: true, ended: false }
+      orderBy: id
+      orderDirection: desc
+    ) {
+      id
+    }
+  }
+`;
+
+export async function fetchActiveRoundsPageFromSubgraph(first: number, skip: number) {
+  const data = await fetchGraphQL<{ rounds: Array<{ id: string }> }>(ACTIVE_ROUNDS_QUERY, {
+    first: clampSubgraphPageSize(first),
+    skip,
+  });
+  return data.rounds;
 }
 
 const SEARCH_QUERY = `

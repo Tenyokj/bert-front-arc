@@ -353,25 +353,31 @@ export function FundingPoolHero() {
   }, []);
 
   return (
-    <section className="relative min-h-[78vh] overflow-hidden rounded-3xl border border-white/10 bg-[#2a2d3b]">
+    <section className="relative min-h-[66vh] overflow-hidden rounded-3xl border border-white/10 bg-[#2a2d3b] sm:min-h-[72vh] lg:min-h-[78vh]">
       <div ref={mountRef} className="absolute inset-0" />
 
-      <div className="relative z-10 flex min-h-[78vh] flex-col items-center justify-center px-6 text-center">
+      <div className="relative z-10 flex min-h-[66vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[72vh] sm:px-6 lg:min-h-[78vh]">
         <p className="text-xs uppercase tracking-[0.28em] text-slate-100">Funding Pool</p>
-        <h1 className="mt-4 font-[var(--font-display)] text-5xl leading-none text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.42)] md:text-8xl">
+        <h1 className="mt-4 break-words font-[var(--font-display)] text-4xl leading-none text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.42)] sm:text-5xl md:text-7xl lg:text-8xl">
           {formatUsdc(totalPoolBalance as bigint | undefined)} USDC
         </h1>
-        <p className="mt-4 max-w-2xl text-base text-slate-100/90 md:text-lg">Total balance currently available for DAO grant distribution.</p>
-        <p className="mt-2 text-sm text-slate-200/90">
-          Distributions: {distributionCount === undefined ? "..." : String(distributionCount)} | My deposits:{" "}
+        <p className="mt-4 max-w-2xl text-sm text-slate-100/90 sm:text-base md:text-lg">
+          Treasury capital available for winning projects. Deposits expand how much funding BERT can route into milestone-based grants.
+        </p>
+        <p className="mt-2 text-xs text-slate-200/90 sm:text-sm">
+          Projects funded: {distributionCount === undefined ? "..." : String(distributionCount)} | My deposits:{" "}
           {formatUsdc(donorBalance as bigint | undefined)} USDC
         </p>
-        <div className="mt-5 flex w-full max-w-lg items-center gap-2">
+        <div className="mt-5 flex flex-wrap justify-center gap-2 text-xs text-slate-200">
+          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">For contributors: add treasury capital</span>
+          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">For builders: grants are paid from this pool</span>
+        </div>
+        <div className="mt-5 flex w-full max-w-lg flex-col items-stretch gap-2 sm:flex-row sm:items-center">
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            placeholder="Amount in USDC"
-            className="min-w-0 flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300"
+            placeholder="How much USDC do you want to contribute?"
+            className="min-w-0 flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-3 text-sm text-white outline-none focus:border-cyan-300"
           />
           {needApprove ? (
             <button
@@ -387,9 +393,9 @@ export function FundingPoolHero() {
                   gas: 200_000n,
                 });
               }}
-              className="rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isApprovePending ? "Sign..." : isApproveConfirming ? "Approving..." : "Approve"}
+              {isApprovePending ? "Sign..." : isApproveConfirming ? "Approving..." : "Approve USDC"}
             </button>
           ) : (
             <button
@@ -405,29 +411,39 @@ export function FundingPoolHero() {
                   gas: 300_000n,
                 });
               }}
-              className="rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isDepositPending ? "Sign..." : isDepositConfirming ? "Depositing..." : "Deposit"}
+              {isDepositPending ? "Sign..." : isDepositConfirming ? "Depositing..." : "Contribute to treasury"}
             </button>
           )}
         </div>
         {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance.</p>}
         {poolPausedValue && <p className="mt-2 text-xs text-amber-200">FundingPool is paused by admin.</p>}
         {!hasContracts && (
-          <p className="mt-2 text-xs text-amber-200">Set `NEXT_PUBLIC_FUNDING_POOL_ADDRESS` and `NEXT_PUBLIC_GOVERNANCE_TOKEN_ADDRESS` in `.env`.</p>
+          <p className="mt-2 text-xs text-amber-200">Treasury contracts are not configured in this environment yet.</p>
         )}
         {approveError?.message && <p className="mt-2 text-xs text-rose-300">{prettyTxError(approveError.message)}</p>}
         {depositError?.message && <p className="mt-2 text-xs text-rose-300">{prettyTxError(depositError.message)}</p>}
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <div className="mt-6 flex w-full max-w-lg flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             onClick={() => {
               const section = document.getElementById("pool-stats");
               section?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
-            className="rounded-lg border border-white/35 bg-black/15 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-cyan-300/70"
+            className="rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-50"
           >
-            View Pool Activity
+            Understand treasury status
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const section = document.getElementById("pool-stats");
+              section?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="rounded-lg border border-white/35 bg-black/15 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-cyan-300/70"
+          >
+            View pool activity
           </button>
         </div>
       </div>

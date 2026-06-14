@@ -450,6 +450,18 @@ export default function RoundDetailsPage() {
           Voting window: {formatDateTimeFromUnix(round.startTime)} - {formatDateTimeFromUnix(round.endTime)}
         </p>
 
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
+            1. Inspect the ideas competing in this round.
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
+            2. If the round is live, allocate one USDC-backed vote to the strongest proposal.
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
+            3. After finalization, the winning idea moves into staged grant release.
+          </div>
+        </div>
+
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <p className="text-sm text-slate-200">Total votes: {formatUsdc(round.totalVotes)}</p>
           {shouldShowEndRoundButton ? (
@@ -502,12 +514,12 @@ export default function RoundDetailsPage() {
           <p className="mt-2 text-xs text-slate-300">Round can be ended only after `endTime`.</p>
         )}
         {claimError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(claimError.message)}</p>}
-        {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Claim tx: {claimTxHash}</p>}
+        {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Claim transaction reference: {claimTxHash}</p>}
         {endError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(endError.message)}</p>}
-        {endTxHash && <p className="mt-2 break-all text-xs text-slate-300">End round tx: {endTxHash}</p>}
+        {endTxHash && <p className="mt-2 break-all text-xs text-slate-300">Round-finalization transaction reference: {endTxHash}</p>}
         {contracts.grantManager && (
           <p className="mt-2 text-xs text-slate-300">
-            Claim status: {canClaimByWallet ? "eligible" : "not eligible"}
+            Grant claim status: {canClaimByWallet ? "eligible for this connected wallet" : "not yet available for this connected wallet"}
             {!isWinnerAuthor && round.winningIdeaId > 0n
               ? " (connected wallet is not winner author)"
               : claimGrantReason
@@ -522,7 +534,7 @@ export default function RoundDetailsPage() {
         )}
         {contracts.usdc && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
-            Wallet balance: {formatUsdc(tokenBalanceValue)} | Allowance to FundingPool: {formatUsdc(allowanceValue)} | Min stake: {formatUsdc(minStakeValue)}
+            Wallet voting context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum vote size {formatUsdc(minStakeValue)}
           </p>
         )}
 
@@ -561,6 +573,9 @@ export default function RoundDetailsPage() {
       <section className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.28)] sm:p-5 md:p-7">
         <h2 className="font-[var(--font-display)] text-2xl text-white sm:text-3xl md:text-4xl">Ideas in this round</h2>
         <p className="mt-2 text-sm text-slate-300">On-chain `ideaIds`: {round.ideaIds.join(", ") || "-"}</p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Open an idea card to inspect the full proposal. If the round is still live, you can cast one vote in this round after approving the amount you want to allocate.
+        </p>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
           {ideas.map((idea) => {
@@ -622,7 +637,7 @@ export default function RoundDetailsPage() {
                       }));
                     }}
                     className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#232632] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60"
-                    placeholder="Vote amount in USDC"
+                    placeholder="How much USDC do you want to allocate?"
                   />
                   {needApprove ? (
                     <button
@@ -640,7 +655,7 @@ export default function RoundDetailsPage() {
                       }}
                       className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isApprovePending ? "Sign approve..." : isApproveConfirming ? "Approving..." : "Approve"}
+                      {isApprovePending ? "Sign approve..." : isApproveConfirming ? "Approving..." : "Approve USDC"}
                     </button>
                   ) : (
                   <button
@@ -672,9 +687,9 @@ export default function RoundDetailsPage() {
         </div>
 
         {approveError?.message && <p className="mt-4 max-w-full overflow-hidden break-words text-sm text-rose-300">{prettyRoundError(approveError.message)}</p>}
-        {approveTxHash && <p className="mt-2 break-all text-xs text-slate-300">Approve tx: {approveTxHash}</p>}
+        {approveTxHash && <p className="mt-2 break-all text-xs text-slate-300">Approval transaction reference: {approveTxHash}</p>}
         {voteError?.message && <p className="mt-4 max-w-full overflow-hidden break-words text-sm text-rose-300">{prettyRoundError(voteError.message)}</p>}
-        {voteTxHash && <p className="mt-2 break-all text-xs text-slate-300">Vote tx: {voteTxHash}</p>}
+        {voteTxHash && <p className="mt-2 break-all text-xs text-slate-300">Vote transaction reference: {voteTxHash}</p>}
       </section>
     </section>
   );
