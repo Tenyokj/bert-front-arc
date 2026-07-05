@@ -1,7 +1,7 @@
 # FundingPoolUpgradeable
 
 **Summary**
-Treasury-like pool that holds governance tokens, tracks deposits, locks author stake, and distributes milestone-based grants.
+Treasury-like pool that holds USDC balances, tracks deposits, locks author stake, and distributes milestone-based grants.
 
 **Role In System**
 Receives deposits and stakes from voters, records pool balances per round/idea, and pays out grants through the grant manager.
@@ -21,7 +21,7 @@ Receives deposits and stakes from voters, records pool balances per round/idea, 
 - Uses `RolesAwareUpgradeable` for role checks
 
 **Dependencies**
-- `GovernanceTokenUpgradeable` (ERC20)
+- configured USDC token contract
 - `IdeaRegistryUpgradeable` for idea author lookups
 - `RolesRegistryUpgradeable` for access control
 

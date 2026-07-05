@@ -2,6 +2,7 @@ import Link from "next/link";
 import HeroLogo3DClient from "@/components/HeroLogo3DClient";
 import { HomeLiveStats } from "@/components/HomeLiveStats";
 import { HomeStrategyCards } from "@/components/HomeStrategyCards";
+import { RoleBootstrapAddressesShowcase } from "@/components/RoleBootstrapAddressesShowcase";
 import SiteFooter from "@/components/SiteFooter";
 import {
   FaGithub,
@@ -146,6 +147,10 @@ export default function Home() {
             </div>
           </div>
         </main>
+
+        <section className="mt-18 sm:mt-22">
+          <RoleBootstrapAddressesShowcase variant="home" />
+        </section>
 
         <section className="mt-24 sm:mt-32">
           <div className="rounded-[30px] border border-white/30 bg-white/25 p-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] backdrop-blur sm:rounded-[36px] sm:p-8">

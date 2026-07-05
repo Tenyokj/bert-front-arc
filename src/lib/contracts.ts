@@ -188,6 +188,65 @@ export const usdcAbi = [
   },
 ] as const satisfies Abi;
 
+export const roleBootstrapDistributorAbi = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "distributionActive",
+    inputs: [],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "isCuratorEligible",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "isReviewerEligible",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "hasClaimedCurator",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "hasClaimedReviewer",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "claimAllEligibleRoles",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "claimCuratorRole",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "claimReviewerRole",
+    inputs: [],
+    outputs: [],
+  },
+] as const satisfies Abi;
+
 export const fundingPoolAbi = replaceAbiFunctions(
   (FundingPoolArtifact as { abi: Abi }).abi,
   fundingPoolPatches
@@ -214,4 +273,5 @@ export const contracts = {
   usdc: toAddress(process.env.NEXT_PUBLIC_USDC_ADDRESS),
   votingSystem: toAddress(process.env.NEXT_PUBLIC_VOTING_SYSTEM_ADDRESS),
   voterProgression: toAddress(process.env.NEXT_PUBLIC_VOTER_PROGRESSION_ADDRESS),
+  roleBootstrapDistributor: toAddress(process.env.NEXT_PUBLIC_ROLE_BOOTSTRAP_DISTRIBUTOR_ADDRESS),
 };

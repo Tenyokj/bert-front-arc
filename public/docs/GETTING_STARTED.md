@@ -34,12 +34,18 @@ npx hardhat node
 ```bash
 npx hardhat run scripts/deploy/deploy-proxies.ts --network localhost
 ```
+```bash
+npx hardhat run scripts/deploy/deploy-faucet.ts --network localhost
+```
 
-**Arc Testnet Setup**
+**Sepolia Setup**
 1. Copy `.env.example` to `.env`
 2. Set `SEPOLIA_RPC_URL` and `DEPLOYER_KEY`
 
-**Deploy (Arc Testnet)**
+**Deploy (Sepolia)**
 ```bash
-npx hardhat run scripts/deploy/deploy-proxies.ts --network arcTestnet
+npx hardhat run scripts/deploy/deploy-proxies.ts --network sepolia
+```
+```bash
+npx hardhat run scripts/deploy/deploy-faucet.ts --network sepolia
 ```

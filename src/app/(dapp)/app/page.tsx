@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { FaArrowRight, FaCircle, FaCompass, FaCoins, FaProjectDiagram, FaShieldAlt } from "react-icons/fa";
 import { DappDashboardLiveStats } from "@/components/DappDashboardLiveStats";
+import { RoleBootstrapClaimPanel } from "@/components/RoleBootstrapClaimPanel";
+import { RoleBootstrapAddressesShowcase } from "@/components/RoleBootstrapAddressesShowcase";
 
 const concepts = [
   {
@@ -100,6 +102,10 @@ export default function DappDashboardPage() {
       </div>
 
       <DappDashboardLiveStats />
+
+      <RoleBootstrapClaimPanel />
+
+      <RoleBootstrapAddressesShowcase variant="dashboard" />
 
       <div className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Choose your path</p>
