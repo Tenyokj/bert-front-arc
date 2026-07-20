@@ -10,8 +10,10 @@ import {
 import {
   AuthorStakeDeposited,
   AuthorStakeSlashed,
+  FundsDeposited,
   FundsDistributed,
   IdeaFundsReserved,
+  PoolBalanceUpdated,
 } from "../generated/FundingPool/FundingPoolUpgradeable";
 import {
   GrantManagerUpgradeable,
@@ -46,6 +48,7 @@ import {
   GrantPayout,
   Idea,
   MilestoneRequest,
+  ProtocolStats,
   Review,
   Round,
   Vote,
@@ -53,6 +56,7 @@ import {
 
 const ZERO = BigInt.zero();
 const ONE = BigInt.fromI32(1);
+const PROTOCOL_STATS_ID = "current";
 
 function ensureAccount(address: Address, blockNumber: BigInt): Account {
   const id = address.toHexString();
@@ -93,6 +97,23 @@ function ensureRound(roundId: BigInt, blockNumber: BigInt): Round {
   }
   round.updatedAtBlock = blockNumber;
   return round;
+}
+
+function ensureProtocolStats(blockNumber: BigInt): ProtocolStats {
+  let stats = ProtocolStats.load(PROTOCOL_STATS_ID);
+  if (stats == null) {
+    stats = new ProtocolStats(PROTOCOL_STATS_ID);
+    stats.totalTreasury = ZERO;
+    stats.totalDeposited = ZERO;
+    stats.totalDistributed = ZERO;
+    stats.distributionCount = ZERO;
+    stats.totalIdeas = ZERO;
+    stats.totalRounds = ZERO;
+    stats.activeRounds = ZERO;
+    stats.createdAtBlock = blockNumber;
+  }
+  stats.updatedAtBlock = blockNumber;
+  return stats;
 }
 
 function ensureIdea(ideaId: BigInt, blockNumber: BigInt): Idea {
@@ -295,6 +316,13 @@ export function handleVotingRoundStarted(event: VotingRoundStarted): void {
   round.ideaIds = event.params.ideaIds;
   round.save();
 
+  const stats = ensureProtocolStats(event.block.number);
+  if (event.params.roundId.gt(stats.totalRounds)) {
+    stats.totalRounds = event.params.roundId;
+  }
+  stats.activeRounds = stats.activeRounds.plus(ONE);
+  stats.save();
+
   const ideaIds = event.params.ideaIds;
   for (let i = 0; i < ideaIds.length; i++) {
     const idea = ensureIdea(ideaIds[i], event.block.number);
@@ -312,6 +340,12 @@ export function handleVotingRoundEnded(event: VotingRoundEnded): void {
   round.winningIdeaId = event.params.winningIdeaId;
   round.winningVotes = event.params.winningVotes;
   round.save();
+
+  const stats = ensureProtocolStats(event.block.number);
+  if (stats.activeRounds.gt(ZERO)) {
+    stats.activeRounds = stats.activeRounds.minus(ONE);
+  }
+  stats.save();
 }
 
 export function handleVoteCast(event: VoteCast): void {
@@ -355,6 +389,12 @@ export function handleIdeaCreated(event: IdeaCreated): void {
   idea.title = event.params.title;
   idea.status = 0;
   idea.save();
+
+  const stats = ensureProtocolStats(event.block.number);
+  if (event.params.ideaId.gt(stats.totalIdeas)) {
+    stats.totalIdeas = event.params.ideaId;
+  }
+  stats.save();
 }
 
 export function handleIdeaStatusUpdated(event: IdeaStatusUpdated): void {
@@ -421,6 +461,12 @@ export function handleAuthorStakeDeposited(event: AuthorStakeDeposited): void {
   idea.save();
 }
 
+export function handleFundsDeposited(event: FundsDeposited): void {
+  const stats = ensureProtocolStats(event.block.number);
+  stats.totalDeposited = stats.totalDeposited.plus(event.params.amount);
+  stats.save();
+}
+
 export function handleAuthorStakeSlashed(event: AuthorStakeSlashed): void {
   const idea = ensureIdea(event.params.ideaId, event.block.number);
   if (event.params.amount.ge(idea.authorStake)) {
@@ -442,6 +488,11 @@ export function handleFundsDistributed(event: FundsDistributed): void {
   round.distributedAmount = round.distributedAmount.plus(event.params.amount);
   round.save();
 
+  const stats = ensureProtocolStats(event.block.number);
+  stats.totalDistributed = stats.totalDistributed.plus(event.params.amount);
+  stats.distributionCount = stats.distributionCount.plus(ONE);
+  stats.save();
+
   const distribution = new Distribution(
     event.transaction.hash.toHex() + "-" + event.logIndex.toString(),
   );
@@ -452,6 +503,12 @@ export function handleFundsDistributed(event: FundsDistributed): void {
   distribution.timestamp = event.block.timestamp;
   distribution.blockNumber = event.block.number;
   distribution.save();
+}
+
+export function handlePoolBalanceUpdated(event: PoolBalanceUpdated): void {
+  const stats = ensureProtocolStats(event.block.number);
+  stats.totalTreasury = event.params.newBalance;
+  stats.save();
 }
 
 export function handleRoundFunded(event: RoundFunded): void {

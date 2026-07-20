@@ -40,6 +40,15 @@ export function HomeLiveStats() {
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleRetry = () => {
+      if (cancelled || retryTimer) return;
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        void load();
+      }, 10_000);
+    };
 
     async function load() {
       if (!client) return;
@@ -47,6 +56,7 @@ export function HomeLiveStats() {
         (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
 
       const next: HomeStats = {};
+      let hasFreshData = false;
 
       await Promise.all([
         (async () => {
@@ -67,6 +77,7 @@ export function HomeLiveStats() {
             next.poolBalance = poolBalance;
             next.fundedProposals = fundedProposals;
             next.ideasWithGrant = fundedProposals;
+            hasFreshData = true;
           } catch {
             // keep defaults
           }
@@ -86,27 +97,20 @@ export function HomeLiveStats() {
               functionName: "currentRoundId",
             })) as bigint;
 
-            const totalRounds = currentRoundId > 1n ? Number(currentRoundId - 1n) : 0;
-            if (totalRounds > 0) {
-              const infos = await Promise.all(
-                Array.from({ length: totalRounds }, (_, idx) =>
-                  readContract({
-                    address: contracts.votingSystem!,
-                    abi: votingSystemAbi,
-                    functionName: "getRoundInfo",
-                    args: [BigInt(idx + 1)],
-                  })
-                )
-              );
-
-              const active = infos
-                .map((row) => row as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])
-                .filter((row) => row[4] && !row[5]);
-
-              next.activeRounds = active.length;
-            } else {
+            if (currentRoundId <= 0n) {
               next.activeRounds = 0;
+              return;
             }
+
+            const currentRound = (await readContract({
+              address: contracts.votingSystem,
+              abi: votingSystemAbi,
+              functionName: "getRoundInfo",
+              args: [currentRoundId],
+            })) as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint];
+
+            next.activeRounds = currentRound[0] > 0n && currentRound[4] && !currentRound[5] ? 1 : 0;
+            hasFreshData = true;
           } catch {
             // keep defaults
           }
@@ -120,11 +124,13 @@ export function HomeLiveStats() {
               functionName: "totalIdeas",
             })) as bigint;
             next.totalIdeas = totalIdeas;
+            hasFreshData = true;
           } catch {
             if (hasSubgraphConfigured()) {
               try {
                 const ideas = await fetchAllIdeasFromSubgraph();
                 next.totalIdeas = BigInt(ideas.length);
+                hasFreshData = true;
               } catch {
                 // keep defaults
               }
@@ -148,18 +154,26 @@ export function HomeLiveStats() {
             ])) as [string, bigint];
             next.tokenSymbol = tokenSymbol;
             next.tokenSupply = tokenSupply;
+            hasFreshData = true;
           } catch {
             // keep defaults
           }
         })(),
       ]);
 
-      if (!cancelled) setStats(next);
+      if (!cancelled && Object.keys(next).length > 0) {
+        setStats((prev) => ({ ...prev, ...next }));
+      }
+
+      if (!hasFreshData) {
+        scheduleRetry();
+      }
     }
 
     void load();
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [client]);
 

@@ -26,6 +26,9 @@ function prettyTxError(message?: string) {
   if (message.includes("EnforcedPause")) {
     return "FundingPool is paused. Deposits are temporarily disabled.";
   }
+  if (message.includes("rate limited") || message.includes("request limit reached")) {
+    return "Arc RPC is rate limiting requests right now. Wait a few seconds and retry the action.";
+  }
   if (message.includes("NetworkError when attempting to fetch resource")) {
     return "RPC connection failed. Check active network and RPC URL.";
   }
@@ -59,12 +62,14 @@ export function FundingPoolHero() {
   const frameRef = useRef<number | null>(null);
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState("");
+  const [allowanceOwner, setAllowanceOwner] = useState<string | null>(null);
+  const [balanceOwner, setBalanceOwner] = useState<string | null>(null);
 
   const fundingPool = contracts.fundingPool;
   const token = contracts.usdc;
   const hasContracts = Boolean(fundingPool && token);
 
-  const { data: totalPoolBalance } = useReadContract({
+  const { data: totalPoolBalance, refetch: refetchTotalPoolBalance } = useReadContract({
     address: fundingPool,
     abi: fundingPoolAbi,
     functionName: "totalPoolBalance",
@@ -78,7 +83,7 @@ export function FundingPoolHero() {
     query: { enabled: Boolean(fundingPool) },
   });
 
-  const { data: donorBalance } = useReadContract({
+  const { data: donorBalance, refetch: refetchDonorBalance } = useReadContract({
     address: fundingPool,
     abi: fundingPoolAbi,
     functionName: "donorBalances",
@@ -92,7 +97,7 @@ export function FundingPoolHero() {
     query: { enabled: Boolean(fundingPool) },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: token,
     abi: usdcAbi,
     functionName: "allowance",
@@ -100,7 +105,7 @@ export function FundingPoolHero() {
     query: { enabled: Boolean(token && fundingPool && address) },
   });
 
-  const { data: balance } = useReadContract({
+  const { data: balance, refetch: refetchBalance } = useReadContract({
     address: token,
     abi: usdcAbi,
     functionName: "balanceOf",
@@ -110,19 +115,56 @@ export function FundingPoolHero() {
   const allowanceValue = allowance as bigint | undefined;
   const balanceValue = balance as bigint | undefined;
   const poolPausedValue = poolPaused as boolean | undefined;
+  const normalizedAddress = address?.toLowerCase() ?? null;
 
   const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending, error: approveError } =
     useWriteContract();
   const sendApprove = writeApprove as unknown as (variables: Record<string, unknown>) => void;
-  const { isLoading: isApproveConfirming } = useWaitForTransactionReceipt({
+  const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
     hash: approveHash,
   });
   const { writeContract: writeDeposit, data: depositHash, isPending: isDepositPending, error: depositError } =
     useWriteContract();
   const sendDeposit = writeDeposit as unknown as (variables: Record<string, unknown>) => void;
-  const { isLoading: isDepositConfirming } = useWaitForTransactionReceipt({
+  const { isLoading: isDepositConfirming, isSuccess: isDepositSuccess } = useWaitForTransactionReceipt({
     hash: depositHash,
   });
+
+  useEffect(() => {
+    if (!isApproveSuccess) return;
+    void refetchAllowance();
+  }, [isApproveSuccess, refetchAllowance]);
+
+  useEffect(() => {
+    if (!isDepositSuccess) return;
+    void Promise.all([
+      refetchAllowance(),
+      refetchBalance(),
+      refetchDonorBalance(),
+      refetchTotalPoolBalance(),
+    ]);
+  }, [isDepositSuccess, refetchAllowance, refetchBalance, refetchDonorBalance, refetchTotalPoolBalance]);
+
+  useEffect(() => {
+    setAllowanceOwner(null);
+    setBalanceOwner(null);
+    if (!normalizedAddress) {
+      setAmount("");
+      return;
+    }
+
+    void Promise.all([refetchAllowance(), refetchBalance(), refetchDonorBalance()]);
+  }, [normalizedAddress, refetchAllowance, refetchBalance, refetchDonorBalance]);
+
+  useEffect(() => {
+    if (!normalizedAddress || allowanceValue === undefined) return;
+    setAllowanceOwner(normalizedAddress);
+  }, [normalizedAddress, allowanceValue]);
+
+  useEffect(() => {
+    if (!normalizedAddress || balanceValue === undefined) return;
+    setBalanceOwner(normalizedAddress);
+  }, [normalizedAddress, balanceValue]);
 
   const parsedAmount = useMemo(() => {
     try {
@@ -132,12 +174,18 @@ export function FundingPoolHero() {
     }
   }, [amount]);
 
-  const needApprove = (allowanceValue ?? 0n) < (parsedAmount > 0n ? parsedAmount : 0n);
+  const allowanceReady = !normalizedAddress || allowanceOwner === normalizedAddress;
+  const balanceReady = !normalizedAddress || balanceOwner === normalizedAddress;
+  const effectiveAllowance = allowanceReady ? allowanceValue : undefined;
+  const effectiveBalance = balanceReady ? balanceValue : undefined;
+  const needApprove = (effectiveAllowance ?? 0n) < (parsedAmount > 0n ? parsedAmount : 0n);
   const invalidAmount = parsedAmount <= 0n;
-  const insufficientBalance = balanceValue !== undefined && parsedAmount > balanceValue;
+  const insufficientBalance = effectiveBalance !== undefined && parsedAmount > effectiveBalance;
+  const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
   const actionDisabled =
     !hasContracts ||
     !isConnected ||
+    !accountDataReady ||
     invalidAmount ||
     insufficientBalance ||
     isApprovePending ||

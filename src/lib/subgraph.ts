@@ -30,6 +30,17 @@ export type SubgraphVote = {
   timestamp: string;
 };
 
+export type SubgraphProtocolStats = {
+  id: string;
+  totalTreasury: string;
+  totalDeposited: string;
+  totalDistributed: string;
+  distributionCount: string;
+  totalIdeas: string;
+  totalRounds: string;
+  activeRounds: string;
+};
+
 type GraphQLResponse<T> = {
   data?: T;
   errors?: Array<{ message: string }>;
@@ -381,6 +392,29 @@ export async function fetchActiveRoundsPageFromSubgraph(first: number, skip: num
     skip,
   });
   return data.rounds;
+}
+
+const PROTOCOL_STATS_QUERY = `
+  query ProtocolStats($id: ID!) {
+    protocolStats(id: $id) {
+      id
+      totalTreasury
+      totalDeposited
+      totalDistributed
+      distributionCount
+      totalIdeas
+      totalRounds
+      activeRounds
+    }
+  }
+`;
+
+export async function fetchProtocolStatsFromSubgraph(id = "current") {
+  const data = await fetchGraphQL<{ protocolStats: SubgraphProtocolStats | null }>(
+    PROTOCOL_STATS_QUERY,
+    { id }
+  );
+  return data.protocolStats;
 }
 
 const SEARCH_QUERY = `

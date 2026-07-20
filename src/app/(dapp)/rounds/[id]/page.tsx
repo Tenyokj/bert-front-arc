@@ -68,6 +68,9 @@ function formatUsdc(value: bigint | number | undefined) {
 
 function prettyRoundError(message?: string) {
   if (!message) return "";
+  if (message.includes("rate limited") || message.includes("request limit reached")) {
+    return "Arc RPC is rate limiting requests right now. Wait a few seconds and retry.";
+  }
   if (message.includes("RoundNotEnded")) return "Round can only be ended after the voting window closes.";
   if (message.includes("RoundAlreadyEnded")) return "This round has already been ended.";
   if (message.includes("AlreadyDistributed")) return "Initial 30% has already been claimed for this winning idea.";
@@ -88,6 +91,8 @@ export default function RoundDetailsPage() {
   const [voteAmountByIdea, setVoteAmountByIdea] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [allowanceOwner, setAllowanceOwner] = useState<string | null>(null);
+  const [balanceOwner, setBalanceOwner] = useState<string | null>(null);
 
   const {
     data: approveTxHash,
@@ -144,7 +149,7 @@ export default function RoundDetailsPage() {
     },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "allowance",
@@ -155,7 +160,7 @@ export default function RoundDetailsPage() {
     },
   });
 
-  const { data: tokenBalance } = useReadContract({
+  const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "balanceOf",
@@ -188,6 +193,7 @@ export default function RoundDetailsPage() {
   const allowanceValue = allowance as bigint | undefined;
   const tokenBalanceValue = tokenBalance as bigint | undefined;
   const userHasVotedValue = userHasVoted as boolean | undefined;
+  const normalizedAddress = address?.toLowerCase() ?? null;
 
   const canClaimGrant = Array.isArray(canClaimGrantRaw) ? Boolean(canClaimGrantRaw[0]) : false;
   const claimGrantReason = Array.isArray(canClaimGrantRaw)
@@ -197,6 +203,36 @@ export default function RoundDetailsPage() {
   const winnerAuthor = winnerIdea?.author;
   const isWinnerAuthor = Boolean(address && winnerAuthor && address.toLowerCase() === winnerAuthor.toLowerCase());
   const canClaimByWallet = canClaimGrant && isWinnerAuthor;
+
+  useEffect(() => {
+    if (!isApproveConfirmed) return;
+    void refetchAllowance();
+  }, [isApproveConfirmed, refetchAllowance]);
+
+  useEffect(() => {
+    if (!isVoteConfirmed) return;
+    void Promise.all([refetchAllowance(), refetchTokenBalance()]);
+  }, [isVoteConfirmed, refetchAllowance, refetchTokenBalance]);
+
+  useEffect(() => {
+    setAllowanceOwner(null);
+    setBalanceOwner(null);
+    if (!normalizedAddress) {
+      setVoteAmountByIdea({});
+      return;
+    }
+    void Promise.all([refetchAllowance(), refetchTokenBalance()]);
+  }, [normalizedAddress, refetchAllowance, refetchTokenBalance]);
+
+  useEffect(() => {
+    if (!normalizedAddress || allowanceValue === undefined) return;
+    setAllowanceOwner(normalizedAddress);
+  }, [normalizedAddress, allowanceValue]);
+
+  useEffect(() => {
+    if (!normalizedAddress || tokenBalanceValue === undefined) return;
+    setBalanceOwner(normalizedAddress);
+  }, [normalizedAddress, tokenBalanceValue]);
 
   useEffect(() => {
     let cancelled = false;
@@ -394,7 +430,8 @@ export default function RoundDetailsPage() {
           setVoters(votersByIdea.flat());
         }
       } catch (error) {
-        if (!cancelled) setLoadError(error instanceof Error ? error.message : "Failed to load round");
+        const message = error instanceof Error ? prettyRoundError(error.message) : "Failed to load round";
+        if (!cancelled) setLoadError(message);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -581,12 +618,17 @@ export default function RoundDetailsPage() {
           {ideas.map((idea) => {
             const amountInput = voteAmountByIdea[idea.id] ?? "";
             const parsedAmount = safeParseAmount(amountInput);
-            const needApprove = (allowanceValue ?? 0n) < parsedAmount;
-            const insufficientBalance = (tokenBalanceValue ?? 0n) < parsedAmount;
+            const allowanceReady = !normalizedAddress || allowanceOwner === normalizedAddress;
+            const balanceReady = !normalizedAddress || balanceOwner === normalizedAddress;
+            const effectiveAllowance = allowanceReady ? allowanceValue : undefined;
+            const effectiveBalance = balanceReady ? tokenBalanceValue : undefined;
+            const needApprove = (effectiveAllowance ?? 0n) < parsedAmount;
+            const insufficientBalance = (effectiveBalance ?? 0n) < parsedAmount;
             const belowMinStake = minStakeValue !== undefined && parsedAmount > 0n && parsedAmount < minStakeValue;
             const invalidVoteAmount = parsedAmount <= 0n || insufficientBalance || belowMinStake;
             const votingBusy = isVotePending || isVoteConfirming || isApprovePending || isApproveConfirming;
             const isOwnIdea = Boolean(address) && idea.author.toLowerCase() === address!.toLowerCase();
+            const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
 
             return (
               <div
@@ -642,7 +684,7 @@ export default function RoundDetailsPage() {
                   {needApprove ? (
                     <button
                       type="button"
-                      disabled={!isConnected || parsedAmount <= 0n || isApprovePending || isApproveConfirming || !contracts.usdc || !contracts.fundingPool || isOwnIdea}
+                      disabled={!isConnected || !accountDataReady || parsedAmount <= 0n || isApprovePending || isApproveConfirming || !contracts.usdc || !contracts.fundingPool || isOwnIdea}
                       onClick={() => {
                         if (!contracts.usdc || !contracts.fundingPool || parsedAmount <= 0n) return;
                         sendApprove({
@@ -660,7 +702,7 @@ export default function RoundDetailsPage() {
                   ) : (
                   <button
                     type="button"
-                    disabled={!canVote || invalidVoteAmount || votingBusy || isOwnIdea}
+                    disabled={!canVote || !accountDataReady || invalidVoteAmount || votingBusy || isOwnIdea}
                     onClick={() => {
                       if (!contracts.votingSystem || invalidVoteAmount) return;
                       sendVote({

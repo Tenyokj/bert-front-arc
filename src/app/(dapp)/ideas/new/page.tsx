@@ -79,6 +79,8 @@ export default function NewIdeaPage() {
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
   const [stakeAmount, setStakeAmount] = useState("");
+  const [allowanceOwner, setAllowanceOwner] = useState<string | null>(null);
+  const [balanceOwner, setBalanceOwner] = useState<string | null>(null);
 
   const {
     data: approveTxHash,
@@ -116,7 +118,7 @@ export default function NewIdeaPage() {
     query: { enabled: Boolean(contracts.ideaRegistry) },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "allowance",
@@ -124,7 +126,7 @@ export default function NewIdeaPage() {
     query: { enabled: Boolean(address && contracts.usdc && contracts.fundingPool) },
   });
 
-  const { data: tokenBalance } = useReadContract({
+  const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "balanceOf",
@@ -137,15 +139,51 @@ export default function NewIdeaPage() {
     setStakeAmount(formatPlainAmount(authorMinStake as bigint));
   }, [authorMinStake, stakeAmount]);
 
+  const normalizedAddress = address?.toLowerCase() ?? null;
   const minStakeValue = authorMinStake as bigint | undefined;
   const registryFundingPoolValue = registryFundingPool as string | undefined;
   const allowanceValue = allowance as bigint | undefined;
   const tokenBalanceValue = tokenBalance as bigint | undefined;
+
+  useEffect(() => {
+    if (!isApproveSuccess) return;
+    void refetchAllowance();
+  }, [isApproveSuccess, refetchAllowance]);
+
+  useEffect(() => {
+    if (!isCreateSuccess) return;
+    void Promise.all([refetchAllowance(), refetchTokenBalance()]);
+  }, [isCreateSuccess, refetchAllowance, refetchTokenBalance]);
+
+  useEffect(() => {
+    setAllowanceOwner(null);
+    setBalanceOwner(null);
+    if (!normalizedAddress) {
+      setStakeAmount("");
+      return;
+    }
+    void Promise.all([refetchAllowance(), refetchTokenBalance()]);
+  }, [normalizedAddress, refetchAllowance, refetchTokenBalance]);
+
+  useEffect(() => {
+    if (!normalizedAddress || allowanceValue === undefined) return;
+    setAllowanceOwner(normalizedAddress);
+  }, [normalizedAddress, allowanceValue]);
+
+  useEffect(() => {
+    if (!normalizedAddress || tokenBalanceValue === undefined) return;
+    setBalanceOwner(normalizedAddress);
+  }, [normalizedAddress, tokenBalanceValue]);
   const parsedStake = useMemo(() => safeParseAmount(stakeAmount), [stakeAmount]);
   const invalidStake = parsedStake <= 0n;
   const belowMinStake = minStakeValue !== undefined && parsedStake > 0n && parsedStake < minStakeValue;
-  const insufficientBalance = (tokenBalanceValue ?? 0n) < parsedStake;
-  const needsApproval = parsedStake > 0n && (allowanceValue ?? 0n) < parsedStake;
+  const allowanceReady = !normalizedAddress || allowanceOwner === normalizedAddress;
+  const balanceReady = !normalizedAddress || balanceOwner === normalizedAddress;
+  const effectiveAllowance = allowanceReady ? allowanceValue : undefined;
+  const effectiveBalance = balanceReady ? tokenBalanceValue : undefined;
+  const insufficientBalance = (effectiveBalance ?? 0n) < parsedStake;
+  const needsApproval = parsedStake > 0n && (effectiveAllowance ?? 0n) < parsedStake;
+  const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
   const writeBusy = isApprovePending || isApproveConfirming || isCreatePending || isCreateConfirming;
   const expectedFundingPool = contracts.fundingPool;
   const hasFundingPoolMismatch =
@@ -158,6 +196,7 @@ export default function NewIdeaPage() {
     hydrated &&
     isConnected &&
     Boolean(contracts.usdc && contracts.fundingPool) &&
+    accountDataReady &&
     parsedStake > 0n &&
     !insufficientBalance &&
     !isRegistryWiringBroken &&
@@ -169,6 +208,7 @@ export default function NewIdeaPage() {
     Boolean(contracts.ideaRegistry) &&
     title.trim().length > 0 &&
     description.trim().length > 0 &&
+    accountDataReady &&
     !invalidStake &&
     !belowMinStake &&
     !insufficientBalance &&

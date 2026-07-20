@@ -10,7 +10,12 @@ import {
   votingSystemAbi,
 } from "@/lib/contracts";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
-import { fetchActiveRoundsPageFromSubgraph, fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
+import {
+  fetchActiveRoundsPageFromSubgraph,
+  fetchAllIdeasFromSubgraph,
+  fetchProtocolStatsFromSubgraph,
+  hasSubgraphConfigured,
+} from "@/lib/subgraph";
 
 type DashboardStats = {
   totalTreasury?: bigint;
@@ -38,26 +43,66 @@ export function DappDashboardLiveStats() {
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const scheduleRetry = () => {
+      if (cancelled || retryTimer) return;
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        void load();
+      }, 10_000);
+    };
 
     async function load() {
       if (!client) return;
       const readContract = (config: Record<string, unknown>) =>
         (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
+      const readWithRetry = async (config: Record<string, unknown>, retries = 2) => {
+        for (let attempt = 0; attempt <= retries; attempt += 1) {
+          try {
+            return await readContract(config);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            const isRateLimited =
+              message.includes("rate limited") || message.includes("request limit reached");
+            if (!isRateLimited || attempt === retries) throw error;
+            await delay(750 * (attempt + 1));
+          }
+        }
+        throw new Error("Failed to read contract");
+      };
 
       const next: DashboardStats = {};
       let distributionCountValue: bigint | undefined;
+      let hasFreshData = false;
 
       await Promise.all([
         (async () => {
+          if (hasSubgraphConfigured()) {
+            try {
+              const stats = await fetchProtocolStatsFromSubgraph();
+              if (stats) {
+                next.totalTreasury = BigInt(stats.totalTreasury || "0");
+                next.successfulProjects = BigInt(stats.distributionCount || "0");
+                next.grantsDistributed = BigInt(stats.totalDistributed || "0");
+                hasFreshData = true;
+                return;
+              }
+            } catch {
+              // Fallback to direct RPC reads below.
+            }
+          }
+
           if (!contracts.fundingPool) return;
           try {
             const [poolBalance, distributionCount] = (await Promise.all([
-              readContract({
+              readWithRetry({
                 address: contracts.fundingPool,
                 abi: fundingPoolAbi,
                 functionName: "totalPoolBalance",
               }),
-              readContract({
+              readWithRetry({
                 address: contracts.fundingPool,
                 abi: fundingPoolAbi,
                 functionName: "getDistributionCount",
@@ -67,61 +112,89 @@ export function DappDashboardLiveStats() {
             next.totalTreasury = poolBalance;
             next.successfulProjects = distributionCount;
             distributionCountValue = distributionCount;
+            hasFreshData = true;
+            if (distributionCount === 0n) {
+              next.grantsDistributed = 0n;
+            }
           } catch {
             // Keep partial stats empty when live contracts are unavailable.
           }
         })(),
         (async () => {
+          if (hasSubgraphConfigured()) {
+            try {
+              const stats = await fetchProtocolStatsFromSubgraph();
+              if (stats) {
+                next.activeRounds = Number(stats.activeRounds || "0");
+                hasFreshData = true;
+                return;
+              }
+            } catch {
+              // Fallback to current subgraph query or RPC below.
+            }
+          }
+
           if (!contracts.votingSystem) return;
           try {
             if (hasSubgraphConfigured()) {
               const activeRows = await fetchActiveRoundsPageFromSubgraph(1000, 0);
               next.activeRounds = activeRows.length;
+              hasFreshData = true;
               return;
             }
 
-            const currentRoundId = (await readContract({
+            const currentRoundId = (await readWithRetry({
               address: contracts.votingSystem,
               abi: votingSystemAbi,
               functionName: "currentRoundId",
             })) as bigint;
 
-            const totalRounds = currentRoundId > 1n ? Number(currentRoundId - 1n) : 0;
-            if (totalRounds > 0) {
-              const infos = await Promise.all(
-                Array.from({ length: totalRounds }, (_, idx) =>
-                  readContract({
-                    address: contracts.votingSystem!,
-                    abi: votingSystemAbi,
-                    functionName: "getRoundInfo",
-                    args: [BigInt(idx + 1)],
-                  })
-                )
-              );
-
-              next.activeRounds = infos
-                .map((row) => row as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])
-                .filter((row) => row[4] && !row[5]).length;
-            } else {
+            if (currentRoundId <= 0n) {
               next.activeRounds = 0;
+              return;
             }
+
+            const currentRound = (await readWithRetry({
+              address: contracts.votingSystem,
+              abi: votingSystemAbi,
+              functionName: "getRoundInfo",
+              args: [currentRoundId],
+            })) as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint];
+
+            next.activeRounds = currentRound[0] > 0n && currentRound[4] && !currentRound[5] ? 1 : 0;
+            hasFreshData = true;
           } catch {
             // Ignore live round stat failures.
           }
         })(),
         (async () => {
+          if (hasSubgraphConfigured()) {
+            try {
+              const stats = await fetchProtocolStatsFromSubgraph();
+              if (stats) {
+                next.totalIdeas = BigInt(stats.totalIdeas || "0");
+                hasFreshData = true;
+                return;
+              }
+            } catch {
+              // Fallback to direct read / broad subgraph query below.
+            }
+          }
+
           if (!contracts.ideaRegistry) return;
           try {
-            next.totalIdeas = (await readContract({
+            next.totalIdeas = (await readWithRetry({
               address: contracts.ideaRegistry,
               abi: ideaRegistryAbi,
               functionName: "totalIdeas",
             })) as bigint;
+            hasFreshData = true;
           } catch {
             if (hasSubgraphConfigured()) {
               try {
                 const ideas = await fetchAllIdeasFromSubgraph();
                 next.totalIdeas = BigInt(ideas.length);
+                hasFreshData = true;
               } catch {
                 // Ignore fallback failure.
               }
@@ -130,13 +203,15 @@ export function DappDashboardLiveStats() {
         })(),
       ]);
 
-      if (!cancelled) setStats((prev) => ({ ...prev, ...next }));
+      if (!cancelled && Object.keys(next).length > 0) {
+        setStats((prev) => ({ ...prev, ...next }));
+      }
 
       if (contracts.fundingPool && distributionCountValue && distributionCountValue > 0n) {
         try {
           const distributions = await Promise.all(
             Array.from({ length: Number(distributionCountValue) }, (_, i) =>
-              readContract({
+              readWithRetry({
                 address: contracts.fundingPool!,
                 abi: fundingPoolAbi,
                 functionName: "getDistribution",
@@ -153,15 +228,21 @@ export function DappDashboardLiveStats() {
           if (!cancelled) {
             setStats((prev) => ({ ...prev, grantsDistributed: paidOut }));
           }
+          hasFreshData = true;
         } catch {
           // Ignore slower payout aggregation failures.
         }
+      }
+
+      if (!hasFreshData) {
+        scheduleRetry();
       }
     }
 
     void load();
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [client]);
 

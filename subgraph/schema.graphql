@@ -122,3 +122,16 @@ type Distribution @entity(immutable: true) {
   timestamp: BigInt!
   blockNumber: BigInt!
 }
+
+type ProtocolStats @entity(immutable: false) {
+  id: ID!
+  totalTreasury: BigInt!
+  totalDeposited: BigInt!
+  totalDistributed: BigInt!
+  distributionCount: BigInt!
+  totalIdeas: BigInt!
+  totalRounds: BigInt!
+  activeRounds: BigInt!
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}

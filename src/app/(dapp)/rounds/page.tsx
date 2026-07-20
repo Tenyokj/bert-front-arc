@@ -67,6 +67,16 @@ function RoundsPageContent() {
     }).format(asNumber);
   };
 
+  const formatLoadError = (message?: string) => {
+    if (!message) return "Failed to load rounds";
+    if (message.includes("rate limited") || message.includes("request limit reached")) {
+      return "Arc RPC is rate limiting requests right now. The page now loads fewer calls, so retry in a few seconds.";
+    }
+    return message;
+  };
+
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   useEffect(() => {
     let cancelled = false;
 
@@ -82,19 +92,33 @@ function RoundsPageContent() {
       try {
         const readContract = (config: Record<string, unknown>) =>
           (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
+        const readWithRetry = async (config: Record<string, unknown>, retries = 2) => {
+          for (let attempt = 0; attempt <= retries; attempt += 1) {
+            try {
+              return await readContract(config);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error);
+              const isRateLimited =
+                message.includes("rate limited") || message.includes("request limit reached");
+              if (!isRateLimited || attempt === retries) throw error;
+              await delay(750 * (attempt + 1));
+            }
+          }
+          throw new Error("Failed to read contract");
+        };
         const [currentRoundId, ideaLimit, totalIdeas, lastUsedIdeaId] = (await Promise.all([
-          readContract({
+          readWithRetry({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "currentRoundId",
           }),
-          readContract({
+          readWithRetry({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "IDEAS_PER_ROUND",
           }),
           contracts.ideaRegistry
-            ? readContract({
+            ? readWithRetry({
                 address: contracts.ideaRegistry,
                 abi: ideaRegistryAbi,
                 functionName: "totalIdeas",
@@ -104,7 +128,7 @@ function RoundsPageContent() {
                 return BigInt(ideas.length);
               })
             : Promise.resolve(0n),
-          readContract({
+          readWithRetry({
             address: contracts.votingSystem,
             abi: votingSystemAbi,
             functionName: "lastUsedIdeaId",
@@ -150,11 +174,16 @@ function RoundsPageContent() {
           }
         }
 
-        const ids = Array.from({ length: total }, (_, i) => total - i);
+        const firstVisibleId = Math.max(total - start, 1);
+        const lastVisibleId = Math.max(total - (start + pageSize) + 1, 1);
+        const ids = Array.from(
+          { length: Math.max(firstVisibleId - lastVisibleId + 1, 0) },
+          (_, i) => firstVisibleId - i
+        );
         const entries = await Promise.all(
           ids.map(async (id) => {
             try {
-              const row = (await readContract({
+              const row = (await readWithRetry({
                 address: contracts.votingSystem!,
                 abi: votingSystemAbi,
                 functionName: "getRoundInfo",
@@ -180,7 +209,8 @@ function RoundsPageContent() {
 
         if (!cancelled) setRounds(entries.filter((entry): entry is OnChainRound => entry !== null));
       } catch (error) {
-        if (!cancelled) setLoadError(error instanceof Error ? error.message : "Failed to load rounds");
+        const message = error instanceof Error ? formatLoadError(error.message) : "Failed to load rounds";
+        if (!cancelled) setLoadError(message);
       } finally {
         if (!cancelled) setIsLoading(false);
       }

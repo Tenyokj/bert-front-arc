@@ -1588,3 +1588,162 @@ export class Distribution extends Entity {
     this.set("blockNumber", Value.fromBigInt(value));
   }
 }
+
+export class ProtocolStats extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save ProtocolStats entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type ProtocolStats must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("ProtocolStats", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): ProtocolStats | null {
+    return changetype<ProtocolStats | null>(
+      store.get_in_block("ProtocolStats", id),
+    );
+  }
+
+  static load(id: string): ProtocolStats | null {
+    return changetype<ProtocolStats | null>(store.get("ProtocolStats", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get totalTreasury(): BigInt {
+    let value = this.get("totalTreasury");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalTreasury(value: BigInt) {
+    this.set("totalTreasury", Value.fromBigInt(value));
+  }
+
+  get totalDeposited(): BigInt {
+    let value = this.get("totalDeposited");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalDeposited(value: BigInt) {
+    this.set("totalDeposited", Value.fromBigInt(value));
+  }
+
+  get totalDistributed(): BigInt {
+    let value = this.get("totalDistributed");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalDistributed(value: BigInt) {
+    this.set("totalDistributed", Value.fromBigInt(value));
+  }
+
+  get distributionCount(): BigInt {
+    let value = this.get("distributionCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set distributionCount(value: BigInt) {
+    this.set("distributionCount", Value.fromBigInt(value));
+  }
+
+  get totalIdeas(): BigInt {
+    let value = this.get("totalIdeas");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalIdeas(value: BigInt) {
+    this.set("totalIdeas", Value.fromBigInt(value));
+  }
+
+  get totalRounds(): BigInt {
+    let value = this.get("totalRounds");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalRounds(value: BigInt) {
+    this.set("totalRounds", Value.fromBigInt(value));
+  }
+
+  get activeRounds(): BigInt {
+    let value = this.get("activeRounds");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set activeRounds(value: BigInt) {
+    this.set("activeRounds", Value.fromBigInt(value));
+  }
+
+  get createdAtBlock(): BigInt {
+    let value = this.get("createdAtBlock");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set createdAtBlock(value: BigInt) {
+    this.set("createdAtBlock", Value.fromBigInt(value));
+  }
+
+  get updatedAtBlock(): BigInt {
+    let value = this.get("updatedAtBlock");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set updatedAtBlock(value: BigInt) {
+    this.set("updatedAtBlock", Value.fromBigInt(value));
+  }
+}

@@ -7,7 +7,12 @@ import { usePublicClient } from "wagmi";
 
 import { contracts, ideaRegistryAbi, votingSystemAbi } from "@/lib/contracts";
 import { formatTokenAmount } from "@/lib/dapp-onchain";
-import { hasSubgraphConfigured, searchSubgraph } from "@/lib/subgraph";
+import {
+  fetchIdeaByIdFromSubgraph,
+  fetchRoundByIdFromSubgraph,
+  hasSubgraphConfigured,
+  searchSubgraph,
+} from "@/lib/subgraph";
 
 type SearchIdea = { id: number; title: string; totalVotes: bigint };
 type SearchRound = { id: number; totalVotes: bigint };
@@ -41,8 +46,82 @@ function SearchPageContent() {
       }
       const readContract = (config: Record<string, unknown>) =>
         (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
+      const exactId = /^\d+$/.test(q) ? Number(q) : null;
 
       try {
+        if (exactId !== null && exactId > 0) {
+          if (hasSubgraphConfigured()) {
+            try {
+              const [idea, round] = await Promise.all([
+                fetchIdeaByIdFromSubgraph(String(exactId)),
+                fetchRoundByIdFromSubgraph(String(exactId)),
+              ]);
+
+              if (!cancelled) {
+                setIdeas(
+                  idea
+                    ? [{ id: Number(idea.id), title: idea.title, totalVotes: BigInt(idea.totalVotes || "0") }]
+                    : []
+                );
+                setRounds(
+                  round
+                    ? [{ id: Number(round.id), totalVotes: BigInt(round.totalVotes || "0") }]
+                    : []
+                );
+              }
+              return;
+            } catch {
+              // Fallback to direct RPC exact lookup below.
+            }
+          }
+
+          const [ideaResult, roundResult] = await Promise.all([
+            readContract({
+              address: contracts.ideaRegistry,
+              abi: ideaRegistryAbi,
+              functionName: "getIdea",
+              args: [BigInt(exactId)],
+            }).catch(() => null),
+            readContract({
+              address: contracts.votingSystem,
+              abi: votingSystemAbi,
+              functionName: "getRoundInfo",
+              args: [BigInt(exactId)],
+            }).catch(() => null),
+          ]);
+
+          const nextIdeas =
+            ideaResult &&
+            Array.isArray(ideaResult) &&
+            BigInt((ideaResult as readonly unknown[])[0] as bigint) > 0n
+              ? [
+                  {
+                    id: Number((ideaResult as readonly [bigint, string, string, string, string, bigint, bigint, bigint])[0]),
+                    title: (ideaResult as readonly [bigint, string, string, string, string, bigint, bigint, bigint])[2],
+                    totalVotes: (ideaResult as readonly [bigint, string, string, string, string, bigint, bigint, bigint])[6],
+                  },
+                ]
+              : [];
+
+          const nextRounds =
+            roundResult &&
+            Array.isArray(roundResult) &&
+            BigInt((roundResult as readonly unknown[])[0] as bigint) > 0n
+              ? [
+                  {
+                    id: Number((roundResult as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])[0]),
+                    totalVotes: (roundResult as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])[6],
+                  },
+                ]
+              : [];
+
+          if (!cancelled) {
+            setIdeas(nextIdeas);
+            setRounds(nextRounds);
+          }
+          return;
+        }
+
         if (hasSubgraphConfigured()) {
           try {
             const data = await searchSubgraph(q, 300);
@@ -65,6 +144,12 @@ function SearchPageContent() {
             // Subgraph fallback to direct RPC reads below.
           }
         }
+
+        if (!cancelled) {
+          setIdeas([]);
+          setRounds([]);
+        }
+        return;
 
         const [totalIdeas, currentRoundId] = (await Promise.all([
           readContract({
