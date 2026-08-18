@@ -80,6 +80,16 @@ const sections: FaqSection[] = [
           "The current default vote commitment is 10 USDC. Vote weight is based directly on committed USDC.",
       },
       {
+        question: "Do I need verification before I can vote?",
+        answer:
+          "Yes, in the current live Arc configuration human-only voting is enabled. A wallet must complete the proof-of-personhood flow and finalize that verification onchain before it can vote.",
+      },
+      {
+        question: "What is the maximum vote amount per idea?",
+        answer:
+          "The current live cap is 10,000 USDC per wallet for one idea. This keeps voting capital-backed while reducing single-wallet dominance over one target idea.",
+      },
+      {
         question: "Where does committed USDC go?",
         answer:
           "Committed USDC flows into FundingPool accounting. That treasury state becomes the capital base for subsequent grant releases once a winning idea enters execution.",
@@ -92,7 +102,43 @@ const sections: FaqSection[] = [
       {
         question: "Can voting still be abused?",
         answer:
-          "The protocol defends against common issues with one-vote-per-round rules, self-vote restrictions, minimum commitments, and role-gated settlement paths. Operational monitoring is still important, especially during testnet rollout.",
+          "The protocol now defends against multiple layers of abuse: self-vote restrictions, minimum commitments, proof-of-personhood-gated access, per-wallet vote caps, and role-gated settlement paths. Operational monitoring is still important, especially during testnet rollout.",
+      },
+    ],
+  },
+  {
+    id: "verification",
+    title: "Verification",
+    items: [
+      {
+        question: "What kind of verification does BERT use?",
+        answer:
+          "The current live Arc stack uses proof-of-personhood verification for voting eligibility. It is designed to prove that a real human is behind the wallet before that wallet can participate in voting.",
+      },
+      {
+        question: "Is this the same as KYC?",
+        answer:
+          "No. In the current live flow, BERT uses proof-of-personhood gating rather than a traditional KYC identity onboarding process for voting.",
+      },
+      {
+        question: "How does the verification flow work?",
+        answer:
+          "The frontend opens the World ID flow, the backend validates the proof and signs a BERT verification payload, and the wallet finalizes that payload onchain through PoPVerifierUpgradeable. Once that transaction lands, the wallet becomes eligible to vote until the verification expires.",
+      },
+      {
+        question: "How long does verification stay active?",
+        answer:
+          "The current verification window is 14 days. After that, the wallet needs to refresh verification before voting again.",
+      },
+      {
+        question: "Why does BERT need both verification and a vote cap?",
+        answer:
+          "They solve different problems. Verification reduces sybil pressure from large numbers of fresh wallets, while the 10,000 USDC cap reduces the ability of one wallet to dominate one idea with an outsized vote.",
+      },
+      {
+        question: "What if I pass verification but still cannot vote?",
+        answer:
+          "Most often the wallet has not finalized the signed payload onchain yet, the verification has expired, the connected wallet is different from the verified wallet, or the vote amount exceeds the live per-idea cap.",
       },
     ],
   },
@@ -175,7 +221,7 @@ const sections: FaqSection[] = [
       {
         question: "What should operators verify before public testing?",
         answer:
-          "Check network alignment, contract addresses, role wiring, pause state, minimum stake values, and one complete non-admin smoke flow from idea creation through voting.",
+          "Check network alignment, contract addresses, role wiring, pause state, minimum stake values, human verifier configuration, max vote amount, backend signer alignment, and one complete non-admin smoke flow from verification through voting.",
       },
     ],
   },
@@ -186,7 +232,7 @@ const sections: FaqSection[] = [
       {
         question: "What are the biggest live risks?",
         answer:
-          "The main risk areas are upgrade authority, role misconfiguration, treasury release mistakes, stale env data in the frontend, and incorrect handling of USDC’s 6-decimal unit model.",
+          "The main risk areas are upgrade authority, role misconfiguration, treasury release mistakes, stale env data in the frontend, backend signer misconfiguration, and incorrect handling of USDC’s 6-decimal unit model.",
       },
       {
         question: "Why are pause controls important?",
@@ -196,7 +242,7 @@ const sections: FaqSection[] = [
       {
         question: "How should admin keys be secured?",
         answer:
-          "Use hardware-backed keys or multisig where possible. Separate deployer, operator, and upgrade responsibilities by environment and keep verification records for privileged transactions.",
+          "Use hardware-backed keys or multisig where possible. Separate deployer, operator, upgrade, and trusted-signer responsibilities by environment and keep verification records for privileged transactions.",
       },
       {
         question: "Is fork simulation enough for safety?",
