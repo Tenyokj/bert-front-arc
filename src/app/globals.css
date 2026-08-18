@@ -130,6 +130,15 @@ html {
   display: none;
 }
 
+.news-track {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.news-track::-webkit-scrollbar {
+  display: none;
+}
+
 .footer-link {
   transition: color 0.25s ease, transform 0.25s ease;
 }

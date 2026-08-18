@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FaArrowRight, FaCircle, FaCompass, FaCoins, FaProjectDiagram, FaShieldAlt } from "react-icons/fa";
 import { DappDashboardLiveStats } from "@/components/DappDashboardLiveStats";
+import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import { RoleBootstrapClaimPanel } from "@/components/RoleBootstrapClaimPanel";
 import { RoleBootstrapAddressesShowcase } from "@/components/RoleBootstrapAddressesShowcase";
 
@@ -102,6 +103,8 @@ export default function DappDashboardPage() {
       </div>
 
       <DappDashboardLiveStats />
+
+      <HumanVerificationPanel />
 
       <RoleBootstrapClaimPanel />
 

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import HeroLogo3DClient from "@/components/HeroLogo3DClient";
 import { HomeLiveStats } from "@/components/HomeLiveStats";
+import { NewsCarousel } from "@/components/NewsCarousel";
 import { HomeStrategyCards } from "@/components/HomeStrategyCards";
-import { RoleBootstrapAddressesShowcase } from "@/components/RoleBootstrapAddressesShowcase";
 import SiteFooter from "@/components/SiteFooter";
 import {
   FaGithub,
@@ -14,10 +14,6 @@ import {
   FaGavel,
   FaChartLine,
   FaUsers,
-  FaLock,
-  FaCoins,
-  FaCheckCircle,
-  FaRocket,
 } from "react-icons/fa";
 
 export default function Home() {
@@ -148,191 +144,8 @@ export default function Home() {
           </div>
         </main>
 
-        <section className="mt-18 sm:mt-22">
-          <RoleBootstrapAddressesShowcase variant="home" />
-        </section>
+        <NewsCarousel />
 
-        <section className="mt-24 sm:mt-32">
-          <div className="rounded-[30px] border border-white/30 bg-white/25 p-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] backdrop-blur sm:rounded-[36px] sm:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-teal-600">
-                  V2 Upgrade
-                </p>
-                <h2 className="mt-4 font-[var(--font-display)] text-4xl font-semibold text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-6xl">
-                  What changed in BERT Protocol V2
-                </h2>
-                <p className="mt-5 max-w-2xl text-lg text-slate-700 dark:text-slate-200">
-                  Proposal funding now runs on a stablecoin-native execution
-                  path: <span className="font-semibold text-slate-900">50 USDC</span> to create,
-                  <span className="font-semibold text-slate-900"> 10 USDC</span> minimum to vote,
-                  and a <span className="font-semibold text-slate-900">30 / 40 / 30</span> release rail with validator checkpoints.
-                </p>
-              </div>
-              <Link
-                href="/how-it-works"
-                className="w-fit rounded-full bg-slate-900 px-7 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_16px_36px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5"
-              >
-                Explore V2 flow
-              </Link>
-            </div>
-
-            <div className="mt-12 grid gap-6 xl:grid-cols-[0.72fr_1.18fr]">
-              <div className="grid gap-6">
-                <div className="rounded-[28px] border border-white/30 bg-white/35 p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)]">
-                      <FaLock className="text-lg" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Proposal entry
-                      </p>
-                      <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-                        Minimum idea deposit is now 50 USDC
-                      </h3>
-                      <p className="mt-3 text-base text-slate-700 dark:text-slate-200">
-                        New ideas must be backed by real stake before they ever reach a round.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[28px] border border-white/30 bg-white/35 p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-500 text-white shadow-[0_12px_30px_rgba(20,184,166,0.24)]">
-                      <FaCoins className="text-lg" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Grant release
-                      </p>
-                      <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-                        Funding now moves in 30 / 40 / 30
-                      </h3>
-                      <p className="mt-3 text-base text-slate-700 dark:text-slate-200">
-                        Winning ideas enter a staged release rail instead of a single treasury payout.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[28px] border border-white/30 bg-white/35 p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)]">
-                      <FaCheckCircle className="text-lg" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Validator control
-                      </p>
-                      <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-                        The last 70% unlocks only after proof
-                      </h3>
-                      <p className="mt-3 text-base text-slate-700 dark:text-slate-200">
-                        Progress proof unlocks 40%. Launch proof unlocks the final 30%.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[32px] border border-slate-200/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.82),rgba(226,232,240,0.72))] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
-                <div className="absolute -left-10 top-10 h-32 w-32 rounded-full bg-cyan-300/30 blur-3xl" />
-                <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" />
-                <div className="absolute bottom-0 right-10 h-32 w-32 rounded-full bg-teal-300/30 blur-3xl" />
-
-                <div className="relative">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                        Release Rail
-                      </p>
-                      <h3 className="mt-2 font-[var(--font-display)] text-3xl font-semibold text-slate-900">
-                        V2 payout logic
-                      </h3>
-                    </div>
-                    <div className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
-                      Milestones
-                    </div>
-                  </div>
-
-                  <div className="mt-8 rounded-[28px] border border-white/70 bg-white/70 p-5 sm:p-6">
-                    <div className="flex flex-col gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-                      <span>Winning idea</span>
-                      <span>Launch verified</span>
-                    </div>
-
-                    <div className="relative mt-6">
-                      <div className="absolute left-[1.8rem] right-[1.8rem] top-6 hidden h-[2px] bg-gradient-to-r from-slate-300 via-teal-400 to-blue-500 2xl:block" />
-                      <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-3">
-                        <div className="relative rounded-[24px] border border-slate-200/80 bg-white p-5 sm:p-6 shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500 text-lg font-semibold text-white">
-                            30
-                          </div>
-                          <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Upfront
-                          </p>
-                          <p className="mt-2 max-w-[10ch] text-[1.35rem] font-semibold leading-[1.08] text-slate-900 sm:text-[1.5rem] 2xl:text-[1.65rem]">
-                            Claim anytime after win
-                          </p>
-                          <p className="mt-3 max-w-[20ch] text-sm leading-7 text-slate-600">
-                            First tranche for the winning author to start execution.
-                          </p>
-                        </div>
-
-                        <div className="relative rounded-[24px] border border-slate-200/80 bg-white p-5 sm:p-6 shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500 text-lg font-semibold text-white">
-                            40
-                          </div>
-                          <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Checkpoint one
-                          </p>
-                          <p className="mt-2 max-w-[10ch] text-[1.35rem] font-semibold leading-[1.08] text-slate-900 sm:text-[1.5rem] 2xl:text-[1.65rem]">
-                            Validators confirm progress
-                          </p>
-                          <p className="mt-3 max-w-[20ch] text-sm leading-7 text-slate-600">
-                            Unlocked only after proof that the build is actively in progress.
-                          </p>
-                        </div>
-
-                        <div className="relative rounded-[24px] border border-slate-200/80 bg-white p-5 sm:p-6 shadow-[0_14px_28px_rgba(15,23,42,0.08)] lg:col-span-2 2xl:col-span-1">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-lg font-semibold text-white">
-                            30
-                          </div>
-                          <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Final checkpoint
-                          </p>
-                          <p className="mt-2 max-w-[10ch] text-[1.35rem] font-semibold leading-[1.08] text-slate-900 sm:text-[1.5rem] 2xl:text-[1.65rem]">
-                            Validators confirm launch
-                          </p>
-                          <p className="mt-3 max-w-[24ch] text-sm leading-7 text-slate-600">
-                            The last tranche unlocks only after the project is live
-                            and working in production.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between rounded-[24px] border border-white/70 bg-slate-900 px-5 py-4 text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/60">
-                        Net effect
-                      </p>
-                      <p className="mt-1 text-lg font-semibold">
-                        Less spam at entry, more accountability after funding
-                      </p>
-                    </div>
-                    <div className="hidden h-14 w-14 items-center justify-center rounded-2xl bg-white/10 sm:flex">
-                      <FaRocket className="text-xl text-cyan-300" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <section className="mt-32">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

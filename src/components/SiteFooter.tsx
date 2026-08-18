@@ -44,19 +44,19 @@ export default function SiteFooter() {
         <div>
           <h4 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">BERT Products</h4>
           <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
-            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/main/contracts/BERT/docs_contracts/IdeaRegistryUpgradeable.md">
+            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/docs_contracts/IdeaRegistryUpgradeable.md">
               Idea Registry
             </a>
-            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/main/contracts/BERT/docs_contracts/VotingSystemUpgradeable.md">
+            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/docs_contracts/VotingSystemUpgradeable.md">
               Voting Rounds
             </a>
-            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/main/contracts/BERT/docs_contracts/GrantManagerUpgradeable.md">
+            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/docs_contracts/GrantManagerUpgradeable.md">
               Grant Engine
             </a>
-            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/main/contracts/BERT/docs_contracts/ReputationSystemUpgradeable.md">
+            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/docs_contracts/ReputationSystemUpgradeable.md">
               Reputation Layer
             </a>
-            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/main/docs/UPGRADES.md">
+            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/UPGRADES.md">
               Upgrade Modules
             </a>
           </div>
@@ -89,7 +89,7 @@ export default function SiteFooter() {
             <Link className="footer-link" href="/developer-guide">
               Developer guide
             </Link>
-            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/main/docs/CONTRACTS.md">
+            <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/CONTRACTS.md">
               Smart contracts
             </a>
           </div>

@@ -5,10 +5,11 @@ This document describes the operational flow of BERT in a narrative sequence fro
 ## Contents
 1. Idea Creation Flow
 2. Round Formation Flow
-3. Voting Flow
-4. Round Resolution Flow
-5. Grant Claim Flow
-6. Milestone Review Flow
+3. Human Verification Flow
+4. Voting Flow
+5. Round Resolution Flow
+6. Grant Claim Flow
+7. Milestone Review Flow
 
 ## Idea Creation Flow
 
@@ -28,12 +29,22 @@ This document describes the operational flow of BERT in a narrative sequence fro
 4. those ideas move into `Voting`
 5. round timing and membership become active
 
+## Human Verification Flow
+
+1. wallet opens the verification flow in the frontend
+2. World ID proof is generated for the configured BERT action
+3. backend validates the proof and nullifier
+4. backend signs a verification payload for that wallet
+5. wallet submits the signed payload to `PoPVerifierUpgradeable`
+6. verification state becomes active until its expiry timestamp
+
 ## Voting Flow
 
 1. voter selects idea and amount
-2. voting system validates round, membership, and minimum stake
-3. funding pool records round and idea capital
-4. vote totals are updated in round state
+2. voting system checks that human-only voting rules are satisfied when enabled
+3. voting system validates round, membership, minimum stake, and max vote amount
+4. funding pool records round and idea capital
+5. vote totals are updated in round state
 
 ## Round Resolution Flow
 

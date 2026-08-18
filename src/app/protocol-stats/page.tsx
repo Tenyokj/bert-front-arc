@@ -130,6 +130,20 @@ export default function ProtocolStatsPage() {
     query: { enabled: Boolean(contracts.votingSystem) },
   });
 
+  const { data: humanOnlyVoting } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "humanOnlyVoting",
+    query: { enabled: Boolean(contracts.votingSystem) },
+  });
+
+  const { data: maxVoteAmount } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "maxVoteAmount",
+    query: { enabled: Boolean(contracts.votingSystem) },
+  });
+
   const { data: totalIdeas } = useReadContract({
     address: contracts.ideaRegistry,
     abi: ideaRegistryAbi,
@@ -249,6 +263,23 @@ export default function ProtocolStatsPage() {
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Min Stake</p>
               <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(minStake as bigint | undefined)} USDC</p>
               <p className="mt-1 text-xs text-slate-500">VotingSystem.minStake()</p>
+            </article>
+          </section>
+
+          <section className="grid gap-3 sm:grid-cols-2">
+            <article className="rounded-xl border border-amber-200/30 bg-[linear-gradient(180deg,rgba(120,53,15,0.12),rgba(51,24,12,0.18))] p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-amber-300">Max vote per idea</p>
+              <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
+                {formatUsdc(maxVoteAmount as bigint | undefined)} USDC
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Per-wallet influence cap applied to each idea in a round</p>
+            </article>
+            <article className="rounded-xl border border-teal-200/30 bg-[linear-gradient(180deg,rgba(13,148,136,0.12),rgba(15,23,42,0.14))] p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-teal-300">Human-only voting</p>
+              <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
+                {humanOnlyVoting === undefined ? "—" : humanOnlyVoting ? "Enabled" : "Disabled"}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Voting access requires an active proof-of-personhood record</p>
             </article>
           </section>
 

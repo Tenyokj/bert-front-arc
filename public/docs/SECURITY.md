@@ -232,12 +232,16 @@ Critical parameters include:
 - `IDEAS_PER_ROUND`
 - `VOTING_DURATION`
 - `minStake`
+- `humanOnlyVoting`
+- `maxVoteAmount`
 - `authorMinStake`
 - `authorSharePercent`
 
 Configuration mistakes can cause:
 - impossible round creation
 - spammy or economically weak voting
+- human-verification bypass through disabled gating
+- whale-dominant outcomes through an overly large per-wallet cap
 - excessive author friction
 - unfair or unintended payout split
 

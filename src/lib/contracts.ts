@@ -137,6 +137,30 @@ const fundingPoolPatches = [
   },
 ] as const satisfies readonly AbiFunction[];
 
+const votingSystemPatches = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "humanVerifier",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "humanOnlyVoting",
+    inputs: [],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "maxVoteAmount",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+  },
+] as const satisfies readonly AbiFunction[];
+
 export const usdcAbi = [
   {
     type: "function",
@@ -247,6 +271,40 @@ export const roleBootstrapDistributorAbi = [
   },
 ] as const satisfies Abi;
 
+export const popVerifierAbi = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "isVerifiedHuman",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "getVerification",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [
+      { name: "verified", type: "bool" },
+      { name: "until", type: "uint64" },
+      { name: "nonce", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "submitVerification",
+    inputs: [
+      { name: "verifiedUntil_", type: "uint64" },
+      { name: "nonce", type: "uint256" },
+      { name: "provider", type: "bytes32" },
+      { name: "credentialHash", type: "bytes32" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [],
+  },
+] as const satisfies Abi;
+
 export const fundingPoolAbi = replaceAbiFunctions(
   (FundingPoolArtifact as { abi: Abi }).abi,
   fundingPoolPatches
@@ -259,7 +317,10 @@ export const ideaRegistryAbi = replaceAbiFunctions(
   (IdeaRegistryArtifact as { abi: Abi }).abi,
   ideaRegistryPatches
 );
-export const votingSystemAbi = (VotingSystemArtifact as { abi: Abi }).abi;
+export const votingSystemAbi = replaceAbiFunctions(
+  (VotingSystemArtifact as { abi: Abi }).abi,
+  votingSystemPatches
+);
 export const reputationSystemAbi = (ReputationSystemArtifact as { abi: Abi }).abi;
 export const rolesRegistryAbi = (RolesRegistryArtifact as { abi: Abi }).abi;
 export const voterProgressionAbi = (VoterProgressionArtifact as { abi: Abi }).abi;
@@ -274,4 +335,5 @@ export const contracts = {
   votingSystem: toAddress(process.env.NEXT_PUBLIC_VOTING_SYSTEM_ADDRESS),
   voterProgression: toAddress(process.env.NEXT_PUBLIC_VOTER_PROGRESSION_ADDRESS),
   roleBootstrapDistributor: toAddress(process.env.NEXT_PUBLIC_ROLE_BOOTSTRAP_DISTRIBUTOR_ADDRESS),
+  popVerifier: toAddress(process.env.NEXT_PUBLIC_POP_VERIFIER_ADDRESS),
 };

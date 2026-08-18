@@ -24,6 +24,11 @@ const pillars = [
     value: "30 / 40 / 30",
     note: "Initial release, milestone release, and final release after reviewer validation.",
   },
+  {
+    label: "Verified Voting",
+    value: "PoP + 10k cap",
+    note: "Only human-verified wallets can vote, and each wallet is capped at 10,000 USDC per idea.",
+  },
 ];
 
 const flowSteps = [
@@ -38,17 +43,22 @@ const flowSteps = [
       "VotingSystem groups eligible ideas into a live round. Participants review the round and commit USDC directly onchain instead of relying on a separate governance asset.",
   },
   {
-    title: "3. USDC commitments accumulate in treasury",
+    title: "3. Voters prove personhood first",
     body:
-      "Every valid vote routes committed USDC into the treasury path. The pool tracks committed capital, protocol reserve balances, and the amount attached to each winning proposal.",
+      "Before voting, a wallet completes the World ID flow, the backend validates the proof, signs a BERT verification payload, and the wallet finalizes that proof onchain through PoPVerifierUpgradeable.",
   },
   {
-    title: "4. Winner enters grant execution",
+    title: "4. USDC commitments accumulate in treasury",
+    body:
+      "Every valid vote routes committed USDC into the treasury path. Human-only gating reduces sybil pressure, and a per-wallet 10,000 USDC cap reduces single-wallet dominance over one idea.",
+  },
+  {
+    title: "5. Winner enters grant execution",
     body:
       "After the round closes and settlement succeeds, the winning idea moves into GrantManager. At that point the protocol stops being only a voting system and becomes a capital release system.",
   },
   {
-    title: "5. Milestones unlock funding",
+    title: "6. Milestones unlock funding",
     body:
       "Grant release is milestone-based. Builders claim the initial tranche, submit implementation proof, then submit final delivery proof. Reviewers validate each stage before the next release can execute.",
   },
@@ -56,7 +66,9 @@ const flowSteps = [
 
 const safetyChecks = [
   "USDC commitments use explicit allowance checks before protocol actions execute.",
-  "Round voting enforces one vote per address per round and blocks self-voting.",
+  "Round voting enforces one vote per address per idea and blocks self-voting.",
+  "Human-only voting requires an active proof-of-personhood verification before a wallet can vote.",
+  "Per-idea vote size is capped at 10,000 USDC per wallet to reduce single-wallet control.",
   "Treasury release follows milestone state transitions instead of one-shot payouts.",
   "Pause controls remain available for incident handling and controlled rollout.",
   "Role-gated review and grant functions keep validator actions explicit and auditable.",
@@ -102,12 +114,12 @@ export default function HowItWorksPage() {
             </h1>
             <p className="max-w-4xl text-lg leading-relaxed text-slate-700 dark:text-slate-200">
               The protocol is a programmable capital allocation system: builders post a USDC-backed proposal deposit,
-              contributors commit USDC votes, treasury balances accumulate onchain, and winning proposals unlock
-              milestone-based releases through validator review.
+              contributors commit USDC votes, verified humans activate voting access onchain, treasury balances
+              accumulate onchain, and winning proposals unlock milestone-based releases through validator review.
             </p>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pillars.map((pillar) => (
               <div key={pillar.label} className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600">{pillar.label}</p>
@@ -123,7 +135,8 @@ export default function HowItWorksPage() {
               <p className="max-w-4xl text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 BERT coordinates one continuous funding path. Proposal deposits filter out spam, round voting directs
                 capital toward the strongest ideas, treasury accounting preserves visibility over committed and released
-                balances, and milestone releases keep grant execution measurable.
+                balances, human verification limits sybil pressure, and milestone releases keep grant execution
+                measurable.
               </p>
             </div>
             <div className="mt-6 overflow-hidden rounded-3xl border border-white/15 bg-black/10 p-3">
@@ -145,6 +158,47 @@ export default function HowItWorksPage() {
                 <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">{step.body}</p>
               </div>
             ))}
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Human verification flow</h2>
+              <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                <p>
+                  BERT still uses USDC-weighted voting, but now the protocol requires a proof-of-personhood activation
+                  before that capital can be used in voting. This changes the attack surface from pure wallet count to
+                  verified-human participation.
+                </p>
+                <p>
+                  The frontend opens the World ID flow, the backend checks the proof and signs a short-lived BERT
+                  payload, and the wallet submits that payload to <strong>PoPVerifierUpgradeable</strong>. Once that
+                  transaction lands, the wallet can vote until the verification window expires.
+                </p>
+                <p>
+                  The current verification window is <strong>14 days</strong>. After that, the wallet simply refreshes
+                  its verification and continues using the same address.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 md:p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Why the 10,000 USDC cap exists</h2>
+              <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                <p>
+                  Human verification alone helps against sybil voting, but it does not limit how much influence a
+                  single verified wallet can concentrate on one idea. The per-wallet cap closes that second gap.
+                </p>
+                <p>
+                  BERT now limits each wallet to <strong>10,000 USDC per idea</strong>. Large participants can still
+                  support the protocol, but one wallet cannot unilaterally overpower an idea round by sending an
+                  outsized vote into a single target.
+                </p>
+                <p>
+                  This keeps the system practical: capital still matters, but the protocol now asks for both
+                  human-verification and bounded per-wallet influence before treasury allocation can happen.
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

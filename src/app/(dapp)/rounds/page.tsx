@@ -7,6 +7,7 @@ import { formatUnits } from "viem";
 import { FaCheckCircle, FaClock } from "react-icons/fa";
 import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
+import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import { Pagination } from "@/components/Pagination";
 import { contracts, ideaRegistryAbi, votingSystemAbi } from "@/lib/contracts";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
@@ -302,6 +303,8 @@ function RoundsPageContent() {
         )}
         {txHash && <p className="mt-2 break-all text-xs text-slate-300">Tx: {txHash}</p>}
       </div>
+
+      <HumanVerificationPanel />
 
       {!contracts.votingSystem ? (
         <p className="rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">

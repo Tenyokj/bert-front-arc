@@ -80,6 +80,62 @@ Lower values:
 - improve accessibility
 - increase noise and potential low-conviction participation
 
+### `humanOnlyVoting`
+Owned by:
+- `VotingSystemUpgradeable`
+
+Meaning:
+- whether voting is restricted to wallets with an active human-verification record
+
+When enabled:
+- wallets must finalize a valid verification through `PoPVerifierUpgradeable`
+- the protocol reduces simple sybil pressure from throwaway addresses
+- the frontend and backend must both support the verification flow
+
+When disabled:
+- any wallet that satisfies the normal vote requirements can participate
+- the protocol falls back to purely economic gating
+
+Operational note:
+- this setting changes the trust and UX model of the protocol, not just a cosmetic frontend toggle
+
+### `maxVoteAmount`
+Owned by:
+- `VotingSystemUpgradeable`
+
+Meaning:
+- the maximum amount of USDC one wallet can commit to one idea in a round
+
+Higher values:
+- allow larger single-wallet conviction
+- increase the chance of whale-dominant outcomes
+
+Lower values:
+- reduce single-wallet control
+- may force large supporters to spread participation across more ideas or rounds
+
+Operational note:
+- this parameter is meant to work alongside human verification, not replace it
+
+### Human Verification Window
+Owned by:
+- `PoPVerifierUpgradeable`
+- backend proof issuance policy
+
+Meaning:
+- how long a wallet stays verified after submitting a signed verification payload onchain
+
+Higher values:
+- reduce repeat verification friction
+- increase the time window during which a stale verification remains valid
+
+Lower values:
+- tighten recency of personhood checks
+- increase repeat verification frequency for active users
+
+Operational note:
+- the current Arc configuration uses a `14 day` verification window
+
 ## Proposal Intake Parameters
 
 ### `authorMinStake`
@@ -173,6 +229,8 @@ Critical addresses include:
 - reputation system
 - voter progression
 - roles registry
+- human verifier
+- trusted signer / backend signer
 
 Critical role assignments include:
 - `VOTING_ROLE`
@@ -186,12 +244,20 @@ If addresses or roles are wrong, valid code may still fail at runtime.
 
 ## Recommended Defaults
 
-For local or Sepolia-style testing, existing protocol defaults have included:
+For the current Arc testnet configuration, active protocol defaults include:
 - `IDEAS_PER_ROUND = 30`
 - `VOTING_DURATION = 1 day`
-- `minStake = 3000 * tokenUnit`
-- `authorMinStake = 5000 * tokenUnit`
+- `minStake = 10 * tokenUnit`
+- `humanOnlyVoting = true`
+- `maxVoteAmount = 10_000 * tokenUnit`
+- `verificationWindow = 14 days`
+- `authorMinStake = 50 * tokenUnit`
 - `authorSharePercent = 95`
+
+Operational note:
+- `humanOnlyVoting` and `maxVoteAmount` now form one policy pair
+- the first limits sybil scaling
+- the second limits single-wallet dominance per idea
 
 These should be treated as environment defaults, not universal policy truths.
 

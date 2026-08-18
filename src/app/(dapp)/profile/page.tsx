@@ -7,6 +7,7 @@ import { formatUnits } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 
 import { Pagination } from "@/components/Pagination";
+import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import {
   contracts,
   fundingPoolAbi,
@@ -338,6 +339,8 @@ function ProfilePageContent() {
               <p className="mt-2 text-3xl font-semibold text-white">{completedGrantIdeas}</p>
             </div>
           </div>
+
+          <HumanVerificationPanel />
 
           <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 md:p-6">
             <h2 className="font-[var(--font-display)] text-3xl text-white">Grant release flow</h2>

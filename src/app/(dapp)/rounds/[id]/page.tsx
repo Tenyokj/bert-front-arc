@@ -8,6 +8,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { AddressIdentity } from "@/components/AddressIdentity";
+import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import {
   contracts,
   grantManagerAbi,
@@ -149,6 +150,15 @@ export default function RoundDetailsPage() {
     },
   });
 
+  const { data: maxVoteAmount } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "maxVoteAmount",
+    query: {
+      enabled: Boolean(contracts.votingSystem),
+    },
+  });
+
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: contracts.usdc,
     abi: usdcAbi,
@@ -190,6 +200,7 @@ export default function RoundDetailsPage() {
     },
   });
   const minStakeValue = minStake as bigint | undefined;
+  const maxVoteAmountValue = maxVoteAmount as bigint | undefined;
   const allowanceValue = allowance as bigint | undefined;
   const tokenBalanceValue = tokenBalance as bigint | undefined;
   const userHasVotedValue = userHasVoted as boolean | undefined;
@@ -473,6 +484,19 @@ export default function RoundDetailsPage() {
         Back to rounds
       </Link>
 
+      <div className="rounded-3xl border border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.10),rgba(15,23,42,0.82))] p-5 md:p-6">
+        <p className="text-xs uppercase tracking-[0.28em] text-amber-300">Voting Policy</p>
+        <h2 className="mt-3 font-[var(--font-display)] text-2xl text-white sm:text-3xl">
+          Live rounds require human verification and cap one-wallet influence.
+        </h2>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
+          To vote in this round, a wallet must complete proof-of-personhood verification first. Each wallet is also capped
+          at 10,000 USDC per idea vote.
+        </p>
+      </div>
+
+      <HumanVerificationPanel />
+
       <article className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.3)] sm:p-5 md:p-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -571,7 +595,7 @@ export default function RoundDetailsPage() {
         )}
         {contracts.usdc && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
-            Wallet voting context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum vote size {formatUsdc(minStakeValue)}
+            Wallet voting context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum vote size {formatUsdc(minStakeValue)} | max vote amount {formatUsdc(maxVoteAmountValue)}
           </p>
         )}
 
@@ -625,7 +649,9 @@ export default function RoundDetailsPage() {
             const needApprove = (effectiveAllowance ?? 0n) < parsedAmount;
             const insufficientBalance = (effectiveBalance ?? 0n) < parsedAmount;
             const belowMinStake = minStakeValue !== undefined && parsedAmount > 0n && parsedAmount < minStakeValue;
-            const invalidVoteAmount = parsedAmount <= 0n || insufficientBalance || belowMinStake;
+            const aboveMaxVoteAmount =
+              maxVoteAmountValue !== undefined && maxVoteAmountValue > 0n && parsedAmount > maxVoteAmountValue;
+            const invalidVoteAmount = parsedAmount <= 0n || insufficientBalance || belowMinStake || aboveMaxVoteAmount;
             const votingBusy = isVotePending || isVoteConfirming || isApprovePending || isApproveConfirming;
             const isOwnIdea = Boolean(address) && idea.author.toLowerCase() === address!.toLowerCase();
             const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
@@ -721,6 +747,7 @@ export default function RoundDetailsPage() {
                 </div>
                 {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance for this vote amount.</p>}
                 {belowMinStake && <p className="mt-2 text-xs text-rose-300">Amount is below `minStake`.</p>}
+                {aboveMaxVoteAmount && <p className="mt-2 text-xs text-rose-300">Amount is above the `maxVoteAmount` cap.</p>}
                 {isOwnIdea && <p className="mt-2 text-xs text-rose-300">You cannot vote for your own idea.</p>}
                 {!isOwnIdea && userHasVotedValue && <p className="mt-2 text-xs text-rose-300">You already voted in this round (one vote per wallet per round).</p>}
               </div>

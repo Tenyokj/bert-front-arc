@@ -15,6 +15,7 @@ This document maps the major BERT protocol contracts, their responsibilities, th
 Current documented core flow:
 - `v1.0.0`: proposal registry, rounds, voting, treasury accounting, winner selection, one-step grant claim
 - `v1.1.0`: author stake on idea creation, staged grant release `30 / 40 / 30`, milestone proof review, rejection cooldown, reserve-aware rejected stake flow
+- `v1.2.0`: proof-of-personhood-gated voting, onchain human verification, and per-wallet vote caps
 
 ## Core Contracts
 
@@ -153,6 +154,25 @@ Critical invariants:
 - rejected proof must respect cooldown
 
 ## Supporting Contracts
+
+### `PoPVerifierUpgradeable`
+Role in system:
+- onchain source of truth for wallet human-verification state
+
+Owns this state:
+- verification expiry per wallet
+- verification nonce usage
+- trusted signer configuration
+
+Can mutate:
+- verified wallets can submit backend-signed verification payloads
+- admin can rotate the trusted signer
+
+Critical invariants:
+- a verification payload must be signed by the trusted signer
+- verification state must expire correctly
+- nonce reuse must not allow replayed proofs
+- provider-linked credential hashes must remain replay-safe
 
 ### `RolesRegistryUpgradeable`
 Reference:

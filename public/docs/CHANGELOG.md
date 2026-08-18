@@ -38,6 +38,38 @@ Introduced stake-backed proposal intake and staged milestone-based grant release
 ### Documentation Impact
 - architecture, treasury, security, and upgrades documentation all need to reflect staged release semantics
 
+## v1.2.0
+
+### Summary
+Introduced proof-of-personhood-gated voting and a per-wallet vote cap for idea rounds.
+
+### Modules Touched
+- `VotingSystemUpgradeable`
+- `PoPVerifierUpgradeable`
+- frontend verification flow
+- backend proof issuer
+
+### Key Changes
+1. Voting can now require an active human-verification record before a wallet is allowed to vote.
+2. A new `PoPVerifierUpgradeable` contract stores wallet verification state onchain.
+3. The verification flow uses World ID proof validation plus a backend-issued signed payload.
+4. Voting now enforces a `10,000 USDC` per-wallet cap per idea.
+5. Frontend surfaces now explain human-only voting status, verification expiry, and the vote cap.
+
+### Behavioral Impact
+- wallet-count sybil pressure is reduced because throwaway addresses cannot vote without human verification
+- single-wallet influence is bounded per idea even if the wallet is verified
+- voting remains USDC-weighted, but only inside the new human-gated and capped policy rail
+
+### Operator Impact
+- operators must deploy and wire `PoPVerifierUpgradeable`
+- the voting system must point to the live human verifier address
+- the backend signer becomes part of the operational trust surface
+- verification window length and vote cap now matter as live governance parameters
+
+### Documentation Impact
+- config, security, system flow, website copy, and operator runbooks all need to reflect the new verification rail
+
 ## v1.0.0
 
 ### Summary
