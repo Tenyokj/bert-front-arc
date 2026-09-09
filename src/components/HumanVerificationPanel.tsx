@@ -411,7 +411,7 @@ export function HumanVerificationPanel() {
           app_id={worldAppId}
           action={worldAction}
           rp_context={rpContext}
-          allow_legacy_proofs={false}
+          allow_legacy_proofs={true}
           environment={worldEnvironment}
           preset={proofOfHuman({ signal: address?.toLowerCase() })}
           onSuccess={async () => {
