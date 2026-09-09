@@ -1,0 +1,160 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum
+    name: CommunityFactory
+    network: arc-testnet
+    source:
+      address: "__V3_FACTORY_ADDRESS__"
+      abi: CommunityFactory
+      startBlock: __V3_FACTORY_START_BLOCK__
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Community
+        - CommunityHubSource
+        - CommunityTreasurySource
+      abis:
+        - name: CommunityFactory
+          file: ./abis/CommunityFactory.json
+      eventHandlers:
+        - event: CommunityTreasuryCreated(indexed uint256,indexed address,address,bytes32,string,string)
+          handler: handleCommunityTreasuryCreated
+        - event: CommunityCreated(indexed uint256,indexed address,indexed address,address)
+          handler: handleCommunityCreated
+      file: ./src/factory-mapping.ts
+
+templates:
+  - kind: ethereum
+    name: CommunityHub
+    network: arc-testnet
+    source:
+      abi: CommunityHub
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Community
+        - CommunityMember
+        - CommunityProposal
+        - CommunitySlateRound
+        - CommunityBinaryVote
+        - CommunitySlateVote
+        - CommunityValidatorDecision
+        - CommunityValidatorEpoch
+        - CommunityAdminAction
+      abis:
+        - name: CommunityHub
+          file: ./abis/CommunityHub.json
+      eventHandlers:
+        - event: CommunityStatusChanged(uint8)
+          handler: handleCommunityStatusChanged
+        - event: CommunityArchived(uint256)
+          handler: handleCommunityArchived
+        - event: AdminAdded(indexed address)
+          handler: handleAdminAdded
+        - event: AdminRemoved(indexed address)
+          handler: handleAdminRemoved
+        - event: ValidatorAdded(indexed address)
+          handler: handleValidatorAdded
+        - event: ValidatorRemoved(indexed address)
+          handler: handleValidatorRemoved
+        - event: AdminActionRequested(indexed uint256,uint8,indexed address,indexed address,uint256,uint256)
+          handler: handleAdminActionRequested
+        - event: AdminActionApproved(indexed uint256,indexed address)
+          handler: handleAdminActionApproved
+        - event: AdminActionCancelled(indexed uint256,indexed address)
+          handler: handleAdminActionCancelled
+        - event: AdminActionExecuted(indexed uint256,uint8,indexed address)
+          handler: handleAdminActionExecuted
+        - event: MemberJoined(indexed address,uint256)
+          handler: handleMemberJoined
+        - event: MembershipExitRequested(indexed address,uint256)
+          handler: handleMembershipExitRequested
+        - event: MembershipExited(indexed address,uint256)
+          handler: handleMembershipExited
+        - event: ProposalCreated(indexed uint256,indexed address,uint8)
+          handler: handleProposalCreated
+        - event: ValidatorDecisionCast(indexed uint256,indexed address,bool)
+          handler: handleValidatorDecisionCast
+        - event: ProposalValidationFinalized(indexed uint256,bool)
+          handler: handleProposalValidationFinalized
+        - event: BinaryVotingOpened(indexed uint256,uint256)
+          handler: handleBinaryVotingOpened
+        - event: BinaryVoteCast(indexed uint256,indexed address,uint8,uint256)
+          handler: handleBinaryVoteCast
+        - event: BinaryProposalSettled(indexed uint256,bool)
+          handler: handleBinaryProposalSettled
+        - event: SlateRoundCreated(indexed uint256,uint8,uint256)
+          handler: handleSlateRoundCreated
+        - event: SlateRoundVoteCast(indexed uint256,indexed uint256,indexed address,uint256)
+          handler: handleSlateRoundVoteCast
+        - event: SlateRoundSettled(indexed uint256,indexed uint256,uint256,uint256)
+          handler: handleSlateRoundSettled
+        - event: ProposalPointAwarded(indexed uint256,indexed address,uint256)
+          handler: handleProposalPointAwarded
+        - event: ValidatorEligibilityReached(indexed address,uint256)
+          handler: handleValidatorEligibilityReached
+        - event: ValidatorRewardEpochFinalized(indexed uint256,uint256)
+          handler: handleValidatorRewardEpochFinalized
+        - event: ValidatorRewardEpochRolled(indexed uint256,uint256,uint256)
+          handler: handleValidatorRewardEpochRolled
+      file: ./src/hub-mapping.ts
+
+  - kind: ethereum
+    name: CommunityTreasury
+    network: arc-testnet
+    source:
+      abi: CommunityTreasury
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Community
+        - CommunityMember
+        - CommunityProposal
+        - CommunitySlateRound
+        - CommunityWithdrawal
+        - CommunityValidatorEpoch
+        - CommunityValidatorRewardClaim
+      abis:
+        - name: CommunityTreasury
+          file: ./abis/CommunityTreasury.json
+      eventHandlers:
+        - event: MembershipStakeDeposited(indexed address,uint256)
+          handler: handleMembershipStakeDeposited
+        - event: MembershipStakeReleased(indexed address,uint256)
+          handler: handleMembershipStakeReleased
+        - event: ProposalBondDeposited(indexed uint256,indexed address,uint256)
+          handler: handleProposalBondDeposited
+        - event: ProposalBondSlashed(indexed uint256,uint256)
+          handler: handleProposalBondSlashed
+        - event: ProposalBondReturned(indexed uint256,indexed address,uint256)
+          handler: handleProposalBondReturned
+        - event: BinaryYesWinSettled(indexed uint256,uint256,uint256,uint256)
+          handler: handleBinaryYesWinSettled
+        - event: BinaryNoWinSettled(indexed uint256,uint256,uint256)
+          handler: handleBinaryNoWinSettled
+        - event: RefundClaimed(indexed uint256,indexed address,uint256)
+          handler: handleRefundClaimed
+        - event: SlateRoundSettled(indexed uint256,uint256,uint256)
+          handler: handleTreasurySlateRoundSettled
+        - event: ValidatorRewardEpochFinalized(indexed uint256,uint256,uint256)
+          handler: handleTreasuryValidatorRewardEpochFinalized
+        - event: ValidatorRewardClaimed(indexed uint256,indexed address,uint256)
+          handler: handleValidatorRewardClaimed
+        - event: WithdrawalRequestCreated(indexed uint256,indexed address,indexed address,uint256,string,string)
+          handler: handleWithdrawalRequestCreated
+        - event: WithdrawalApproved(indexed uint256,indexed address)
+          handler: handleWithdrawalApproved
+        - event: WithdrawalCancelled(indexed uint256,indexed address)
+          handler: handleWithdrawalCancelled
+        - event: WithdrawalExecuted(indexed uint256,indexed address,uint256)
+          handler: handleWithdrawalExecuted
+      file: ./src/treasury-mapping.ts

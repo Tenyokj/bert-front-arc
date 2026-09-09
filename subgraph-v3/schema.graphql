@@ -1,0 +1,167 @@
+type Community @entity(immutable: false) {
+  id: ID!
+  communityId: BigInt!
+  factory: Bytes!
+  creator: Bytes!
+  hub: Bytes
+  treasury: Bytes!
+  name: String!
+  metadataURI: String!
+  configHash: Bytes!
+  active: Boolean!
+  status: Int!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type CommunityHubSource @entity(immutable: false) {
+  id: ID!
+  community: Community!
+}
+
+type CommunityTreasurySource @entity(immutable: false) {
+  id: ID!
+  community: Community!
+}
+
+type CommunityMember @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  account: Bytes!
+  active: Boolean!
+  isAdmin: Boolean!
+  isValidator: Boolean!
+  membershipStake: BigInt!
+  proposalPoints: BigInt!
+  validatorEligible: Boolean!
+  exitAvailableAt: BigInt
+  joinedAt: BigInt
+  updatedAt: BigInt!
+}
+
+type CommunityProposal @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  proposalId: BigInt!
+  creator: Bytes!
+  origin: Int!
+  mode: Int!
+  status: String!
+  validationApprovals: Int!
+  validationRejections: Int!
+  validationApproved: Boolean
+  binaryDeadline: BigInt
+  yesVotes: BigInt!
+  noVotes: BigInt!
+  accepted: Boolean
+  settled: Boolean!
+  bondAmount: BigInt!
+  bondState: String!
+  executionAmount: BigInt!
+  validatorRewardAmount: BigInt!
+  globalReserveAmount: BigInt!
+  refundLiability: BigInt!
+  round: CommunitySlateRound
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+type CommunitySlateRound @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  roundId: BigInt!
+  origin: Int!
+  votingDeadline: BigInt!
+  totalVotes: BigInt!
+  winningProposalId: BigInt
+  winningVotes: BigInt!
+  settled: Boolean!
+  executionAmount: BigInt!
+  validatorRewardAmount: BigInt!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+type CommunityBinaryVote @entity(immutable: true) {
+  id: ID!
+  proposal: CommunityProposal!
+  voter: Bytes!
+  choice: Int!
+  amount: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type CommunitySlateVote @entity(immutable: true) {
+  id: ID!
+  round: CommunitySlateRound!
+  proposal: CommunityProposal!
+  voter: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type CommunityValidatorDecision @entity(immutable: true) {
+  id: ID!
+  proposal: CommunityProposal!
+  validator: Bytes!
+  approved: Boolean!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type CommunityValidatorEpoch @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  epochId: BigInt!
+  startTime: BigInt!
+  endTime: BigInt!
+  activeValidatorCount: BigInt!
+  rewardPerValidator: BigInt!
+  finalized: Boolean!
+  updatedAt: BigInt!
+}
+
+type CommunityValidatorRewardClaim @entity(immutable: true) {
+  id: ID!
+  epoch: CommunityValidatorEpoch!
+  validator: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type CommunityWithdrawal @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  requestId: BigInt!
+  creator: Bytes!
+  recipient: Bytes!
+  amount: BigInt!
+  reason: String!
+  metadataURI: String!
+  approvals: Int!
+  cancelled: Boolean!
+  executed: Boolean!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+type CommunityAdminAction @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  requestId: BigInt!
+  action: Int!
+  proposer: Bytes!
+  target: Bytes!
+  value: BigInt!
+  expiresAt: BigInt!
+  approvals: Int!
+  cancelled: Boolean!
+  executed: Boolean!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}

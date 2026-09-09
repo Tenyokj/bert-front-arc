@@ -174,6 +174,216 @@ const sections: FaqSection[] = [
     ],
   },
   {
+    id: "community-layer",
+    title: "BERT V3 Community Layer",
+    items: [
+      {
+        question: "What is BERT V3 Community Layer?",
+        answer:
+          "BERT V3 is a Community Layer built on top of the main BERT protocol. Each Community has its own CommunityHub for governance rules and CommunityTreasury for local accounting, while still routing the protocol reserve into the existing BERT FundingPool. V3 does not replace the V2 grants system.",
+      },
+      {
+        question: "What is created when a Community is launched?",
+        answer:
+          "The creation flow reserves a CommunityTreasury, deploys the matching CommunityHub with the selected immutable configuration, and activates the pair in CommunityFactory. The Factory records the creator, Hub, Treasury, metadata URI, and Community ID so every deployment can be discovered onchain.",
+      },
+      {
+        question: "Which settings are chosen per Community?",
+        answer:
+          "A creator chooses the entry stake, member-proposal bond, minimum vote, exit cooldown, validator approval threshold, points required for validator eligibility, admin quorum, NO-side fee, validator reward share, validation window, binary and slate voting durations, validator reward epoch duration, and validator activity threshold. These are Community-specific, not global frontend defaults.",
+      },
+      {
+        question: "Can a Community change those rules after launch?",
+        answer:
+          "No. The core economic and timing configuration is fixed when the Hub is deployed. This prevents an administrator from changing stake, quorum, voting, or reward rules after participants have entered under a different set of expectations.",
+      },
+      {
+        question: "What is the difference between CommunityHub and CommunityTreasury?",
+        answer:
+          "CommunityHub owns membership, roles, proposal state, validation, voting, the Community clock, and governance actions. CommunityTreasury escrows membership stakes and votes, records execution and validator-reward balances, tracks refundable claims, and enforces multi-admin withdrawal approval before USDC leaves execution.",
+      },
+      {
+        question: "Does a Community have its own ID and addresses?",
+        answer:
+          "Yes. CommunityFactory assigns an onchain numeric Community ID and links one Hub and one Treasury address. The V3 workspace exposes both addresses with copy controls so participants can independently inspect the deployed contracts.",
+      },
+    ],
+  },
+  {
+    id: "community-roles",
+    title: "Community Roles & Membership",
+    items: [
+      {
+        question: "Which roles exist inside a Community?",
+        answer:
+          "The local V3 roles are Admin, Validator, Member, and public non-member. They are Community-local: holding a role in one Community does not grant it in another Community or in BERT V2.",
+      },
+      {
+        question: "Can one wallet hold multiple roles in the same Community?",
+        answer:
+          "No. V3 keeps active governance roles mutually exclusive. A wallet cannot simultaneously act as a Member and Validator or as an Admin and Validator. This prevents a proposal author from validating their own member proposal and makes authority boundaries explicit.",
+      },
+      {
+        question: "How do I become a Member?",
+        answer:
+          "Approve the CommunityTreasury to transfer the configured entry stake and then join through the Community workspace. The entry stake remains locked while the membership is active; it is not a vote and it is not spendable by an admin.",
+      },
+      {
+        question: "How do I become a Validator?",
+        answer:
+          "Members earn local proposal points from the configured successful participation paths. When the onchain points threshold is reached, the wallet becomes eligible for nomination. An Admin then nominates that wallet through the Community’s quorum-protected governance action. Eligibility is not an automatic role assignment.",
+      },
+      {
+        question: "Can an Admin add or remove another Admin alone?",
+        answer:
+          "No. Adding or removing Admins is a quorum-protected Community action. The request collects the configured number of Admin approvals before it can execute. A safe handover is therefore two steps: approve the replacement Admin first, then separately approve removal of the previous Admin.",
+      },
+      {
+        question: "How does leaving a Community work?",
+        answer:
+          "A Member requests exit, waits through the configured cooldown measured in active Community time, clears any settled vote locks, and must have no active member proposal. Only then can the Member finalize exit and recover the locked entry stake. This prevents a wallet from voting or proposing and immediately escaping the relevant obligations.",
+      },
+      {
+        question: "Do proposal points disappear after leaving?",
+        answer:
+          "Points are local participation history. They can remain recorded after exit so the protocol can preserve an auditable history and an Admin can still evaluate a previously eligible participant. An active role, membership stake, and the ability to act are separate onchain states.",
+      },
+    ],
+  },
+  {
+    id: "community-proposals",
+    title: "V3 Proposals & Voting",
+    items: [
+      {
+        question: "What proposal modes does V3 support?",
+        answer:
+          "V3 supports Admin Binary Proposals, Member Binary Proposals, Admin Slate Proposals, and Member Slate Proposals. Binary proposals receive a YES or NO vote. Slate rounds place multiple eligible proposals into one support-only round and select one winner.",
+      },
+      {
+        question: "What is an Admin Binary Proposal?",
+        answer:
+          "A Community Admin creates a direct YES or NO governance proposal. Active Members can stake one vote on either side during the binary voting window. Admin proposals do not pass through validator review because they originate from an accountable Community administrator.",
+      },
+      {
+        question: "What is a Member Binary Proposal?",
+        answer:
+          "A Member submits an idea with the configured proposal bond. Validators review it during the validation window. If the approval threshold is reached, the proposal opens for binary Member voting. If it is rejected or expires without sufficient approval, its bond follows the onchain slash rule instead of entering the voting flow.",
+      },
+      {
+        question: "What is a Slate Round?",
+        answer:
+          "A Slate Round is a support-only competition between several eligible proposals of the same origin type. Each Member casts one stake-backed vote for one proposal in the round. When the round settles, the winner is chosen from the onchain vote totals and all round voting capital follows the round settlement rule into local Community execution.",
+      },
+      {
+        question: "How are ties resolved in a Slate Round?",
+        answer:
+          "The Hub uses deterministic proposal order as its onchain tie-breaker. The interface shows proposals in the same order used by the contract so the result is predictable and does not rely on a hidden offchain decision.",
+      },
+      {
+        question: "Can I vote twice or vote for my own proposal?",
+        answer:
+          "No. A wallet may cast only one vote in the relevant binary proposal or Slate Round, and the contracts reject prohibited self-voting paths. The UI prevents obvious invalid actions, but contract checks remain the source of truth.",
+      },
+      {
+        question: "Why is there a 10,000 USDC vote cap?",
+        answer:
+          "Every V3 binary vote and Slate Round vote is capped at 10,000 USDC per wallet. This is a protocol-wide guard against a single wallet overwhelming a Community decision with an outsized stake.",
+      },
+      {
+        question: "What happens when a binary proposal settles YES?",
+        answer:
+          "For an Admin proposal, the settled voting stake enters the Community execution treasury. For an approved Member proposal, settlement follows the configured local distribution, including the Community execution balance, validator-reward accounting, and the BERT protocol reserve path. The exact split is visible in the deployed Community settings.",
+      },
+      {
+        question: "What happens when NO wins a binary proposal?",
+        answer:
+          "NO-side voters can claim their own stake after onchain settlement, minus the configured NO-side fee. The claim is per wallet and can only be completed once. YES-side stake follows the rejection settlement path rather than becoming a refundable NO claim.",
+      },
+      {
+        question: "Can a Member recover the proposal bond?",
+        answer:
+          "Yes, when the proposal reaches the contract state that returns its bond. A validated and properly settled Member proposal can make the bond refundable to its author; a rejected or expired proposal can instead be slashed under the Community’s bond rules. The proposal details page displays the live bond state and only enables a claim when the contract allows it.",
+      },
+    ],
+  },
+  {
+    id: "community-treasury",
+    title: "V3 Treasury, Validators & Safety",
+    items: [
+      {
+        question: "Why are Community treasury balances shown separately?",
+        answer:
+          "V3 deliberately separates locked membership funds, execution treasury, validator rewards, and refundable user claims. Showing them as one number would be misleading because each balance has a different owner, withdrawal rule, and settlement path.",
+      },
+      {
+        question: "How do Validators earn rewards?",
+        answer:
+          "Only validated Member proposal flows allocate validator rewards. Rewards accrue inside the configured reward epoch. After the epoch has ended in active Community time, anyone can finalize it; an eligible Validator then claims their own calculated share. Admin-originated proposals do not allocate validator rewards because no validation work occurred.",
+      },
+      {
+        question: "What makes a Validator eligible for an epoch reward?",
+        answer:
+          "The Validator must meet the Community’s validator activity threshold, expressed as participation in the epoch’s available validation cases. The reward page shows the wallet’s completed cases, available cases, epoch pool, finalization state, and whether a claim is currently permitted.",
+      },
+      {
+        question: "Do unclaimed Validator rewards disappear after the next epoch?",
+        answer:
+          "No. Finalized epoch claims remain independently claimable. A Validator can claim a prior eligible epoch later, and each epoch can be claimed only once by that Validator. The interface retains a recent epoch window for clarity while the onchain accounting remains the authority.",
+      },
+      {
+        question: "How are execution withdrawals protected?",
+        answer:
+          "An Admin first creates a withdrawal request with recipient, amount, reason, and metadata URI. The amount is reserved, not transferred. The request needs the configured number of Admin approvals, and only a request that has reached quorum can execute the USDC transfer. With quorum 2, one Admin cannot withdraw alone.",
+      },
+      {
+        question: "Can an Admin cancel a withdrawal request?",
+        answer:
+          "A cancellation is itself a quorum-protected governance action. This prevents one Admin from unilaterally cancelling another Admin’s legitimate request, while still allowing the Community to release reserved funds once the required approvals agree. The request card and Admin action queue show the same cancellation lifecycle.",
+      },
+      {
+        question: "What does pausing a Community do?",
+        answer:
+          "Pause freezes the Community clock and blocks governance-sensitive operations such as proposal creation, voting, validation progression, treasury withdrawal creation, and settlement paths that require active Community time. When resumed, only the remaining active time continues to run. Already-earned user claims remain available when the contract permits them.",
+      },
+      {
+        question: "Why are some Admin actions shown as requests?",
+        answer:
+          "Roster changes, pause or resume, archive, and withdrawal cancellation are protected by the same Admin quorum mechanism as treasury safety. The first requester provides one approval, other active Admins approve, and the action executes only after quorum. Unapproved requests expire after the configured active-time lifetime.",
+      },
+      {
+        question: "Can a Community be archived at any time?",
+        answer:
+          "No. Archive is a quorum-protected action and the Hub checks that the Community is clean enough to close without trapping active governance obligations. Participants should settle relevant proposals, rounds, claims, and membership paths before an archive is attempted.",
+      },
+    ],
+  },
+  {
+    id: "community-timing",
+    title: "V3 Timing & Demo Environments",
+    items: [
+      {
+        question: "Why does a V3 timer use active Community time?",
+        answer:
+          "V3 has a Community clock that stops while the Community is paused. A binary vote, validation window, Slate Round, exit cooldown, request expiry, or reward epoch therefore does not silently expire during an incident pause. After resume, the remaining active time continues.",
+      },
+      {
+        question: "Why do localhost Communities use minutes?",
+        answer:
+          "Local test Communities intentionally use minute-scale configuration so every lifecycle can be exercised in one development session. The timing values are still stored and enforced by the same contracts; only the per-Community configuration differs from production-style settings.",
+      },
+      {
+        question: "How should a hackathon judge test a multi-day flow?",
+        answer:
+          "Use a clearly labelled demo Community configured with accelerated minute-scale windows, not a weakened production contract. The same onchain logic, roles, treasury rules, and settlement checks run, but the demonstration Community reaches validation, voting, reward finalization, and exits quickly.",
+      },
+      {
+        question: "Can the frontend change a live Community deadline?",
+        answer:
+          "No. The frontend only reads and displays the configured onchain timing. It cannot shorten voting, force settlement, or bypass a Community pause. This is intentional: the contract clock is the source of truth.",
+      },
+    ],
+  },
+  {
     id: "arc",
     title: "Arc & Local Testing",
     items: [

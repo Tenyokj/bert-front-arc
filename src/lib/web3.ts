@@ -62,7 +62,10 @@ export const arcTestnet = defineChain({
 });
 
 export const defaultChain = defaultChainKey === "hardhat" ? hardhatLocalhost : arcTestnet;
-export const supportedChains = [defaultChain] as const;
+/** Both deployments stay available; the environment value only selects the initial chain. */
+export const supportedChains = defaultChain.id === hardhatLocalhost.id
+  ? [hardhatLocalhost, arcTestnet] as const
+  : [arcTestnet, hardhatLocalhost] as const;
 
 const connectors = connectorsForWallets(
   [

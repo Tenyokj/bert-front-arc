@@ -4,6 +4,7 @@ const navItems = [
   { href: "/app", label: "Dashboard" },
   { href: "/rounds", label: "Rounds" },
   { href: "/ideas", label: "Ideas" },
+  { href: "/v3", label: "BERT V3", variant: "demo" as const },
   { href: "/pool", label: "Pool" },
   { href: "/profile", label: "Profile" },
   { href: "/ideas/new", label: "Create Idea" },

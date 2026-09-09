@@ -15,6 +15,7 @@ import {
 import {
   contracts,
   ideaRegistryAbi,
+  popVerifierAbi,
   usdcAbi,
 } from "@/lib/contracts";
 import { formatTokenAmount, USDC_DECIMALS } from "@/lib/dapp-onchain";
@@ -50,6 +51,12 @@ function prettyCreateIdeaError(message?: string) {
   }
   if (message.includes("InsufficientAllowance")) {
     return "FundingPool allowance is too low for the selected stake amount.";
+  }
+  if (message.includes("HumanVerifierNotConfigured")) {
+    return "Idea creation is human-only, but its PoP verifier is not configured by the protocol administrator.";
+  }
+  if (message.includes("HumanVerificationRequired")) {
+    return "Complete World ID proof-of-personhood verification before creating an idea.";
   }
   if (message.includes("ExternalCallFailed") && message.includes("FundingPool")) {
     return "FundingPool rejected the author stake deposit. This usually means the deployment wiring or contract roles are incomplete.";
@@ -116,6 +123,21 @@ export default function NewIdeaPage() {
     abi: ideaRegistryAbi,
     functionName: "fundingPool",
     query: { enabled: Boolean(contracts.ideaRegistry) },
+  });
+
+  const { data: humanOnlyIdeaCreation } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "humanOnlyIdeaCreation",
+    query: { enabled: Boolean(contracts.ideaRegistry) },
+  });
+
+  const { data: isVerifiedHuman } = useReadContract({
+    address: contracts.popVerifier,
+    abi: popVerifierAbi,
+    functionName: "isVerifiedHuman",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address && contracts.popVerifier && humanOnlyIdeaCreation) },
   });
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -191,6 +213,8 @@ export default function NewIdeaPage() {
     normalizeAddress(registryFundingPoolValue) !== normalizeAddress(expectedFundingPool);
   const hasInvalidMinStake = minStakeValue !== undefined && minStakeValue <= 0n;
   const isRegistryWiringBroken = hasFundingPoolMismatch || hasInvalidMinStake;
+  const requiresHumanVerification = Boolean(humanOnlyIdeaCreation);
+  const verificationReady = !requiresHumanVerification || isVerifiedHuman === true;
 
   const canApprove =
     hydrated &&
@@ -213,6 +237,7 @@ export default function NewIdeaPage() {
     !belowMinStake &&
     !insufficientBalance &&
     !needsApproval &&
+    verificationReady &&
     !isRegistryWiringBroken &&
     !writeBusy;
 
@@ -362,6 +387,12 @@ export default function NewIdeaPage() {
               <p>Make sure your wallet has enough USDC for both the deposit and gas.</p>
             </div>
           </div>
+
+          {requiresHumanVerification && !isVerifiedHuman && (
+            <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm text-amber-100">
+              Complete <Link href="/profile" className="font-semibold underline">World ID verification</Link> before submitting an idea.
+            </p>
+          )}
 
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button

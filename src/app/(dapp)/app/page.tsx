@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaArrowRight, FaCircle, FaCompass, FaCoins, FaProjectDiagram, FaShieldAlt } from "react-icons/fa";
+import { FaArrowRight, FaCircle, FaCompass, FaCoins, FaProjectDiagram, FaShieldAlt, FaUsers } from "react-icons/fa";
 import { DappDashboardLiveStats } from "@/components/DappDashboardLiveStats";
 import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import { RoleBootstrapClaimPanel } from "@/components/RoleBootstrapClaimPanel";
@@ -109,6 +109,14 @@ export default function DappDashboardPage() {
       <RoleBootstrapClaimPanel />
 
       <RoleBootstrapAddressesShowcase variant="dashboard" />
+
+      <div className="relative overflow-hidden rounded-[28px] border border-cyan-300/18 bg-[linear-gradient(120deg,rgba(8,47,73,0.52),rgba(22,78,99,0.22),rgba(42,45,59,0.96))] p-6 sm:p-8">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">New module / BERT V3</p><h2 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl">Build a governance world around your community.</h2><p className="mt-3 text-sm leading-relaxed text-slate-300">V3 adds stake-gated membership, local validators, proposal review, binary votes, slate rounds, and a community Treasury without replacing the V2 grant protocol.</p></div>
+          <Link href="/communities" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"><FaUsers /> Explore Community Layer <FaArrowRight className="text-xs" /></Link>
+        </div>
+      </div>
 
       <div className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Choose your path</p>

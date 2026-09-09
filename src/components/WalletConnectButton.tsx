@@ -70,7 +70,7 @@ export function WalletConnectButton() {
                   ) : null}
                   <span className="flex flex-col leading-none">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100/70">Network</span>
-                    <span className="mt-1 text-sm font-semibold text-white">Arc Testnet</span>
+                  <span className="mt-1 text-sm font-semibold text-white">{chain?.name ?? "Network"}</span>
                   </span>
                 </button>
 

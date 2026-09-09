@@ -7,7 +7,7 @@ import { darkTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { useEffect, useRef, useState } from "react";
 import { WagmiProvider, useAccount, useSwitchChain } from "wagmi";
 
-import { defaultChain, web3Config } from "@/lib/web3";
+import { defaultChain, supportedChains, web3Config } from "@/lib/web3";
 
 function AutoSwitchDefaultChain() {
   const { chainId, isConnected } = useAccount();
@@ -15,7 +15,7 @@ function AutoSwitchDefaultChain() {
   const attemptedRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!isConnected || !chainId || chainId === defaultChain.id) {
+    if (!isConnected || !chainId || supportedChains.some((chain) => chain.id === chainId)) {
       attemptedRef.current = null;
       return;
     }

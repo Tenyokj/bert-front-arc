@@ -49,6 +49,13 @@ const ideaRegistryPatches = [
     inputs: [],
     outputs: [{ name: "", type: "address", internalType: "address" }],
   },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "humanOnlyIdeaCreation",
+    inputs: [],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
 ] as const satisfies readonly AbiFunction[];
 
 const grantManagerPatches = [

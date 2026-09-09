@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "src/abi/**/artifacts.d.ts",
     // Generated subgraph typings.
     "subgraph/generated/**",
+    // V3 indexer is a standalone AssemblyScript package with its own build pipeline.
+    "subgraph-v3/**",
     // Utility scripts are not part of runtime frontend bundle.
     "scripts/**",
   ]),

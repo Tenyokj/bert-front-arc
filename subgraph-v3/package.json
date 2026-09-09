@@ -1,0 +1,15 @@
+{
+  "name": "bert-v3-subgraph",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "sync:abis": "BERT_CORE_PATH=../../../bert-core V3_SUBGRAPH_ROOT=. node ../scripts/sync-v3-subgraph-artifacts.mjs",
+    "configure": "node scripts/configure-manifest.mjs",
+    "codegen": "npm run sync:abis && npm run configure && ../subgraph/node_modules/.bin/graph codegen subgraph.yaml",
+    "build": "npm run codegen && ../subgraph/node_modules/.bin/graph build subgraph.yaml"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.98.1",
+    "@graphprotocol/graph-ts": "^0.38.2"
+  }
+}

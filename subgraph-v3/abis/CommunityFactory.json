@@ -1,0 +1,530 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        }
+      ],
+      "name": "CommunityAlreadyActivated",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "voter",
+          "type": "address"
+        }
+      ],
+      "name": "HumanVerificationRequired",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "hub",
+          "type": "address"
+        }
+      ],
+      "name": "InvalidCommunityHub",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "idType",
+          "type": "string"
+        }
+      ],
+      "name": "InvalidId",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidInitialization",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "paramName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "InvalidParameter",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "NotCommunityCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInitializing",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "paramName",
+          "type": "string"
+        }
+      ],
+      "name": "ZeroAddress",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "hub",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "treasury",
+          "type": "address"
+        }
+      ],
+      "name": "CommunityCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "treasury",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "configHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "metadataURI",
+          "type": "string"
+        }
+      ],
+      "name": "CommunityTreasuryCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "hub",
+          "type": "address"
+        }
+      ],
+      "name": "activateCommunity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "communityCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "hub",
+          "type": "address"
+        }
+      ],
+      "name": "communityIdByHub",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "treasury",
+          "type": "address"
+        }
+      ],
+      "name": "communityIdByTreasury",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "communityTreasuryDeployer",
+      "outputs": [
+        {
+          "internalType": "contract ICommunityTreasuryDeployer",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        }
+      ],
+      "name": "configHashByCommunityId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "configHash",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "metadataURI",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "usdc",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "globalBertReserve",
+              "type": "address"
+            },
+            {
+              "internalType": "address[]",
+              "name": "initialAdmins",
+              "type": "address[]"
+            },
+            {
+              "internalType": "address[]",
+              "name": "initialValidators",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "entryStakeUSDC",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "proposalBondUSDC",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "voteMinStakeUSDC",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "membershipExitCooldown",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validatorApprovalThreshold",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "adminApprovalThreshold",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "binaryRejectionFeeBps",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validatorRewardShareBps",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validationWindow",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "binaryVotingDuration",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "roundVotingDuration",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validatorRewardEpoch",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validatorActiveThresholdBps",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validatorProposalPointsThreshold",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct CommunityTypes.CommunityConfig",
+          "name": "config_",
+          "type": "tuple"
+        }
+      ],
+      "name": "createCommunity",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "treasury",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "communityId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getCommunity",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "hub",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "treasury",
+              "type": "address"
+            },
+            {
+              "internalType": "uint64",
+              "name": "createdAt",
+              "type": "uint64"
+            }
+          ],
+          "internalType": "struct CommunityTypes.CommunityDeployment",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        }
+      ],
+      "name": "getCreatorCommunityIds",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "humanVerifier",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract ICommunityTreasuryDeployer",
+          "name": "communityTreasuryDeployer_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "humanVerifier_",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "treasury",
+          "type": "address"
+        }
+      ],
+      "name": "isActiveCommunityTreasury",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
