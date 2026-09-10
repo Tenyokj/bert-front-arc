@@ -81,6 +81,7 @@ const defaults: Form = {
   validatorActivityBps: "6000",
   ...productionTiming,
 };
+const maxBinaryRejectionFeeBps = 1_000n;
 const whole = (value: string, name: string) => {
   if (!/^\d+$/.test(value) || BigInt(value) === 0n)
     throw new Error(`${name} must be a positive whole number.`);
@@ -217,6 +218,7 @@ export default function CreateCommunityPage() {
       "Validator points threshold",
     );
     const adminApprovalThreshold = whole(form.adminThreshold, "Admin quorum");
+    const binaryRejectionFeeBps = whole(form.rejectionFeeBps, "NO fee");
     if (
       validatorApprovalThreshold > BigInt(validators.length) ||
       adminApprovalThreshold > BigInt(initialAdmins.length)
@@ -224,6 +226,8 @@ export default function CreateCommunityPage() {
       throw new Error("A threshold cannot exceed its role-holder count.");
     if (validatorProposalPointsThreshold > 100n)
       throw new Error("Validator points threshold cannot exceed 100.");
+    if (binaryRejectionFeeBps > maxBinaryRejectionFeeBps)
+      throw new Error("NO fee cannot exceed 1,000 bps (10%).");
     return {
       name: form.name.trim(),
       metadataURI: form.metadataURI.trim(),
@@ -240,7 +244,7 @@ export default function CreateCommunityPage() {
       ),
       validatorApprovalThreshold,
       adminApprovalThreshold,
-      binaryRejectionFeeBps: whole(form.rejectionFeeBps, "Fee"),
+      binaryRejectionFeeBps,
       validatorRewardShareBps: whole(form.validatorRewardBps, "Reward"),
       validationWindow: minutes(form.validationMinutes, "Validation"),
       binaryVotingDuration: minutes(form.binaryVotingMinutes, "Binary voting"),
@@ -439,10 +443,11 @@ export default function CreateCommunityPage() {
                   set={(v) => field("adminThreshold", v)}
                 />
                 <Field
-                  label="NO fee"
+                  label="NO fee (max 10%)"
                   value={form.rejectionFeeBps}
                   set={(v) => field("rejectionFeeBps", v)}
                   suffix="bps"
+                  max={1000}
                 />
                 <Field
                   label="Validator reward"
@@ -553,12 +558,14 @@ function Field({
   set,
   placeholder,
   suffix,
+  max,
 }: {
   label: string;
   value: string;
   set: (value: string) => void;
   placeholder?: string;
   suffix?: string;
+  max?: number;
 }) {
   return (
     <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.13em] text-slate-400">
@@ -568,6 +575,8 @@ function Field({
           value={value}
           onChange={(e) => set(e.target.value)}
           placeholder={placeholder}
+          inputMode="numeric"
+          max={max}
           className="w-full rounded-xl border border-white/10 bg-slate-950/35 px-3 py-3 pr-14 text-sm font-normal normal-case tracking-normal text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/50"
         />
         {suffix ? (
