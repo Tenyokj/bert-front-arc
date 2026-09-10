@@ -1,6 +1,7 @@
 import { type Address, type PublicClient } from "viem";
 
 import { communityFactoryAbi, communityHubAbi } from "@/lib/community-contracts";
+import { fetchIndexedCommunities } from "@/lib/community-v3-subgraph";
 
 export type CommunityDeployment = { creator: Address; hub: Address; treasury: Address; createdAt: bigint; name?: string; metadataURI?: string };
 export type CommunityProposal = {
@@ -50,12 +51,14 @@ export function normalizeCommunityRefundPreview(value: unknown): CommunityRefund
 
 const asRead = (client: PublicClient, request: Record<string, unknown>) => client.readContract(request as never) as Promise<unknown>;
 
-/** Reads Factory deployment data and enriches it with the canonical creation-event metadata. */
+/** Reads Factory deployment data and enriches it with indexed creation metadata when available. */
 export async function getCommunityDeployment(client: PublicClient, factory: Address, communityId: bigint): Promise<CommunityDeployment> {
   const deployment = await asRead(client, { address: factory, abi: communityFactoryAbi, functionName: "getCommunity", args: [communityId] }) as CommunityDeployment;
-  const logs = await client.getLogs({ address: factory, event: communityFactoryAbi[0], args: { communityId }, fromBlock: 0n, toBlock: "latest" });
-  const event = logs.at(-1);
-  return { ...deployment, name: event?.args.name, metadataURI: event?.args.metadataURI };
+  // The subgraph indexes Factory events. Do not request logs from genesis from
+  // a public Arc RPC, which may prune historical logs.
+  const indexed = await fetchIndexedCommunities(1, communityId).catch(() => null);
+  const item = indexed?.[0];
+  return { ...deployment, name: item?.name, metadataURI: item?.metadataURI };
 }
 
 /** Converts the exact CommunityTypes.Proposal struct returned by CommunityHub into frontend data. */

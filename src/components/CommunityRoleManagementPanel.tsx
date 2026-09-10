@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { isAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityEventFromBlock, communityHubAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 
 type RoleEvent = {
@@ -36,10 +36,10 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
       setLoading(true);
       try {
         const [adminAdded, adminRemoved, validatorAdded, validatorRemoved] = await Promise.all([
-          client.getLogs({ address: hub, event: communityHubAbi[2] as never, fromBlock: 0n, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityHubAbi[3] as never, fromBlock: 0n, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityHubAbi[4] as never, fromBlock: 0n, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityHubAbi[5] as never, fromBlock: 0n, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityHubAbi[2] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityHubAbi[3] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityHubAbi[4] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityHubAbi[5] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
         ]);
         const events: RoleEvent[] = [
           ...toRoleEvents(adminAdded, "admin", true, "admin"),

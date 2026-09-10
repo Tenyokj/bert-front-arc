@@ -1,0 +1,32 @@
+import Link from "next/link";
+import { FaArrowRight, FaBug, FaCircleCheck, FaShieldHalved, FaTriangleExclamation } from "react-icons/fa6";
+
+import { BugBountyReportForm } from "@/components/BugBountyReportForm";
+import SiteFooter from "@/components/SiteFooter";
+
+export default function BugBountyPage() {
+  return (
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
+        <header className="flex items-center justify-between gap-4"><Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"><span className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />BERT</Link><Link href="/app" className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5">Open dApp</Link></header>
+
+        <main className="mt-10 space-y-10">
+          <section className="rounded-[34px] border border-cyan-300/25 bg-[radial-gradient(circle_at_12%_10%,rgba(34,211,238,0.22),transparent_34%),linear-gradient(135deg,#123946,#20232f_60%,#313443)] p-7 text-white sm:p-10"><p className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-200">Arc Testnet Responsible Disclosure</p><h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight sm:text-6xl">Find the problem before mainnet.</h1><p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-200">BERT&apos;s source is open by design. Review the protocol, V3 Community Layer, backend and frontend; report vulnerabilities privately and give us a chance to fix them before public disclosure.</p><div className="mt-6 flex flex-wrap gap-3"><a href="#report" className="inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-2.5 text-sm font-bold text-slate-950">Prepare a report <FaArrowRight /></a><Link href="/testnet-information" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white">Testnet guide <FaArrowRight /></Link></div></section>
+
+          <section className="grid gap-4 md:grid-cols-3"><Rule icon={<FaShieldHalved />} title="Safe harbor" text="Good-faith research within this policy will not be treated as unauthorized access. Stop once you have the minimum proof of impact." /><Rule icon={<FaBug />} title="Private first" text="Do not open a public issue, tweet, or publish a proof of concept before BERT confirms a fix or explicitly approves disclosure." /><Rule icon={<FaCircleCheck />} title="Reproducible" text="Reports need clear steps and evidence. A transaction hash, test, trace or screenshot makes triage much faster." /></section>
+
+          <section className="grid gap-6 lg:grid-cols-2"><article className="rounded-[28px] border border-white/15 bg-white/45 p-6 dark:bg-white/[0.04]"><p className="text-xs font-bold uppercase tracking-[0.22em] text-teal-600">Scope</p><h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">What we want to hear about.</h2><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-700 dark:text-slate-200"><li>Smart-contract bugs: access control, accounting, upgrade safety, reentrancy and invalid state transitions.</li><li>V2/V3 voting, settlement, Treasury, reward, membership and role logic.</li><li>World ID / proof-of-personhood backend validation and signing boundaries.</li><li>Frontend behavior that misrepresents chain state or guides a wallet into an unsafe transaction.</li></ul></article><article className="rounded-[28px] border border-white/15 bg-white/45 p-6 dark:bg-white/[0.04]"><p className="text-xs font-bold uppercase tracking-[0.22em] text-rose-600">Out of scope</p><h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">What must not be tested.</h2><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-700 dark:text-slate-200"><li>Social engineering, phishing, spam, denial of service or accessing another user&apos;s data.</li><li>Known or duplicate issues, missing best-practice headers without impact, and third-party provider issues.</li><li>Using real credentials, private keys, World ID data or anything beyond the minimum testnet proof.</li><li>Claims that testnet USDC or testnet balances have financial value.</li></ul></article></section>
+
+          <section className="rounded-[28px] border border-amber-300/30 bg-amber-400/8 p-6"><div className="flex gap-4"><FaTriangleExclamation className="mt-1 shrink-0 text-xl text-amber-600 dark:text-amber-300" /><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-200">Reward model</p><h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">An initial Validator seat, not a fake cash bounty.</h2><p className="mt-3 max-w-4xl text-sm leading-relaxed text-slate-700 dark:text-slate-200">For a confirmed, previously unknown, high-impact report handled responsibly before mainnet launch, BERT may add the researcher&apos;s wallet to <code>initialValidators</code> when the official BERT Community is deployed. This is a real contract initialization parameter, so it does not bypass the role model. Validators participate in the Community Layer and can earn the configured validator reward share for validated Member proposals. Seats are limited and subject to conduct requirements. Once that Community is live, any new Validator must follow the normal on-chain eligibility route: earn the local proposal-point threshold as a Member, exit membership, then receive quorum-approved nomination.</p></div></div></section>
+
+          <section id="report"><BugBountyReportForm /></section>
+        </main>
+        <SiteFooter />
+      </div>
+    </div>
+  );
+}
+
+function Rule({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+  return <article className="rounded-2xl border border-white/15 bg-white/45 p-5 dark:bg-white/[0.04]"><div className="text-xl text-teal-600 dark:text-cyan-200">{icon}</div><h2 className="mt-3 font-semibold text-slate-900 dark:text-white">{title}</h2><p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-200">{text}</p></article>;
+}

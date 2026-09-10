@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { type Address } from "viem";
 import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityEventFromBlock, communityHubAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 
 export type CommunityAdminActionRequest = { id: bigint; action: number; target: Address; value: bigint; expiresAt: bigint; approvals: Set<string>; executed: boolean };
@@ -27,9 +27,9 @@ export function CommunityAdminActionQueue({ hub, quorum, refreshKey, onCancellat
       setLoading(true);
       try {
         const [opened, approved, executed] = await Promise.all([
-          client.getLogs({ address: hub, event: { type: "event", anonymous: false, name: "AdminActionRequested", inputs: [{ indexed: true, name: "requestId", type: "uint256" }, { indexed: false, name: "action", type: "uint8" }, { indexed: true, name: "proposer", type: "address" }, { indexed: true, name: "target", type: "address" }, { indexed: false, name: "value", type: "uint256" }, { indexed: false, name: "expiresAt", type: "uint256" }] }, fromBlock: 0n, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: { type: "event", anonymous: false, name: "AdminActionApproved", inputs: [{ indexed: true, name: "requestId", type: "uint256" }, { indexed: true, name: "admin", type: "address" }] }, fromBlock: 0n, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: { type: "event", anonymous: false, name: "AdminActionExecuted", inputs: [{ indexed: true, name: "requestId", type: "uint256" }, { indexed: false, name: "action", type: "uint8" }, { indexed: true, name: "executor", type: "address" }] }, fromBlock: 0n, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: { type: "event", anonymous: false, name: "AdminActionRequested", inputs: [{ indexed: true, name: "requestId", type: "uint256" }, { indexed: false, name: "action", type: "uint8" }, { indexed: true, name: "proposer", type: "address" }, { indexed: true, name: "target", type: "address" }, { indexed: false, name: "value", type: "uint256" }, { indexed: false, name: "expiresAt", type: "uint256" }] }, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: { type: "event", anonymous: false, name: "AdminActionApproved", inputs: [{ indexed: true, name: "requestId", type: "uint256" }, { indexed: true, name: "admin", type: "address" }] }, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: { type: "event", anonymous: false, name: "AdminActionExecuted", inputs: [{ indexed: true, name: "requestId", type: "uint256" }, { indexed: false, name: "action", type: "uint8" }, { indexed: true, name: "executor", type: "address" }] }, fromBlock: communityEventFromBlock, toBlock: "latest" }),
         ]);
         const rows = new Map<bigint, CommunityAdminActionRequest>();
         for (const log of opened) { const args = log.args as { requestId?: bigint; action?: number; target?: Address; value?: bigint; expiresAt?: bigint }; if (args.requestId !== undefined && args.action !== undefined && args.target && args.value !== undefined && args.expiresAt !== undefined) rows.set(args.requestId, { id: args.requestId, action: args.action, target: args.target, value: args.value, expiresAt: args.expiresAt, approvals: new Set(), executed: false }); }

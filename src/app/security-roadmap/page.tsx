@@ -62,8 +62,9 @@ export default function SecurityRoadmapPage() {
                 internal testing, role-gated access controls, pause/unpause safety controls, and manual operational checks.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                <strong>No bug bounty program is active at this time.</strong> Any future bounty will be announced publicly
-                with explicit scope, rules, and rewards.
+                A <strong>testnet responsible-disclosure program is active</strong>. It covers the open BERT core,
+                backend and frontend while the protocol is hardened before mainnet. Scope, safe-harbor rules and the
+                Validator nomination reward are published in the <Link href="/testnet-information#bug-bounty" className="font-semibold text-cyan-700 underline underline-offset-4 dark:text-cyan-200">Testnet Guide</Link>.
               </p>
             </section>
 
@@ -99,7 +100,7 @@ export default function SecurityRoadmapPage() {
             <section id="phase-4" className="space-y-3">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Phase 4: Program Launches (Planned)</h2>
               <ul className="list-disc space-y-2 pl-5 text-base text-slate-700 dark:text-slate-200">
-                <li>Potential launch of a responsible vulnerability rewards program (currently not active).</li>
+                <li>Maintain the testnet responsible-disclosure program through the mainnet readiness review.</li>
                 <li>Formalized disclosure SLAs for critical and high severity reports.</li>
                 <li>Security KPIs published with regular status updates.</li>
               </ul>
@@ -116,8 +117,9 @@ export default function SecurityRoadmapPage() {
             <section id="disclosure" className="space-y-3 border-t border-white/12 pt-8">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Security Disclosure Policy</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                For responsible disclosure and security reports, contact: <strong>info@tenyokj</strong>.
-                Include affected contract/module, reproduction path, impact estimate, and transaction references where relevant.
+                Submit vulnerabilities through a private GitHub Security Advisory for the core repository. Include the
+                affected module, reproduction path, impact estimate, and transaction references where relevant. Do not
+                post exploitable details in public issues.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/privacy-notice" className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100">
@@ -129,6 +131,9 @@ export default function SecurityRoadmapPage() {
                 <Link href="/policy-docs" className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100">
                   Policy Docs
                 </Link>
+                <a href="https://github.com/Tenyokj/bert-core-arc/security/advisories/new" target="_blank" rel="noreferrer" className="rounded-full border border-cyan-300/35 px-4 py-2 text-xs font-semibold text-cyan-700 dark:text-cyan-200">
+                  Private security advisory
+                </a>
               </div>
             </section>
           </section>

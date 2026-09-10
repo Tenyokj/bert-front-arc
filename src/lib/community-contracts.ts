@@ -10,6 +10,17 @@ export const communityContracts = {
   adminActionsLibrary: toAddress(process.env.NEXT_PUBLIC_V3_ADMIN_ACTIONS_LIBRARY_ADDRESS),
 };
 
+function toBlockNumber(value: string | undefined): bigint | undefined {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  return BigInt(value);
+}
+
+// Blockdaemon's Arc endpoint is not an archive node. All V3 Hubs are created
+// after this Factory deployment, so queries never need to start at genesis.
+const arcV3FactoryDeploymentBlock = 61_277_385n;
+export const communityEventFromBlock = toBlockNumber(process.env.NEXT_PUBLIC_V3_EVENT_FROM_BLOCK)
+  ?? ((process.env.NEXT_PUBLIC_DEFAULT_CHAIN || "arc").toLowerCase() === "hardhat" ? 0n : arcV3FactoryDeploymentBlock);
+
 const communityDeployment = {
   components: [
     { name: "creator", type: "address" },
