@@ -67,6 +67,7 @@ export function HumanVerificationPanel() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const pendingPayloadRef = useRef<VerificationPayload | null>(null);
+  const widgetFailureRef = useRef<string | null>(null);
 
   const canUseWorldId = Boolean(worldAppId && popBackendUrl);
   const effectiveChainId = chainId ?? 0;
@@ -272,6 +273,7 @@ export function HumanVerificationPanel() {
   async function startVerification() {
     setErrorMessage(null);
     setStatusMessage(null);
+    widgetFailureRef.current = null;
 
     if (!isConnected || !address) {
       setErrorMessage("Connect your wallet before starting human verification.");
@@ -423,10 +425,24 @@ export function HumanVerificationPanel() {
             await submitPendingPayload(payload);
           }}
           handleVerify={async (result) => {
-            await issueBackendSignature(result);
+            try {
+              await issueBackendSignature(result);
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "The backend rejected the World ID proof.";
+              // IDKit reports a host-side rejection generically. Preserve the
+              // backend response so a user can act on the actual cause.
+              widgetFailureRef.current = message;
+              setErrorMessage(message);
+              throw error;
+            }
           }}
           onError={(code) => {
-            setErrorMessage(`World ID error: ${code}`);
+            setErrorMessage(
+              widgetFailureRef.current ?? `World ID error: ${code}`,
+            );
           }}
         />
       ) : null}
