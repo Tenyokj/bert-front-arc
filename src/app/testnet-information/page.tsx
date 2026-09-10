@@ -26,7 +26,7 @@ export default function TestnetInformationPage() {
             <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">Everything here is a real interaction with deployed testnet contracts, but no testnet asset has monetary value.</p>
             <nav className="mt-7 space-y-2 border-l border-white/20 pl-4 text-sm text-slate-600 dark:text-slate-300">
               <a href="#before-you-start" className="block hover:text-slate-900 dark:hover:text-white">Before you start</a>
-              <a href="#world-id" className="block hover:text-slate-900 dark:hover:text-white">World ID Simulator</a>
+              <a href="#verification" className="block hover:text-slate-900 dark:hover:text-white">Demo verification</a>
               <a href="#bug-bounty" className="block hover:text-slate-900 dark:hover:text-white">Testnet bug bounty</a>
               <a href="#report" className="block hover:text-slate-900 dark:hover:text-white">Report a vulnerability</a>
             </nav>
@@ -43,22 +43,22 @@ export default function TestnetInformationPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <InfoCard icon={<FaCircleCheck />} title="Real testnet execution" text="Wallet signatures, USDC approvals, Community roles, votes, settlements, Treasury requests and validator rewards are sent to deployed Arc Testnet contracts." />
                 <InfoCard icon={<FaFlask />} title="Testnet conditions" text="Deployments, settings, indexers and testnet balances can be reset or changed during development. Record transaction hashes when reporting unexpected behavior." />
-                <InfoCard icon={<FaShieldHalved />} title="PoP is required" text="BERT uses World ID proof-of-personhood to issue a short-lived on-chain verification signature. Verify before attempting protected actions such as creating an idea or voting." />
+                <InfoCard icon={<FaShieldHalved />} title="Demo PoP is required" text="Arc Testnet uses a clearly labelled Demo verification record before protected actions such as creating an idea or voting. It is not a human identity check." />
                 <InfoCard icon={<FaBug />} title="Help harden BERT" text="If something behaves incorrectly, reproduce it on testnet first and report it privately. Do not exploit a weakness beyond the minimum proof needed to demonstrate impact." />
               </div>
             </section>
 
-            <section id="world-id" className="space-y-5">
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-teal-600">World ID Simulator</p>
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Complete verification without scanning a QR code.</h2>
-              <p className="leading-relaxed text-slate-700 dark:text-slate-200">For the staging World App, click <strong>Start verification</strong> in BERT and use the browser simulator. A physical World App or QR scan is not required for this testnet flow.</p>
+            <section id="verification" className="space-y-5">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-teal-600">Demo verification</p>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Use protected testnet flows without an identity provider.</h2>
+              <p className="leading-relaxed text-slate-700 dark:text-slate-200">While BERT is on Arc Testnet, use <strong>Use demo verification</strong> in the dApp. It creates a test-only signed record for your connected wallet and then records it through the real deployed <code>PoPVerifierUpgradeable</code> contract.</p>
               <ol className="grid gap-3 sm:grid-cols-2">
-                <Step number="1" title="Open the simulator" text="When World ID opens, select “Use simulator” rather than scanning the displayed QR code." />
-                <Step number="2" title="Use the correct proof" text="In the simulated phone flow choose World ID v3, then choose the Device credential." />
-                <Step number="3" title="Approve once" text="Finish the simulator flow and return to BERT. Keep the wallet connected to the same address that started verification." />
-                <Step number="4" title="Retry cleanly if needed" text="If the widget reports duplicate_nonce, refresh BERT and start a new verification. Do not retry within the same old modal." />
+                <Step number="1" title="Connect Arc Testnet" text="Connect the wallet that will create, join, vote or test another protected BERT flow." />
+                <Step number="2" title="Request Demo verification" text="Open Profile and press “Use demo verification”. No QR code, World App or simulator is needed." />
+                <Step number="3" title="Confirm on-chain" text="Approve the transaction in your wallet. BERT then records an active verification for this testnet address." />
+                <Step number="4" title="Use the dApp" text="Return to the intended action. You can now test the real contract checks, USDC approvals, votes and settlements." />
               </ol>
-              <p className="rounded-2xl border border-cyan-300/25 bg-cyan-400/8 p-4 text-sm leading-relaxed text-slate-700 dark:text-cyan-50"><strong>Why v3 + Device?</strong> The current BERT staging integration verifies this credential path. Selecting World ID v4 in the simulator does not match the active staging proof flow and will be rejected by the host application.</p>
+              <p className="rounded-2xl border border-amber-300/35 bg-amber-400/10 p-4 text-sm leading-relaxed text-slate-700 dark:text-amber-50"><strong>Important:</strong> Demo verification proves nothing about a real person and must not be used to assess Sybil resistance, reputation or eligibility. On mainnet, Demo verification is disabled and BERT will require production World ID proof-of-personhood instead.</p>
             </section>
 
             <section id="bug-bounty" className="space-y-5">

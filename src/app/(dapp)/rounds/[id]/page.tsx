@@ -490,7 +490,7 @@ export default function RoundDetailsPage() {
           Live rounds require human verification and cap one-wallet influence.
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
-          To vote in this round, a wallet must complete proof-of-personhood verification first. Each wallet is also capped
+          To vote in this round, a wallet must complete human verification first. Each wallet is also capped
           at 10,000 USDC per idea vote.
         </p>
       </div>

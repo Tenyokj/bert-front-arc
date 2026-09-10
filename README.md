@@ -53,10 +53,21 @@ Copy `.env.example` to `.env.local`. The example deliberately contains placehold
 | `NEXT_PUBLIC_V3_SUBGRAPH_URL` | V3 Graph query endpoint. Direct RPC reads remain a fallback while indexing catches up. |
 | `NEXT_PUBLIC_V3_EVENT_FROM_BLOCK` | Arc deployment block used to avoid querying pruned RPC history. |
 | `NEXT_PUBLIC_POP_BACKEND_URL` | Public URL of the BERT PoP backend. |
+| `NEXT_PUBLIC_POP_DEMO_ENABLED` | Set `true` only for Arc Testnet. Enables the clearly labelled test-only Demo verification path. |
 | `NEXT_PUBLIC_WORLD_*` | Public World ID client configuration. |
 | `GRAPH_STUDIO_API_KEY` | Server/build-time key only. Do not prefix it with `NEXT_PUBLIC_`. |
 
-The frontend must use the same World ID action, Arc chain ID, and deployed `PoPVerifier` address as the backend and contracts. For the World ID test simulator, use **v3** and select **Device**; the full testnet guide is available at [/testnet-information](https://bertdao.vercel.app/testnet-information).
+## Verification By Environment
+
+### Arc Testnet: current public deployment
+
+The dApp uses **Demo verification** so every Arc Testnet wallet can access protected flows. It creates a real on-chain `PoPVerifier` record with provider ID `BERT_TESTNET_DEMO`, but it is not proof of personhood and provides no Sybil resistance. Set `NEXT_PUBLIC_POP_DEMO_ENABLED=true` only alongside a backend configured with `POP_DEMO_ENABLED=true`.
+
+### Mainnet: planned production policy
+
+Demo verification is disabled. The frontend will open World ID, the backend will validate the proof and bind its unique World nullifier to one wallet, then the wallet will finalize a signed payload through `PoPVerifierUpgradeable`. The frontend, backend, World action, Arc chain ID and deployed verifier address must match exactly.
+
+Read the full [Testnet Guide](https://bertdao.vercel.app/testnet-information) before using the public deployment.
 
 ## Data and Contract Sources
 
@@ -81,7 +92,8 @@ The application is deployed on Vercel. Configure environment variables in the Ve
 1. Wallet connection on Arc Testnet.
 2. V2 and V3 public contract reads.
 3. V3 subgraph availability and RPC fallback.
-4. PoP backend health and a World ID simulator verification.
+4. PoP backend health and Demo verification with a fresh Arc Testnet wallet.
+5. Before mainnet, a complete production World ID verification with a real credential.
 5. `npm run lint` and `npm run build` locally before merging.
 
 ## Security and Responsible Disclosure
@@ -95,4 +107,4 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request. Forks a
 ## Related Repositories
 
 - [BERT Core](https://github.com/Tenyokj/bert-core-arc): Solidity protocol and deployment tooling.
-- [BERT Backend](https://github.com/Tenyokj/bert-backend-arc): World ID and on-chain proof-of-personhood signing service.
+- [BERT Backend](https://github.com/Tenyokj/bert-backend-arc): Arc Testnet Demo and production World ID verification-signing service.

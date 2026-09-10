@@ -193,7 +193,7 @@ export default function CreateCommunityPage() {
     if (!address || !contracts.usdc || !contracts.fundingPool || !contracts.popVerifier)
       throw new Error("Connect a wallet and configure USDC, FundingPool, and PoPVerifier.");
     if (!isVerifiedHuman)
-      throw new Error("Complete World ID proof-of-personhood verification before creating a Community.");
+      throw new Error("Complete human verification before creating a Community.");
     if (!form.name.trim()) throw new Error("Community name is required.");
     const initialAdmins = admins.some(
       (item) => item.toLowerCase() === address.toLowerCase(),
@@ -537,7 +537,7 @@ export default function CreateCommunityPage() {
             )}
             {!isVerifiedHuman && (
               <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm text-amber-100">
-                Complete <Link href="/profile" className="font-semibold underline">World ID verification</Link> before reserving a Community.
+                Complete <Link href="/profile" className="font-semibold underline">human verification</Link> before reserving a Community.
               </p>
             )}
       {error || reserve.error || deploy.error || activate.error ? (
