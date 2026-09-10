@@ -1,6 +1,12 @@
 "use client";
 
-import { IDKitRequestWidget, proofOfHuman, type IDKitResult, type RpContext } from "@worldcoin/idkit";
+import {
+  deviceLegacy,
+  IDKitRequestWidget,
+  proofOfHuman,
+  type IDKitResult,
+  type RpContext,
+} from "@worldcoin/idkit";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Address, Hex } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
@@ -415,7 +421,11 @@ export function HumanVerificationPanel() {
           rp_context={rpContext}
           allow_legacy_proofs={true}
           environment={worldEnvironment}
-          preset={proofOfHuman({ signal: address?.toLowerCase() })}
+          preset={
+            worldEnvironment === "staging"
+              ? deviceLegacy({ signal: address?.toLowerCase() })
+              : proofOfHuman({ signal: address?.toLowerCase() })
+          }
           onSuccess={async () => {
             const payload = pendingPayloadRef.current;
             if (!payload) {
