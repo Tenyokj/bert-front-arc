@@ -227,6 +227,9 @@ export function HumanVerificationPanel() {
     }
 
     window.localStorage.setItem(getPendingPayloadKey(address, effectiveChainId), JSON.stringify(data));
+    // onSuccess can run before React applies setPendingPayload, so keep the
+    // freshly issued payload available synchronously for finalization.
+    pendingPayloadRef.current = data;
     setPendingPayload(data);
     setStatusMessage("World ID proof accepted. Finish the final on-chain activation step.");
     setErrorMessage(null);
