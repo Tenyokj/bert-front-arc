@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { isAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityEventFromBlock, communityHubAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 import { ClientPagination } from "@/components/ClientPagination";
 
@@ -81,7 +81,7 @@ export function ValidatorNominationPanel({ hub }: { hub: `0x${string}` }) {
               { indexed: false, name: "totalPoints", type: "uint256" },
             ],
           },
-          fromBlock: 0n,
+          fromBlock: communityEventFromBlock,
           toBlock: "latest",
         });
         const reached = new Map<Address, bigint>();

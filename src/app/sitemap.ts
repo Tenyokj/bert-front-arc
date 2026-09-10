@@ -15,6 +15,8 @@ const routes = [
   "/privacy-notice",
   "/terms-of-use",
   "/security-roadmap",
+  "/bug-bounty",
+  "/testnet-information",
   "/rounds",
   "/ideas",
   "/pool",

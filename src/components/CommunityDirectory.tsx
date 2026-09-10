@@ -81,16 +81,6 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
         const shouldUseRpcFallback = !indexedRows || (count > 0n && indexedRows.length === 0);
         let rows: CommunityRow[];
         if (shouldUseRpcFallback) {
-          const events = await client.getLogs({
-            address: communityContracts.factory,
-            event: communityFactoryAbi[0],
-            fromBlock: 0n,
-            toBlock: "latest",
-          });
-          const metadataById = new Map(events.map((event) => [Number(event.args.communityId), {
-            name: event.args.name ?? "",
-            metadataURI: event.args.metadataURI ?? "",
-          }]));
           rows = await Promise.all(ids.map(async (id) => {
             const deployment = (await readContract({
               address: communityContracts.factory,
@@ -100,8 +90,8 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
             })) as { creator: string; hub: string; treasury: string; createdAt: bigint };
             return {
               id: Number(id),
-              name: metadataById.get(Number(id))?.name || `Community #${id.toString()}`,
-              metadataURI: metadataById.get(Number(id))?.metadataURI || "",
+              name: `Community #${id.toString()}`,
+              metadataURI: "",
               creator: deployment.creator,
               hub: deployment.hub,
               treasury: deployment.treasury,

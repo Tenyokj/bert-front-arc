@@ -104,6 +104,9 @@ export default function SiteFooter() {
             <Link className="footer-link" href="/faq">
               FAQ
             </Link>
+            <Link className="footer-link" href="/testnet-information">
+              Testnet Guide
+            </Link>
           </div>
         </div>
       </div>
@@ -147,6 +150,9 @@ export default function SiteFooter() {
             </Link>
             <Link className="footer-link" href="/security-roadmap">
               Security Roadmap
+            </Link>
+            <Link className="footer-link" href="/bug-bounty">
+              Testnet Bug Bounty
             </Link>
           </div>
           <div className="mt-2 ml-auto w-fit">

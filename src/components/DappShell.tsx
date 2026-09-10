@@ -31,7 +31,7 @@ export function DappShell({
   return (
     <div className="min-h-screen bg-[#20232f] text-slate-100">
       <div className="mx-auto min-h-screen max-w-[1480px] px-3 pb-10 pt-3 sm:px-4 sm:pb-12 sm:pt-4 md:px-6 xl:px-8">
-        <header className="sticky top-3 z-30 rounded-2xl border border-white/10 bg-[#2a2d3b]/95 px-3 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur sm:top-4 sm:px-4 md:px-5">
+        <header className="sticky top-14 z-30 rounded-2xl border border-white/10 bg-[#2a2d3b]/95 px-3 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur sm:px-4 md:px-5">
           <div className="flex items-center gap-3">
             <Link href={brandHref} className="flex shrink-0 items-center gap-2">
               <div className="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.8)]" />

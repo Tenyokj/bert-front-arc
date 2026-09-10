@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import { Web3Providers } from "@/components/Web3Providers";
+import { TestnetBanner } from "@/components/TestnetBanner";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -31,7 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${plusJakarta.variable} ${sora.variable} antialiased`}>
-        <Web3Providers>{children}</Web3Providers>
+        <Web3Providers>
+          <TestnetBanner />
+          <div className="pt-11">{children}</div>
+        </Web3Providers>
       </body>
     </html>
   );
