@@ -44,6 +44,8 @@ const worldEnvironment =
     ? process.env.NEXT_PUBLIC_WORLD_ENVIRONMENT
     : "production";
 const popBackendUrl = process.env.NEXT_PUBLIC_POP_BACKEND_URL;
+const arcTestnetChainId = 5_042_002;
+const demoVerificationEnabled = process.env.NEXT_PUBLIC_POP_DEMO_ENABLED === "true";
 
 function getPendingPayloadKey(address: Address, chainId: number) {
   return `bert:pop-pending:${chainId}:${address.toLowerCase()}`;
@@ -77,6 +79,9 @@ export function HumanVerificationPanel() {
 
   const canUseWorldId = Boolean(worldAppId && popBackendUrl);
   const effectiveChainId = chainId ?? 0;
+  const canUseDemoVerification =
+    demoVerificationEnabled && effectiveChainId === arcTestnetChainId && Boolean(popBackendUrl);
+  const showWorldIdFlow = worldEnvironment === "production";
 
   const backendBaseUrl = useMemo(() => {
     if (!popBackendUrl) return null;
@@ -315,6 +320,49 @@ export function HumanVerificationPanel() {
     }
   }
 
+  async function startDemoVerification() {
+    if (!address || !backendBaseUrl || !verifierAddress) {
+      setErrorMessage("Connect your wallet before starting demo verification.");
+      return;
+    }
+    if (!canUseDemoVerification) {
+      setErrorMessage("Demo verification is available only on Arc Testnet.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setStatusMessage("Preparing an Arc Testnet demo verification payload...");
+
+    try {
+      const response = await fetch(`${backendBaseUrl}/api/pop/demo-proof`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: address,
+          chainId: effectiveChainId,
+          verifierAddress,
+        }),
+      });
+      const data = (await response.json()) as VerificationPayload & { error?: string; details?: string };
+      if (!response.ok) {
+        throw new Error(data.details || data.error || "Demo verification is unavailable.");
+      }
+
+      window.localStorage.setItem(getPendingPayloadKey(address, effectiveChainId), JSON.stringify(data));
+      pendingPayloadRef.current = data;
+      setPendingPayload(data);
+      setStatusMessage("Demo payload prepared. Confirm the on-chain activation in your wallet.");
+      await submitPendingPayload(data);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to prepare demo verification."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   const verificationSummary = verified
     ? `Verified until ${formatDateTimeFromUnix(verifiedUntil)}`
     : pendingPayload
@@ -327,11 +375,14 @@ export function HumanVerificationPanel() {
         <div className="max-w-2xl">
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-300">Human Verification</p>
           <h2 className="mt-3 font-[var(--font-display)] text-2xl text-white sm:text-3xl">
-            Voting access now supports proof-of-personhood gating.
+            {canUseDemoVerification
+              ? "Activate Arc Testnet demo access."
+              : "Voting access supports proof-of-personhood gating."}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
-            This wallet can vote only after passing the World ID flow and finalizing the signed proof on-chain through the
-            protocol verifier contract.
+            {canUseDemoVerification
+              ? "Demo access lets each testnet wallet exercise the complete on-chain voting flow. It is not proof of personhood and is never available on mainnet."
+              : "This wallet can vote only after passing the World ID flow and finalizing the signed proof on-chain through the protocol verifier contract."}
           </p>
         </div>
 
@@ -354,20 +405,41 @@ export function HumanVerificationPanel() {
 
       <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
         <div className="rounded-2xl border border-white/10 bg-[#232938]/80 px-4 py-4 text-sm text-slate-300">
-          <p>Step 1. Open World ID and prove that this wallet belongs to a unique human.</p>
-          <p className="mt-2">Step 2. The backend validates the proof and signs a BERT verification payload.</p>
-          <p className="mt-2">Step 3. Your wallet submits that payload to the on-chain `PoPVerifierUpgradeable` contract.</p>
+          {canUseDemoVerification ? (
+            <>
+              <p>Step 1. Request a test-only credential for this Arc Testnet wallet.</p>
+              <p className="mt-2">Step 2. Confirm the signed payload in your wallet.</p>
+              <p className="mt-2">Step 3. The real on-chain `PoPVerifierUpgradeable` records the demo credential.</p>
+            </>
+          ) : (
+            <>
+              <p>Step 1. Open World ID and prove that this wallet belongs to a unique human.</p>
+              <p className="mt-2">Step 2. The backend validates the proof and signs a BERT verification payload.</p>
+              <p className="mt-2">Step 3. Your wallet submits that payload to the on-chain `PoPVerifierUpgradeable` contract.</p>
+            </>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => void startVerification()}
-            disabled={isSubmitting || !isConnected || verified}
-            className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {verified ? "Wallet verified" : isSubmitting ? "Preparing..." : "Start World ID verification"}
-          </button>
+          {canUseDemoVerification ? (
+            <button
+              type="button"
+              onClick={() => void startDemoVerification()}
+              disabled={isSubmitting || !isConnected || verified}
+              className="rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {verified ? "Wallet verified" : isSubmitting ? "Preparing..." : "Use demo verification"}
+            </button>
+          ) : showWorldIdFlow ? (
+            <button
+              type="button"
+              onClick={() => void startVerification()}
+              disabled={isSubmitting || !isConnected || verified}
+              className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {verified ? "Wallet verified" : isSubmitting ? "Preparing..." : "Start World ID verification"}
+            </button>
+          ) : null}
 
           {pendingPayload ? (
             <button
@@ -397,7 +469,7 @@ export function HumanVerificationPanel() {
         </p>
       ) : null}
 
-      {!canUseWorldId ? (
+      {!canUseWorldId && !canUseDemoVerification ? (
         <p className="mt-4 rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
           Configure `NEXT_PUBLIC_WORLD_APP_ID` and `NEXT_PUBLIC_POP_BACKEND_URL` to enable the live verification flow.
         </p>
@@ -415,7 +487,7 @@ export function HumanVerificationPanel() {
         </p>
       ) : null}
 
-      {rpContext && worldAppId ? (
+      {showWorldIdFlow && rpContext && worldAppId ? (
         <IDKitRequestWidget
           open={widgetOpen}
           onOpenChange={setWidgetOpen}
