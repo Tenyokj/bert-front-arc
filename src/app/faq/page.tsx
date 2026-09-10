@@ -82,7 +82,7 @@ const sections: FaqSection[] = [
       {
         question: "Do I need verification before I can vote?",
         answer:
-          "Yes, in the current live Arc configuration human-only voting is enabled. A wallet must complete the proof-of-personhood flow and finalize that verification onchain before it can vote.",
+          "Yes. On Arc Testnet, complete Demo verification and finalize its payload onchain before voting. It opens protected test flows but does not prove humanity. Mainnet will require production World ID verification instead.",
       },
       {
         question: "What is the maximum vote amount per idea?",
@@ -102,7 +102,7 @@ const sections: FaqSection[] = [
       {
         question: "Can voting still be abused?",
         answer:
-          "The protocol now defends against multiple layers of abuse: self-vote restrictions, minimum commitments, proof-of-personhood-gated access, per-wallet vote caps, and role-gated settlement paths. Operational monitoring is still important, especially during testnet rollout.",
+          "Yes, especially on testnet: Demo verification is intentionally not Sybil-resistant. The testnet is for validating contract behavior, economics and UX. Mainnet policy will add World ID proof-of-personhood alongside self-vote restrictions, minimum commitments, vote caps and role-gated settlement paths.",
       },
     ],
   },
@@ -113,17 +113,17 @@ const sections: FaqSection[] = [
       {
         question: "What kind of verification does BERT use?",
         answer:
-          "The current live Arc stack uses proof-of-personhood verification for voting eligibility. It is designed to prove that a real human is behind the wallet before that wallet can participate in voting.",
+          "The current Arc Testnet deployment uses clearly labelled Demo verification so any test wallet can exercise protected flows. It is not proof of personhood. At mainnet launch, Demo verification will be disabled and BERT will use production World ID proof-of-personhood for voting eligibility.",
       },
       {
         question: "Is this the same as KYC?",
         answer:
-          "No. In the current live flow, BERT uses proof-of-personhood gating rather than a traditional KYC identity onboarding process for voting.",
+          "No. Arc Testnet Demo verification is not identity verification at all. The planned mainnet World ID flow is proof-of-personhood, not a traditional BERT KYC onboarding process.",
       },
       {
         question: "How does the verification flow work?",
         answer:
-          "The frontend opens the World ID flow, the backend validates the proof and signs a BERT verification payload, and the wallet finalizes that payload onchain through PoPVerifierUpgradeable. Once that transaction lands, the wallet becomes eligible to vote until the verification expires.",
+          "On Arc Testnet, select Use demo verification and confirm the signed payload in your wallet; the real PoPVerifierUpgradeable contract records the test-only result. On mainnet, the frontend will open World ID, the backend will validate the proof and bind its nullifier to the wallet, then the wallet will finalize the payload onchain.",
       },
       {
         question: "How long does verification stay active?",
@@ -133,7 +133,7 @@ const sections: FaqSection[] = [
       {
         question: "Why does BERT need both verification and a vote cap?",
         answer:
-          "They solve different problems. Verification reduces sybil pressure from large numbers of fresh wallets, while the 10,000 USDC cap reduces the ability of one wallet to dominate one idea with an outsized vote.",
+          "They solve different problems in production. World ID reduces Sybil pressure from many fresh wallets, while the 10,000 USDC cap reduces the ability of one verified wallet to dominate one idea with an outsized vote. Arc Testnet Demo verification does not provide the first protection.",
       },
       {
         question: "What if I pass verification but still cannot vote?",

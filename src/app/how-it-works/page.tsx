@@ -27,7 +27,7 @@ const pillars = [
   {
     label: "Verified Voting",
     value: "PoP + 10k cap",
-    note: "Only human-verified wallets can vote, and each wallet is capped at 10,000 USDC per idea.",
+    note: "Arc Testnet uses Demo PoP; mainnet will require World ID. Each wallet is capped at 10,000 USDC per idea.",
   },
 ];
 
@@ -43,14 +43,14 @@ const flowSteps = [
       "VotingSystem groups eligible ideas into a live round. Participants review the round and commit USDC directly onchain instead of relying on a separate governance asset.",
   },
   {
-    title: "3. Voters prove personhood first",
+    title: "3. Voters activate verification first",
     body:
-      "Before voting, a wallet completes the World ID flow, the backend validates the proof, signs a BERT verification payload, and the wallet finalizes that proof onchain through PoPVerifierUpgradeable.",
+      "On Arc Testnet, a wallet activates clearly labelled Demo verification and finalizes its signed payload onchain through PoPVerifierUpgradeable. Mainnet will replace this test-only path with production World ID proof-of-personhood.",
   },
   {
     title: "4. USDC commitments accumulate in treasury",
     body:
-      "Every valid vote routes committed USDC into the treasury path. Human-only gating reduces sybil pressure, and a per-wallet 10,000 USDC cap reduces single-wallet dominance over one idea.",
+      "Every valid vote routes committed USDC into the treasury path. The per-wallet 10,000 USDC cap reduces single-wallet dominance; production World ID will add Sybil resistance after testnet." ,
   },
   {
     title: "5. Winner enters grant execution",
@@ -67,7 +67,7 @@ const flowSteps = [
 const safetyChecks = [
   "USDC commitments use explicit allowance checks before protocol actions execute.",
   "Round voting enforces one vote per address per idea and blocks self-voting.",
-  "Human-only voting requires an active proof-of-personhood verification before a wallet can vote.",
+  "Protected voting requires an active onchain verification record; Arc Testnet uses Demo PoP and mainnet will use World ID.",
   "Per-idea vote size is capped at 10,000 USDC per wallet to reduce single-wallet control.",
   "Treasury release follows milestone state transitions instead of one-shot payouts.",
   "Pause controls remain available for incident handling and controlled rollout.",
@@ -169,7 +169,7 @@ export default function HowItWorksPage() {
               <p className="max-w-4xl text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 BERT coordinates one continuous funding path. Proposal deposits filter out spam, round voting directs
                 capital toward the strongest ideas, treasury accounting preserves visibility over committed and released
-                balances, human verification limits sybil pressure, and milestone releases keep grant execution
+                balances, testnet verification exercises protected paths, and milestone releases keep grant execution
                 measurable.
               </p>
             </div>
@@ -199,14 +199,15 @@ export default function HowItWorksPage() {
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Human verification flow</h2>
               <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 <p>
-                  BERT still uses USDC-weighted voting, but now the protocol requires a proof-of-personhood activation
-                  before that capital can be used in voting. This changes the attack surface from pure wallet count to
-                  verified-human participation.
+                  BERT still uses USDC-weighted voting, but protected voting requires an onchain verification record
+                  before that capital can be used. Arc Testnet uses Demo verification to test this gate without making
+                  a claim about the wallet&apos;s real-world identity.
                 </p>
                 <p>
-                  The frontend opens the World ID flow, the backend checks the proof and signs a short-lived BERT
-                  payload, and the wallet submits that payload to <strong>PoPVerifierUpgradeable</strong>. Once that
-                  transaction lands, the wallet can vote until the verification window expires.
+                  On Arc Testnet, the frontend requests a clearly labelled Demo payload and the wallet submits it to
+                  <strong>PoPVerifierUpgradeable</strong>. This exercises the real onchain access gate but does not
+                  prove personhood. On mainnet, the frontend will open World ID; the backend will verify the proof and
+                  bind its unique nullifier to one wallet before issuing the same kind of onchain payload.
                 </p>
                 <p>
                   The current verification window is <strong>14 days</strong>. After that, the wallet simply refreshes
@@ -219,8 +220,9 @@ export default function HowItWorksPage() {
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Why the 10,000 USDC cap exists</h2>
               <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 <p>
-                  Human verification alone helps against sybil voting, but it does not limit how much influence a
-                  single verified wallet can concentrate on one idea. The per-wallet cap closes that second gap.
+                  In production, human verification helps against Sybil voting, but it does not limit how much
+                  influence a single verified wallet can concentrate on one idea. The per-wallet cap closes that
+                  second gap.
                 </p>
                 <p>
                   BERT now limits each wallet to <strong>10,000 USDC per idea</strong>. Large participants can still
@@ -229,7 +231,7 @@ export default function HowItWorksPage() {
                 </p>
                 <p>
                   This keeps the system practical: capital still matters, but the protocol now asks for both
-                  human-verification and bounded per-wallet influence before treasury allocation can happen.
+                  production World ID verification and bounded per-wallet influence before treasury allocation can happen.
                 </p>
               </div>
             </div>

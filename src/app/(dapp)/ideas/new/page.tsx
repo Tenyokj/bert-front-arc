@@ -56,7 +56,7 @@ function prettyCreateIdeaError(message?: string) {
     return "Idea creation is human-only, but its PoP verifier is not configured by the protocol administrator.";
   }
   if (message.includes("HumanVerificationRequired")) {
-    return "Complete World ID proof-of-personhood verification before creating an idea.";
+    return "Complete human verification before creating an idea.";
   }
   if (message.includes("ExternalCallFailed") && message.includes("FundingPool")) {
     return "FundingPool rejected the author stake deposit. This usually means the deployment wiring or contract roles are incomplete.";
@@ -390,7 +390,7 @@ export default function NewIdeaPage() {
 
           {requiresHumanVerification && !isVerifiedHuman && (
             <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm text-amber-100">
-              Complete <Link href="/profile" className="font-semibold underline">World ID verification</Link> before submitting an idea.
+              Complete <Link href="/profile" className="font-semibold underline">human verification</Link> before submitting an idea.
             </p>
           )}
 

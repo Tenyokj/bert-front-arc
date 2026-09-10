@@ -279,7 +279,7 @@ export default function ProtocolStatsPage() {
               <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
                 {humanOnlyVoting === undefined ? "—" : humanOnlyVoting ? "Enabled" : "Disabled"}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Voting access requires an active proof-of-personhood record</p>
+              <p className="mt-1 text-xs text-slate-500">Voting access requires an active onchain verification record</p>
             </article>
           </section>
 
