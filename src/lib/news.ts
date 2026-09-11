@@ -10,7 +10,17 @@ export type NewsItem = {
 };
 
 export const newsItems: NewsItem[] = [
-    {
+  {
+    id: "v3-arc-testnet-release",
+    image: "/news-v3-release.png",
+    alt: "BERT V3 release on Arc Testnet banner",
+    href: "https://bertdao-docs.vercel.app",
+    aspectRatio: "2172 / 724",
+    objectFit: "cover",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#070b16]",
+  },
+  {
     id: "verification-and-v2.1",
     image: "/news-verification-v2dot1.png",
     alt: "BERT verification and v2.1 update banner",
