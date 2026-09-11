@@ -6,6 +6,7 @@ import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteCont
 
 import { communityEventFromBlock, communityHubAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
+import { fetchIndexedCommunityRoleSets } from "@/lib/community-v3-subgraph";
 
 type RoleEvent = {
   account: Address;
@@ -24,7 +25,7 @@ const communityRoleEvents = {
   validatorRemoved: communityHubAbi.find((item) => item.type === "event" && item.name === "ValidatorRemoved"),
 };
 
-/** Reconstructs and manages the Hub's current local Admin and Validator sets from on-chain events. */
+/** Reconstructs and manages the Hub's current local Admin and Validator sets from indexed Hub events. */
 export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${string}`; archived: boolean }) {
   const { chainId } = useAccount();
   const client = usePublicClient({ chainId });
@@ -44,14 +45,29 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
       if (!client) return;
       setLoading(true);
       try {
+        const indexedRoles = await fetchIndexedCommunityRoleSets(hub).catch(() => null);
+        if (indexedRoles && (indexedRoles.admins.length > 0 || indexedRoles.validators.length > 0)) {
+          if (!cancelled) {
+            setAdmins(indexedRoles.admins);
+            setValidators(indexedRoles.validators);
+          }
+          return;
+        }
+
         if (Object.values(communityRoleEvents).some((event) => !event)) {
           throw new Error("CommunityHub role events are missing from the ABI.");
         }
+        const latestBlock = await client.getBlockNumber();
+        const recentWindow = 30_000n;
+        const recentFromBlock = latestBlock > recentWindow ? latestBlock - recentWindow : 0n;
+        const fromBlock = communityEventFromBlock && communityEventFromBlock > recentFromBlock
+          ? communityEventFromBlock
+          : recentFromBlock;
         const [adminAdded, adminRemoved, validatorAdded, validatorRemoved] = await Promise.all([
-          client.getLogs({ address: hub, event: communityRoleEvents.adminAdded as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityRoleEvents.adminRemoved as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityRoleEvents.validatorAdded as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityRoleEvents.validatorRemoved as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.adminAdded as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.adminRemoved as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.validatorAdded as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.validatorRemoved as never, fromBlock, toBlock: "latest" }),
         ]);
         const events: RoleEvent[] = [
           ...toRoleEvents(adminAdded, "admin", true, "admin"),
@@ -99,7 +115,7 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
   return <article className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-5">
     <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-200">Role management</p>
     <h3 className="mt-2 text-xl font-semibold text-white">Local Admin and Validator sets.</h3>
-    <p className="mt-2 text-sm text-slate-300">Role holders are reconstructed from the Hub&apos;s own role events. Every roster change becomes a quorum-protected request; a wallet can hold only one active Community role.</p>
+    <p className="mt-2 text-sm text-slate-300">Role holders are reconstructed from indexed Hub role events. Every roster change becomes a quorum-protected request; a wallet can hold only one active Community role.</p>
     {archived ? <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-400/10 p-3 text-sm text-amber-100">This Community is archived, so its Admin and Validator sets are permanently locked.</p> : null}
 
     <div className="mt-5 grid gap-4 xl:grid-cols-2">
