@@ -15,6 +15,15 @@ type RoleEvent = {
   logIndex: number;
 };
 
+// ABI ordering changes whenever contract functions or events are added. Resolve
+// these events by name so roster reconstruction always reads the intended logs.
+const communityRoleEvents = {
+  adminAdded: communityHubAbi.find((item) => item.type === "event" && item.name === "AdminAdded"),
+  adminRemoved: communityHubAbi.find((item) => item.type === "event" && item.name === "AdminRemoved"),
+  validatorAdded: communityHubAbi.find((item) => item.type === "event" && item.name === "ValidatorAdded"),
+  validatorRemoved: communityHubAbi.find((item) => item.type === "event" && item.name === "ValidatorRemoved"),
+};
+
 /** Reconstructs and manages the Hub's current local Admin and Validator sets from on-chain events. */
 export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${string}`; archived: boolean }) {
   const { chainId } = useAccount();
@@ -35,11 +44,14 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
       if (!client) return;
       setLoading(true);
       try {
+        if (Object.values(communityRoleEvents).some((event) => !event)) {
+          throw new Error("CommunityHub role events are missing from the ABI.");
+        }
         const [adminAdded, adminRemoved, validatorAdded, validatorRemoved] = await Promise.all([
-          client.getLogs({ address: hub, event: communityHubAbi[2] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityHubAbi[3] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityHubAbi[4] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityHubAbi[5] as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.adminAdded as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.adminRemoved as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.validatorAdded as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
+          client.getLogs({ address: hub, event: communityRoleEvents.validatorRemoved as never, fromBlock: communityEventFromBlock, toBlock: "latest" }),
         ]);
         const events: RoleEvent[] = [
           ...toRoleEvents(adminAdded, "admin", true, "admin"),
