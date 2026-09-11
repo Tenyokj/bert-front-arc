@@ -31,7 +31,7 @@ export default function SiteFooter() {
           <a href="https://www.youtube.com/@bertdaoARC" target="_blank" rel="noreferrer" aria-label="YouTube">
             <FaYoutube className="text-2xl transition-transform duration-300 hover:-translate-y-1" />
           </a>
-          <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram">
+          <a href="https://t.me/bertdao" target="_blank" rel="noreferrer" aria-label="Telegram">
             <FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" />
           </a>
           <a href="mailto:bertdaoarc@gmail.com" aria-label="Email">
@@ -121,7 +121,7 @@ export default function SiteFooter() {
             <a href="https://www.youtube.com/@bertdaoARC" target="_blank" rel="noreferrer" aria-label="YouTube">
               <FaYoutube className="text-2xl transition-transform duration-300 hover:-translate-y-1" />
             </a>
-            <a href="https://t.me/+8DEt_M62Db00NzYy" target="_blank" rel="noreferrer" aria-label="Telegram">
+            <a href="https://t.me/bertdao" target="_blank" rel="noreferrer" aria-label="Telegram">
               <FaTelegramPlane className="text-2xl transition-transform duration-300 hover:-translate-y-1" />
             </a>
             <a href="mailto:bertdaoarc@gmail.com" aria-label="Email">
