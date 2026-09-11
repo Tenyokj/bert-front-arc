@@ -12,6 +12,11 @@ export type IndexedCommunity = {
   createdAt: bigint;
 };
 
+export type IndexedCommunityRoleSets = {
+  admins: Address[];
+  validators: Address[];
+};
+
 type GraphQLResponse<T> = {
   data?: T;
   errors?: Array<{ message?: string }>;
@@ -59,4 +64,38 @@ export async function fetchIndexedCommunities(
     active: Boolean(community.active),
     createdAt: BigInt(String(community.createdAt)),
   }));
+}
+
+/** Returns the current local roster indexed from CommunityHub role events. */
+export async function fetchIndexedCommunityRoleSets(hub: Address): Promise<IndexedCommunityRoleSets | null> {
+  if (!v3SubgraphUrl) return null;
+
+  const response = await fetch(v3SubgraphUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      query: `
+        query CommunityRoleSets($hub: Bytes!) {
+          communityMembers(first: 100, where: { community_: { hub: $hub } }) {
+            account
+            isAdmin
+            isValidator
+          }
+        }
+      `,
+      variables: { hub },
+    }),
+  });
+
+  if (!response.ok) throw new Error(`V3 subgraph request failed (${response.status})`);
+  const payload = (await response.json()) as GraphQLResponse<{
+    communityMembers: Array<{ account: string; isAdmin: boolean; isValidator: boolean }>;
+  }>;
+  if (payload.errors?.length) throw new Error(payload.errors[0]?.message || "V3 subgraph query failed");
+
+  const members = payload.data?.communityMembers || [];
+  return {
+    admins: members.filter((member) => member.isAdmin).map((member) => member.account as Address),
+    validators: members.filter((member) => member.isValidator).map((member) => member.account as Address),
+  };
 }
