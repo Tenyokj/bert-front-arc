@@ -147,9 +147,8 @@ export default function HowItWorksPage() {
               BERT turns USDC commitments into transparent builder funding on Arc.
             </h1>
             <p className="max-w-4xl text-lg leading-relaxed text-slate-700 dark:text-slate-200">
-              The protocol is a programmable capital allocation system: builders post a USDC-backed proposal deposit,
-              contributors commit USDC votes, verified humans activate voting access onchain, treasury balances
-              accumulate onchain, and winning proposals unlock milestone-based releases through validator review.
+              The protocol is a programmable capital allocation system: builders post a USDC author bond and declare a minimum viable grant,
+              contributors make refundable USDC pledges to one proposal, and only a viable winner unlocks milestone-based releases through validator review.
             </p>
           </section>
 

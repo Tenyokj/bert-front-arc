@@ -5,17 +5,26 @@ import {
   IdeaMarkedLowQuality,
   IdeaRegistryUpgradeable,
   IdeaStatusUpdated,
+  LegacyFundingProposalConfigured,
   ReviewAdded,
 } from "../generated/IdeaRegistry/IdeaRegistryUpgradeable";
 import {
   AuthorStakeDeposited,
   AuthorStakeSlashed,
+  FundingRoundCancelled,
+  FundingRoundFeeFinalized,
+  FundingRoundOpened,
+  FundingRoundSettled,
   FundsDeposited,
   FundsDistributed,
+  GrantRefundActivated,
   IdeaFundsReserved,
+  PledgeRecorded,
+  PledgeRefundClaimed,
   PoolBalanceUpdated,
 } from "../generated/FundingPool/FundingPoolUpgradeable";
 import {
+  GrantCancelled,
   GrantManagerUpgradeable,
   MilestoneApproved,
   MilestoneProofSubmitted,
@@ -48,6 +57,8 @@ import {
   GrantPayout,
   Idea,
   MilestoneRequest,
+  Pledge,
+  PledgeRefund,
   ProtocolStats,
   Review,
   Round,
@@ -91,6 +102,16 @@ function ensureRound(roundId: BigInt, blockNumber: BigInt): Round {
     round.winningIdeaId = ZERO;
     round.winningVotes = ZERO;
     round.ideaIds = [];
+    round.pledgeFeeBps = ZERO;
+    round.totalPledged = ZERO;
+    round.grossFunding = ZERO;
+    round.roundFee = ZERO;
+    round.netFunding = ZERO;
+    round.settled = false;
+    round.feeFinalized = false;
+    round.cancelled = false;
+    round.grantRefundActivated = false;
+    round.refundedAmount = ZERO;
     round.fundingReserved = ZERO;
     round.distributedAmount = ZERO;
     round.createdAtBlock = blockNumber;
@@ -129,6 +150,7 @@ function ensureIdea(ideaId: BigInt, blockNumber: BigInt): Idea {
     idea.status = 0;
     idea.isLowQuality = false;
     idea.authorStake = ZERO;
+    idea.minimumNetFunding = ZERO;
     idea.reviewCount = 0;
     idea.createdAtBlock = blockNumber;
   }
@@ -207,6 +229,11 @@ function syncIdeaFromContract(
     idea.createdAt = value.getCreatedAt();
     idea.totalVotes = value.getTotalVotes();
     idea.status = value.getStatus();
+  }
+
+  const minimumFunding = contract.try_minimumNetFundingByIdea(ideaId);
+  if (!minimumFunding.reverted) {
+    idea.minimumNetFunding = minimumFunding.value;
   }
 
   idea.save();
@@ -452,6 +479,18 @@ export function handleReviewAdded(event: ReviewAdded): void {
   review.save();
 }
 
+export function handleLegacyFundingProposalConfigured(
+  event: LegacyFundingProposalConfigured,
+): void {
+  const idea = syncIdeaFromContract(
+    event.address,
+    event.params.ideaId,
+    event.block.number,
+  );
+  idea.minimumNetFunding = event.params.minimumNetFunding;
+  idea.save();
+}
+
 export function handleAuthorStakeDeposited(event: AuthorStakeDeposited): void {
   const author = ensureAccount(event.params.author, event.block.number);
   author.save();
@@ -511,6 +550,90 @@ export function handlePoolBalanceUpdated(event: PoolBalanceUpdated): void {
   stats.save();
 }
 
+export function handleFundingRoundOpened(event: FundingRoundOpened): void {
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.pledgeFeeBps = event.params.feeBps;
+  round.save();
+}
+
+export function handlePledgeRecorded(event: PledgeRecorded): void {
+  const account = ensureAccount(event.params.voter, event.block.number);
+  account.save();
+
+  const pledge = new Pledge(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString(),
+  );
+  pledge.roundId = event.params.roundId;
+  pledge.round = event.params.roundId.toString();
+  pledge.ideaId = event.params.ideaId;
+  pledge.idea = event.params.ideaId.toString();
+  pledge.voter = event.params.voter;
+  pledge.voterAccount = event.params.voter.toHexString();
+  pledge.amount = event.params.amount;
+  pledge.txHash = event.transaction.hash;
+  pledge.timestamp = event.block.timestamp;
+  pledge.blockNumber = event.block.number;
+  pledge.save();
+
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.totalPledged = round.totalPledged.plus(event.params.amount);
+  round.save();
+}
+
+export function handleFundingRoundSettled(event: FundingRoundSettled): void {
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.winningIdeaId = event.params.winningIdeaId;
+  round.grossFunding = event.params.grossFunding;
+  round.roundFee = event.params.fee;
+  round.netFunding = event.params.netFunding;
+  round.settled = true;
+  round.save();
+}
+
+export function handleFundingRoundFeeFinalized(
+  event: FundingRoundFeeFinalized,
+): void {
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.feeFinalized = true;
+  round.save();
+}
+
+export function handleFundingRoundCancelled(event: FundingRoundCancelled): void {
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.cancelled = true;
+  round.save();
+}
+
+export function handleGrantRefundActivated(event: GrantRefundActivated): void {
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.grantRefundActivated = true;
+  round.save();
+}
+
+export function handlePledgeRefundClaimed(event: PledgeRefundClaimed): void {
+  const account = ensureAccount(event.params.voter, event.block.number);
+  account.save();
+
+  const refund = new PledgeRefund(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString(),
+  );
+  refund.roundId = event.params.roundId;
+  refund.round = event.params.roundId.toString();
+  refund.ideaId = event.params.ideaId;
+  refund.idea = event.params.ideaId.toString();
+  refund.voter = event.params.voter;
+  refund.voterAccount = event.params.voter.toHexString();
+  refund.amount = event.params.amount;
+  refund.txHash = event.transaction.hash;
+  refund.timestamp = event.block.timestamp;
+  refund.blockNumber = event.block.number;
+  refund.save();
+
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.refundedAmount = round.refundedAmount.plus(event.params.amount);
+  round.save();
+}
+
 export function handleRoundFunded(event: RoundFunded): void {
   syncGrantPayoutFromContract(event.address, event.params.roundId, event.block.number);
 }
@@ -559,6 +682,13 @@ export function handleMilestoneApproved(event: MilestoneApproved): void {
     event.params.stage,
     event.block.number,
   );
+}
+
+export function handleGrantCancelled(event: GrantCancelled): void {
+  const round = ensureRound(event.params.roundId, event.block.number);
+  round.cancelled = true;
+  round.grantRefundActivated = true;
+  round.save();
 }
 
 export function handleWinningVoteRegistered(

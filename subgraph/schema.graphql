@@ -23,6 +23,16 @@ type Round @entity(immutable: false) {
   winningIdeaId: BigInt!
   winningVotes: BigInt!
   ideaIds: [BigInt!]!
+  pledgeFeeBps: BigInt!
+  totalPledged: BigInt!
+  grossFunding: BigInt!
+  roundFee: BigInt!
+  netFunding: BigInt!
+  settled: Boolean!
+  feeFinalized: Boolean!
+  cancelled: Boolean!
+  grantRefundActivated: Boolean!
+  refundedAmount: BigInt!
   fundingReserved: BigInt!
   distributedAmount: BigInt!
   createdAtBlock: BigInt!
@@ -41,6 +51,7 @@ type Idea @entity(immutable: false) {
   status: Int!
   isLowQuality: Boolean!
   authorStake: BigInt!
+  minimumNetFunding: BigInt!
   reviewCount: Int!
   roundId: BigInt
   round: Round
@@ -52,6 +63,34 @@ type Vote @entity(immutable: true) {
   id: ID!
   roundId: BigInt!
   ideaId: BigInt!
+  voter: Bytes!
+  voterAccount: Account!
+  amount: BigInt!
+  txHash: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type Pledge @entity(immutable: true) {
+  id: ID!
+  roundId: BigInt!
+  round: Round!
+  ideaId: BigInt!
+  idea: Idea!
+  voter: Bytes!
+  voterAccount: Account!
+  amount: BigInt!
+  txHash: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type PledgeRefund @entity(immutable: true) {
+  id: ID!
+  roundId: BigInt!
+  round: Round!
+  ideaId: BigInt!
+  idea: Idea!
   voter: Bytes!
   voterAccount: Account!
   amount: BigInt!

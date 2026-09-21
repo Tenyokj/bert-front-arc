@@ -128,8 +128,8 @@ npm run dev`}
             <section id="integration" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Contract Integration</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Core write flows are: <code>createIdea</code>, <code>startVotingRound</code>, <code>vote</code>, <code>endVotingRound</code>,
-                grant execution path, and author completion marker. Always surface readable pre-check errors in UI before opening wallet prompt.
+                Core V2 write flows are: <code>createFundingProposal</code>, <code>startFundingRound</code>, <code>vote</code>, <code>endVotingRound</code>,
+                <code>claimPledgeRefund</code>, and the milestone grant path. Always surface readable pre-check errors in UI before opening wallet prompt.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 For token-based actions, sequence matters: ensure user balance, then approval, then protocol write call. Failed approvals or stale allowance are frequent root causes.
@@ -220,9 +220,9 @@ npm run dev`}
                   <li>All proxy addresses in <code>.env</code> match latest deploy output.</li>
                   <li>Roles are wired: voting, grant, distributor, registry, reputation, progression.</li>
                   <li>Pause states are correct for FundingPool / VotingSystem / GrantManager.</li>
-                  <li>Critical parameters validated: <code>minStake</code>, <code>IDEAS_PER_ROUND</code>, payout shares, and treasury balances.</li>
-                  <li>V2-specific smoke checks pass: review flow, milestone proof flow, and staged payout visibility.</li>
-                  <li>Smoke test done from non-admin wallet: fund with test USDC, create idea, vote, and close round.</li>
+                  <li>Critical parameters validated: <code>minStake</code>, <code>IDEAS_PER_ROUND</code>, <code>pledgeFeeBps</code>, and reserve balances.</li>
+                  <li>V2-specific smoke checks pass: losing-pledge refund, target-miss settlement, milestone proof flow, and staged payout visibility.</li>
+                  <li>Smoke test done from non-admin wallet: fund with test USDC, create a funding proposal, pledge, close round, and claim the appropriate refund or grant.</li>
                 </ul>
               </div>
             </section>

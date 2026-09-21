@@ -72,18 +72,6 @@ const managedContracts: ManagedContractConfig[] = [
       { key: "ideaRegistry", label: "ideaRegistry", readFn: "ideaRegistry", setterFn: "setIdeaRegistry" },
       { key: "roles", label: "rolesRegistry", readFn: "roles" },
     ],
-    params: [
-      {
-        key: "authorSharePercent",
-        label: "Author share",
-        readFn: "authorSharePercent",
-        setterFn: "setAuthorShare",
-        unit: "raw",
-        min: 0n,
-        max: 100n,
-        hint: "percent (0-100)",
-      },
-    ],
   },
   {
     key: "votingSystem",
@@ -115,8 +103,8 @@ const managedContracts: ManagedContractConfig[] = [
         readFn: "VOTING_DURATION",
         setterFn: "setVotingDuration",
         unit: "raw",
-        min: 1n,
-        hint: "seconds",
+        min: 86_400n,
+        hint: "seconds (minimum 1 day)",
       },
       {
         key: "minStake",
@@ -124,7 +112,8 @@ const managedContracts: ManagedContractConfig[] = [
         readFn: "minStake",
         setterFn: "setMinStake",
         unit: "token6",
-        min: 1n,
+        min: 5n,
+        max: 50n,
         hint: "USDC",
       },
       {
@@ -152,6 +141,18 @@ const managedContracts: ManagedContractConfig[] = [
       },
       { key: "ideaRegistry", label: "ideaRegistry", readFn: "ideaRegistry", setterFn: "setIdeaRegistry" },
       { key: "roles", label: "rolesRegistry", readFn: "roles" },
+    ],
+    params: [
+      {
+        key: "pledgeFeeBps",
+        label: "Pledge fee",
+        readFn: "pledgeFeeBps",
+        setterFn: "setPledgeFeeBps",
+        unit: "raw",
+        min: 0n,
+        max: 1_000n,
+        hint: "basis points, maximum 1,000 (10%)",
+      },
     ],
   },
   {

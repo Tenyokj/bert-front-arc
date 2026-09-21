@@ -6,7 +6,6 @@ import { formatUnits } from "viem";
 import {
   contracts,
   fundingPoolAbi,
-  grantManagerAbi,
   usdcAbi,
 } from "@/lib/contracts";
 import SiteFooter from "@/components/SiteFooter";
@@ -34,11 +33,11 @@ export default function TreasuryPoliciesPage() {
     query: { enabled: Boolean(contracts.fundingPool) },
   });
 
-  const { data: authorSharePercent } = useReadContract({
-    address: contracts.grantManager,
-    abi: grantManagerAbi,
-    functionName: "authorSharePercent",
-    query: { enabled: Boolean(contracts.grantManager) },
+  const { data: pledgeFeeBps } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "pledgeFeeBps",
+    query: { enabled: Boolean(contracts.fundingPool) },
   });
 
   const { data: tokenSupply } = useReadContract({
@@ -109,7 +108,7 @@ export default function TreasuryPoliciesPage() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">totalPoolBalance</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(totalPoolBalance as bigint | undefined)} USDC</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">protocolReserve</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(protocolReserve as bigint | undefined)} USDC</p></div>
-                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">authorSharePercent</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{authorSharePercent?.toString() ?? "—"}%</p></div>
+                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">pledgeFeeBps</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{pledgeFeeBps === undefined ? "—" : `${Number(pledgeFeeBps) / 100}%`}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">USDC totalSupply</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(tokenSupply as bigint | undefined)} USDC</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Settlement asset</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">USDC on Arc</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Access mode</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">Direct wallet funding</p></div>
@@ -130,8 +129,7 @@ export default function TreasuryPoliciesPage() {
             <section id="sources" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Treasury Sources</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Primary treasury state is represented in <strong>Funding Pool</strong>. Sources may include proposal deposits,
-                vote commitments, protocol-directed capital inflows, and admin-synchronized balance updates where explicitly allowed by contract policy.
+                Primary treasury state is represented in <strong>Funding Pool</strong>. V2 separates voluntary reserve deposits from per-round pledge escrow: author bonds deter spam, losing pledges remain refundable, and fees from successfully claimed grants become protocol reserve.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Any source that changes effective pool balance should be traceable by event history and consistent with on-chain balances.
@@ -142,8 +140,7 @@ export default function TreasuryPoliciesPage() {
             <section id="allocation" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Allocation Rules</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Allocation follows winner resolution from round settlement. Grant splits use protocol parameters such as <code>authorSharePercent</code>.
-                Parameter changes are governance-sensitive and should be treated as policy-level updates, not routine UI edits.
+                Allocation follows conditional winner resolution from round settlement. A winner must clear its declared net target after <code>pledgeFeeBps</code>; the remaining winner pledges fund the grant, released 30/40/30 after the author and reviewer gates. Parameter changes are governance-sensitive and should be treated as policy-level updates, not routine UI edits.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Treasury policy should avoid hidden discretionary payouts. If a payout cannot be derived from round outcomes and configured rules,
@@ -154,8 +151,8 @@ export default function TreasuryPoliciesPage() {
             <section id="workflow" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Distribution Workflow</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Standard workflow is: <strong>round settled -&gt; winner identified -&gt; grant eligibility validated -&gt; payout executed -&gt; status updated</strong>.
-                Funding Pool and Grant Manager split responsibilities so balance custody and payout logic are not mixed in one contract.
+                Standard workflow is: <strong>round settled -&gt; viable winner identified -&gt; losing pledges become refundable -&gt; winner claims -&gt; 30/40/30 milestones release -&gt; fee finalizes to reserve</strong>.
+                Funding Pool and Grant Manager split responsibilities so pledge custody and payout logic are not mixed in one contract.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 After payout, project delivery should be closed by author completion marker. This links financial execution with delivery accountability,
@@ -166,11 +163,10 @@ export default function TreasuryPoliciesPage() {
             <section id="reserves" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Reserve & Risk Limits</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Treasury policy should preserve explicit reserve logic and avoid draining pool liquidity through aggressive payout cadence.
-                If reserve utilization increases beyond expected bounds, policy recommends reducing payout aggressiveness until balance health normalizes.
+                Treasury policy keeps reserve capital separate from grant escrow. A winning pledge is not transferred to the protocol reserve before the author claims; if the grant expires or is cancelled, the contract reopens the appropriate pledge-refund path.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                High-impact parameter changes (stake thresholds, payout share, round size) should be evaluated against treasury sustainability,
+                High-impact parameter changes (stake thresholds, pledge fee, round size) should be evaluated against treasury sustainability,
                 not only participation growth metrics.
               </p>
             </section>

@@ -151,11 +151,11 @@ export default function ProtocolStatsPage() {
     query: { enabled: Boolean(contracts.ideaRegistry) },
   });
 
-  const { data: authorSharePercent } = useReadContract({
-    address: contracts.grantManager,
-    abi: grantManagerAbi,
-    functionName: "authorSharePercent",
-    query: { enabled: Boolean(contracts.grantManager) },
+  const { data: pledgeFeeBps } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "pledgeFeeBps",
+    query: { enabled: Boolean(contracts.fundingPool) },
   });
 
   const { data: grantPaused } = useReadContract({
@@ -285,9 +285,9 @@ export default function ProtocolStatsPage() {
 
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Author Share</p>
-              <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{authorSharePercent?.toString() ?? "—"}%</p>
-              <p className="mt-1 text-xs text-slate-500">GrantManager.authorSharePercent()</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Pledge Fee</p>
+              <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{pledgeFeeBps === undefined ? "—" : `${Number(pledgeFeeBps) / 100}%`}</p>
+              <p className="mt-1 text-xs text-slate-500">FundingPool.pledgeFeeBps()</p>
             </article>
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">USDC Total Supply</p>

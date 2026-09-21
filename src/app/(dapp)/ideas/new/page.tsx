@@ -44,13 +44,16 @@ function prettyCreateIdeaError(message?: string) {
     return "IdeaRegistry is not wired to FundingPool yet. Re-run deployment wiring or call setFundingPool() on the deployed IdeaRegistry.";
   }
   if (message.includes("InsufficientStake")) {
-    return "Stake amount is below the contract minimum.";
+    return "Author bond is below the contract minimum.";
+  }
+  if (message.includes("InvalidMinimumFunding")) {
+    return "Minimum net funding must be a positive USDC amount.";
   }
   if (message.includes("InsufficientTokenBalance")) {
     return "Wallet balance is lower than the stake required for idea creation.";
   }
   if (message.includes("InsufficientAllowance")) {
-    return "FundingPool allowance is too low for the selected stake amount.";
+    return "FundingPool allowance is too low for the selected author bond.";
   }
   if (message.includes("HumanVerifierNotConfigured")) {
     return "Idea creation is human-only, but its PoP verifier is not configured by the protocol administrator.";
@@ -85,7 +88,8 @@ export default function NewIdeaPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
-  const [stakeAmount, setStakeAmount] = useState("");
+  const [authorBond, setAuthorBond] = useState("");
+  const [minimumNetFunding, setMinimumNetFunding] = useState("");
   const [allowanceOwner, setAllowanceOwner] = useState<string | null>(null);
   const [balanceOwner, setBalanceOwner] = useState<string | null>(null);
 
@@ -157,9 +161,9 @@ export default function NewIdeaPage() {
   });
 
   useEffect(() => {
-    if (!authorMinStake || stakeAmount.trim().length > 0) return;
-    setStakeAmount(formatPlainAmount(authorMinStake as bigint));
-  }, [authorMinStake, stakeAmount]);
+    if (!authorMinStake || authorBond.trim().length > 0) return;
+    setAuthorBond(formatPlainAmount(authorMinStake as bigint));
+  }, [authorMinStake, authorBond]);
 
   const normalizedAddress = address?.toLowerCase() ?? null;
   const minStakeValue = authorMinStake as bigint | undefined;
@@ -181,7 +185,8 @@ export default function NewIdeaPage() {
     setAllowanceOwner(null);
     setBalanceOwner(null);
     if (!normalizedAddress) {
-      setStakeAmount("");
+      setAuthorBond("");
+      setMinimumNetFunding("");
       return;
     }
     void Promise.all([refetchAllowance(), refetchTokenBalance()]);
@@ -196,15 +201,21 @@ export default function NewIdeaPage() {
     if (!normalizedAddress || tokenBalanceValue === undefined) return;
     setBalanceOwner(normalizedAddress);
   }, [normalizedAddress, tokenBalanceValue]);
-  const parsedStake = useMemo(() => safeParseAmount(stakeAmount), [stakeAmount]);
-  const invalidStake = parsedStake <= 0n;
-  const belowMinStake = minStakeValue !== undefined && parsedStake > 0n && parsedStake < minStakeValue;
+  const parsedAuthorBond = useMemo(() => safeParseAmount(authorBond), [authorBond]);
+  const parsedMinimumNetFunding = useMemo(
+    () => safeParseAmount(minimumNetFunding),
+    [minimumNetFunding]
+  );
+  const invalidAuthorBond = parsedAuthorBond <= 0n;
+  const invalidMinimumFunding = parsedMinimumNetFunding <= 0n;
+  const belowMinStake =
+    minStakeValue !== undefined && parsedAuthorBond > 0n && parsedAuthorBond < minStakeValue;
   const allowanceReady = !normalizedAddress || allowanceOwner === normalizedAddress;
   const balanceReady = !normalizedAddress || balanceOwner === normalizedAddress;
   const effectiveAllowance = allowanceReady ? allowanceValue : undefined;
   const effectiveBalance = balanceReady ? tokenBalanceValue : undefined;
-  const insufficientBalance = (effectiveBalance ?? 0n) < parsedStake;
-  const needsApproval = parsedStake > 0n && (effectiveAllowance ?? 0n) < parsedStake;
+  const insufficientBalance = (effectiveBalance ?? 0n) < parsedAuthorBond;
+  const needsApproval = parsedAuthorBond > 0n && (effectiveAllowance ?? 0n) < parsedAuthorBond;
   const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
   const writeBusy = isApprovePending || isApproveConfirming || isCreatePending || isCreateConfirming;
   const expectedFundingPool = contracts.fundingPool;
@@ -221,7 +232,7 @@ export default function NewIdeaPage() {
     isConnected &&
     Boolean(contracts.usdc && contracts.fundingPool) &&
     accountDataReady &&
-    parsedStake > 0n &&
+    parsedAuthorBond > 0n &&
     !insufficientBalance &&
     !isRegistryWiringBroken &&
     !writeBusy;
@@ -233,7 +244,8 @@ export default function NewIdeaPage() {
     title.trim().length > 0 &&
     description.trim().length > 0 &&
     accountDataReady &&
-    !invalidStake &&
+    !invalidAuthorBond &&
+    !invalidMinimumFunding &&
     !belowMinStake &&
     !insufficientBalance &&
     !needsApproval &&
@@ -248,8 +260,14 @@ export default function NewIdeaPage() {
     sendWrite({
       address: contracts.ideaRegistry,
       abi: ideaRegistryAbi,
-      functionName: "createIdea",
-      args: [title.trim(), description.trim(), link.trim(), parsedStake],
+      functionName: "createFundingProposal",
+      args: [
+        title.trim(),
+        description.trim(),
+        link.trim(),
+        parsedAuthorBond,
+        parsedMinimumNetFunding,
+      ],
       gas: 1_200_000n,
     });
   };
@@ -270,7 +288,7 @@ export default function NewIdeaPage() {
           Submit proposal
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
-          Share a funding proposal with the BERT community. Idea creation requires a USDC deposit that is locked on-chain to reduce spam and prove real commitment from the author.
+          Publish a conditional funding proposal. The author bond is locked to deter spam; your requested minimum is the post-fee USDC amount the proposal must attract before it can win a grant.
         </p>
 
         {!contracts.ideaRegistry && (
@@ -287,22 +305,22 @@ export default function NewIdeaPage() {
             </p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">2. Approve the deposit</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">2. Set a viable funding target</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-200">
-              Your wallet grants FundingPool permission to move the exact USDC stake required for this submission.
+              State the minimum net grant required to execute responsibly. Voter pledges remain refundable if a proposal loses or no proposal clears its target.
             </p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">3. Submit on-chain</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">3. Lock only the author bond</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-200">
-              Once confirmed, the proposal becomes part of the live registry and can later enter community voting rounds.
+              Your wallet approves only the author bond now. Funding is pledged by voters later, inside the round where the proposal competes.
             </p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Required minimum stake</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Minimum author bond</p>
             <p className="mt-2 break-words text-xl font-semibold text-white sm:text-2xl">{formatTokenAmount(minStakeValue)} USDC</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
@@ -366,15 +384,28 @@ export default function NewIdeaPage() {
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-semibold text-slate-200">Stake amount</span>
+            <span className="text-sm font-semibold text-slate-200">Author bond</span>
             <input
-              value={stakeAmount}
-              onChange={(event) => setStakeAmount(event.target.value)}
+              value={authorBond}
+              onChange={(event) => setAuthorBond(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
               placeholder="50"
             />
             <p className="text-xs text-slate-400">
-              The current live minimum is {formatTokenAmount(minStakeValue)} USDC. You can deposit more, but not less.
+              Locked when you submit. The current live minimum is {formatTokenAmount(minStakeValue)} USDC; this bond is distinct from voter pledges.
+            </p>
+          </label>
+
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-200">Minimum net funding target</span>
+            <input
+              value={minimumNetFunding}
+              onChange={(event) => setMinimumNetFunding(event.target.value)}
+              className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
+              placeholder="1000"
+            />
+            <p className="text-xs text-slate-400">
+              The proposal can receive more than this target. The value is checked after the round fee, so choose the minimum viable grant rather than a hard cap.
             </p>
           </label>
 
@@ -384,7 +415,8 @@ export default function NewIdeaPage() {
               <p>Use a title that explains the outcome, not just the category.</p>
               <p>Write enough context so a reviewer understands the value in under a minute.</p>
               <p>Include a public link to docs, deck, repo, or research if you have one.</p>
-              <p>Make sure your wallet has enough USDC for both the deposit and gas.</p>
+              <p>Set a realistic minimum funding target. It determines whether your proposal can become the round winner.</p>
+              <p>Make sure your wallet has enough USDC for the author bond and gas.</p>
             </div>
           </div>
 
@@ -399,12 +431,12 @@ export default function NewIdeaPage() {
               type="button"
               disabled={!canApprove || !needsApproval}
               onClick={() => {
-                if (!contracts.usdc || !contracts.fundingPool || parsedStake <= 0n) return;
+                if (!contracts.usdc || !contracts.fundingPool || parsedAuthorBond <= 0n) return;
                 sendApprove({
                   address: contracts.usdc,
                   abi: usdcAbi,
                   functionName: "approve",
-                  args: [contracts.fundingPool, parsedStake],
+                  args: [contracts.fundingPool, parsedAuthorBond],
                   gas: 200_000n,
                 });
               }}
@@ -415,36 +447,39 @@ export default function NewIdeaPage() {
                 : isApproveConfirming
                   ? "Approving USDC..."
                   : needsApproval
-                    ? "Approve USDC deposit"
-                    : "Deposit approved"}
+                    ? "Approve author bond"
+                    : "Author bond approved"}
             </button>
             <button
               type="submit"
               disabled={!canSubmit}
               className="rounded-lg bg-[#3b82f6] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isCreatePending ? "Awaiting signature..." : isCreateConfirming ? "Confirming..." : "Submit idea"}
+              {isCreatePending ? "Awaiting signature..." : isCreateConfirming ? "Confirming..." : "Submit funding proposal"}
             </button>
           </div>
         </form>
 
         {hydrated && !isConnected && (
           <p className="mt-4 text-sm text-amber-100">
-            Connect your wallet to approve the deposit and publish an on-chain idea.
+            Connect your wallet to approve the author bond and publish an on-chain funding proposal.
           </p>
         )}
-        {invalidStake && stakeAmount.trim().length > 0 && <p className="mt-3 text-sm text-rose-300">Enter a valid USDC amount.</p>}
+        {invalidAuthorBond && authorBond.trim().length > 0 && <p className="mt-3 text-sm text-rose-300">Enter a valid author-bond amount.</p>}
+        {invalidMinimumFunding && minimumNetFunding.trim().length > 0 && (
+          <p className="mt-3 text-sm text-rose-300">Enter a positive minimum net funding target.</p>
+        )}
         {belowMinStake && minStakeValue !== undefined && (
           <p className="mt-3 text-sm text-rose-300">
-            The deposit is below the current minimum of {formatTokenAmount(minStakeValue)} USDC.
+            The author bond is below the current minimum of {formatTokenAmount(minStakeValue)} USDC.
           </p>
         )}
         {insufficientBalance && (
-          <p className="mt-3 text-sm text-rose-300">Your wallet balance is too low for this USDC deposit.</p>
+          <p className="mt-3 text-sm text-rose-300">Your wallet balance is too low for this author bond.</p>
         )}
-        {needsApproval && parsedStake > 0n && !insufficientBalance && (
+        {needsApproval && parsedAuthorBond > 0n && !insufficientBalance && (
           <p className="mt-3 text-sm text-slate-300">
-            Approve the treasury contract for at least {formatTokenAmount(parsedStake)} USDC before you submit the idea.
+            Approve the treasury contract for at least {formatTokenAmount(parsedAuthorBond)} USDC before you submit the proposal.
           </p>
         )}
         {isRegistryWiringBroken && (
@@ -461,7 +496,7 @@ export default function NewIdeaPage() {
         {createTxHash && <p className="mt-3 break-all text-xs text-slate-300">Submission transaction reference: {createTxHash}</p>}
         {isCreateSuccess && (
           <p className="mt-3 text-sm font-semibold text-emerald-300">
-            Idea created successfully and the deposit is now locked on-chain.
+            Funding proposal created successfully. Its author bond is locked on-chain; the funding target will be evaluated when a round settles.
           </p>
         )}
       </div>
