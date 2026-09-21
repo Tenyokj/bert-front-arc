@@ -43,6 +43,8 @@ dataSources:
       entities:
         - Idea
         - Review
+        - Pledge
+        - PledgeRefund
       abis:
         - name: IdeaRegistryUpgradeable
           file: ./abis/DAO/IdeaRegistryUpgradeable.json
@@ -55,6 +57,8 @@ dataSources:
           handler: handleIdeaMarkedLowQuality
         - event: ReviewAdded(indexed uint256,indexed address)
           handler: handleReviewAdded
+        - event: LegacyFundingProposalConfigured(indexed uint256,indexed address,uint256)
+          handler: handleLegacyFundingProposalConfigured
       file: ./src/mapping.ts
 
   - kind: ethereum
@@ -72,6 +76,8 @@ dataSources:
         - Idea
         - Distribution
         - ProtocolStats
+        - Pledge
+        - PledgeRefund
       abis:
         - name: FundingPoolUpgradeable
           file: ./abis/DAO/FundingPoolUpgradeable.json
@@ -88,6 +94,20 @@ dataSources:
           handler: handleFundsDistributed
         - event: PoolBalanceUpdated(uint256)
           handler: handlePoolBalanceUpdated
+        - event: FundingRoundOpened(indexed uint256,uint256)
+          handler: handleFundingRoundOpened
+        - event: PledgeRecorded(indexed uint256,indexed uint256,indexed address,uint256)
+          handler: handlePledgeRecorded
+        - event: FundingRoundSettled(indexed uint256,indexed uint256,uint256,uint256,uint256)
+          handler: handleFundingRoundSettled
+        - event: FundingRoundFeeFinalized(indexed uint256,uint256)
+          handler: handleFundingRoundFeeFinalized
+        - event: FundingRoundCancelled(indexed uint256,indexed uint256,uint256)
+          handler: handleFundingRoundCancelled
+        - event: GrantRefundActivated(indexed uint256,indexed uint256,uint256)
+          handler: handleGrantRefundActivated
+        - event: PledgeRefundClaimed(indexed uint256,indexed uint256,indexed address,uint256)
+          handler: handlePledgeRefundClaimed
       file: ./src/mapping.ts
 
   - kind: ethereum
@@ -118,6 +138,8 @@ dataSources:
           handler: handleMilestoneRejected
         - event: MilestoneApproved(indexed uint256,indexed uint256,indexed uint8,uint256)
           handler: handleMilestoneApproved
+        - event: GrantCancelled(indexed uint256,indexed uint256,uint256)
+          handler: handleGrantCancelled
       file: ./src/mapping.ts
 
   - kind: ethereum

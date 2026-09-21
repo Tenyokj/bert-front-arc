@@ -19,6 +19,15 @@ This folder contains a working local setup (Hardhat + local graph-node) and an A
   - `AuthorStakeSlashed`
   - `IdeaFundsReserved`
   - `FundsDistributed`
+  - `FundingRoundOpened`
+  - `PledgeRecorded`
+  - `FundingRoundSettled`
+  - `FundingRoundFeeFinalized`
+  - `FundingRoundCancelled`
+  - `GrantRefundActivated`
+  - `PledgeRefundClaimed`
+  - `LegacyFundingProposalConfigured`
+  - `GrantCancelled`
   - `RoundFunded`
   - `MilestoneProofSubmitted`
   - `MilestoneReviewed`
@@ -86,11 +95,14 @@ graph auth --studio <DEPLOY_KEY>
 npm run codegen:arc
 npm run build:arc
 ```
-6. Deploy:
+6. Deploy a new version to the existing Studio slug:
 ```bash
 graph deploy --studio <SUBGRAPH_SLUG> subgraph.yaml
 ```
-7. Create API key in Studio and use query URL in frontend:
+   The V2.1 proxy upgrade preserves every data-source address, so do not create a
+   replacement subgraph or change `NEXT_PUBLIC_SUBGRAPH_URL`. A new version is
+   required because conditional pledges introduce new events and schema entities.
+7. Wait until the new version reaches `Synced`, then keep the same query URL in frontend:
 ```env
 NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/<QUERY_ID>/<SUBGRAPH_NAME>/version/latest
 ```

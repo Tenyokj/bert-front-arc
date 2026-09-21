@@ -28,6 +28,42 @@ export class FundingPoolUpdated__Params {
   }
 }
 
+export class HumanOnlyVotingUpdated extends ethereum.Event {
+  get params(): HumanOnlyVotingUpdated__Params {
+    return new HumanOnlyVotingUpdated__Params(this);
+  }
+}
+
+export class HumanOnlyVotingUpdated__Params {
+  _event: HumanOnlyVotingUpdated;
+
+  constructor(event: HumanOnlyVotingUpdated) {
+    this._event = event;
+  }
+
+  get enabled(): boolean {
+    return this._event.parameters[0].value.toBoolean();
+  }
+}
+
+export class HumanVerifierUpdated extends ethereum.Event {
+  get params(): HumanVerifierUpdated__Params {
+    return new HumanVerifierUpdated__Params(this);
+  }
+}
+
+export class HumanVerifierUpdated__Params {
+  _event: HumanVerifierUpdated;
+
+  constructor(event: HumanVerifierUpdated) {
+    this._event = event;
+  }
+
+  get newHumanVerifier(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
 export class IdeaRegistryUpdated extends ethereum.Event {
   get params(): IdeaRegistryUpdated__Params {
     return new IdeaRegistryUpdated__Params(this);
@@ -78,6 +114,24 @@ export class Initialized__Params {
   }
 
   get version(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+}
+
+export class MaxVoteAmountUpdated extends ethereum.Event {
+  get params(): MaxVoteAmountUpdated__Params {
+    return new MaxVoteAmountUpdated__Params(this);
+  }
+}
+
+export class MaxVoteAmountUpdated__Params {
+  _event: MaxVoteAmountUpdated;
+
+  constructor(event: MaxVoteAmountUpdated) {
+    this._event = event;
+  }
+
+  get newMaxVoteAmount(): BigInt {
     return this._event.parameters[0].value.toBigInt();
   }
 }
@@ -817,6 +871,44 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
+  humanOnlyVoting(): boolean {
+    let result = super.call("humanOnlyVoting", "humanOnlyVoting():(bool)", []);
+
+    return result[0].toBoolean();
+  }
+
+  try_humanOnlyVoting(): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "humanOnlyVoting",
+      "humanOnlyVoting():(bool)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  humanVerifier(): Address {
+    let result = super.call("humanVerifier", "humanVerifier():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_humanVerifier(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "humanVerifier",
+      "humanVerifier():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   ideaRegistry(): Address {
     let result = super.call("ideaRegistry", "ideaRegistry():(address)", []);
 
@@ -872,6 +964,25 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     let result = super.tryCall(
       "lastUsedIdeaId",
       "lastUsedIdeaId():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  maxVoteAmount(): BigInt {
+    let result = super.call("maxVoteAmount", "maxVoteAmount():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_maxVoteAmount(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "maxVoteAmount",
+      "maxVoteAmount():(uint256)",
       [],
     );
     if (result.reverted) {
@@ -1135,6 +1246,66 @@ export class SetFundingPoolCall__Outputs {
   }
 }
 
+export class SetHumanOnlyVotingCall extends ethereum.Call {
+  get inputs(): SetHumanOnlyVotingCall__Inputs {
+    return new SetHumanOnlyVotingCall__Inputs(this);
+  }
+
+  get outputs(): SetHumanOnlyVotingCall__Outputs {
+    return new SetHumanOnlyVotingCall__Outputs(this);
+  }
+}
+
+export class SetHumanOnlyVotingCall__Inputs {
+  _call: SetHumanOnlyVotingCall;
+
+  constructor(call: SetHumanOnlyVotingCall) {
+    this._call = call;
+  }
+
+  get enabled(): boolean {
+    return this._call.inputValues[0].value.toBoolean();
+  }
+}
+
+export class SetHumanOnlyVotingCall__Outputs {
+  _call: SetHumanOnlyVotingCall;
+
+  constructor(call: SetHumanOnlyVotingCall) {
+    this._call = call;
+  }
+}
+
+export class SetHumanVerifierCall extends ethereum.Call {
+  get inputs(): SetHumanVerifierCall__Inputs {
+    return new SetHumanVerifierCall__Inputs(this);
+  }
+
+  get outputs(): SetHumanVerifierCall__Outputs {
+    return new SetHumanVerifierCall__Outputs(this);
+  }
+}
+
+export class SetHumanVerifierCall__Inputs {
+  _call: SetHumanVerifierCall;
+
+  constructor(call: SetHumanVerifierCall) {
+    this._call = call;
+  }
+
+  get _newHumanVerifier(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class SetHumanVerifierCall__Outputs {
+  _call: SetHumanVerifierCall;
+
+  constructor(call: SetHumanVerifierCall) {
+    this._call = call;
+  }
+}
+
 export class SetIdeaPerRoundCall extends ethereum.Call {
   get inputs(): SetIdeaPerRoundCall__Inputs {
     return new SetIdeaPerRoundCall__Inputs(this);
@@ -1191,6 +1362,36 @@ export class SetIdeaRegistryCall__Outputs {
   _call: SetIdeaRegistryCall;
 
   constructor(call: SetIdeaRegistryCall) {
+    this._call = call;
+  }
+}
+
+export class SetMaxVoteAmountCall extends ethereum.Call {
+  get inputs(): SetMaxVoteAmountCall__Inputs {
+    return new SetMaxVoteAmountCall__Inputs(this);
+  }
+
+  get outputs(): SetMaxVoteAmountCall__Outputs {
+    return new SetMaxVoteAmountCall__Outputs(this);
+  }
+}
+
+export class SetMaxVoteAmountCall__Inputs {
+  _call: SetMaxVoteAmountCall;
+
+  constructor(call: SetMaxVoteAmountCall) {
+    this._call = call;
+  }
+
+  get _maxVoteAmount(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetMaxVoteAmountCall__Outputs {
+  _call: SetMaxVoteAmountCall;
+
+  constructor(call: SetMaxVoteAmountCall) {
     this._call = call;
   }
 }
@@ -1315,28 +1516,28 @@ export class SetVotingDurationCall__Outputs {
   }
 }
 
-export class StartVotingRoundCall extends ethereum.Call {
-  get inputs(): StartVotingRoundCall__Inputs {
-    return new StartVotingRoundCall__Inputs(this);
+export class StartFundingRoundCall extends ethereum.Call {
+  get inputs(): StartFundingRoundCall__Inputs {
+    return new StartFundingRoundCall__Inputs(this);
   }
 
-  get outputs(): StartVotingRoundCall__Outputs {
-    return new StartVotingRoundCall__Outputs(this);
+  get outputs(): StartFundingRoundCall__Outputs {
+    return new StartFundingRoundCall__Outputs(this);
   }
 }
 
-export class StartVotingRoundCall__Inputs {
-  _call: StartVotingRoundCall;
+export class StartFundingRoundCall__Inputs {
+  _call: StartFundingRoundCall;
 
-  constructor(call: StartVotingRoundCall) {
+  constructor(call: StartFundingRoundCall) {
     this._call = call;
   }
 }
 
-export class StartVotingRoundCall__Outputs {
-  _call: StartVotingRoundCall;
+export class StartFundingRoundCall__Outputs {
+  _call: StartFundingRoundCall;
 
-  constructor(call: StartVotingRoundCall) {
+  constructor(call: StartFundingRoundCall) {
     this._call = call;
   }
 }

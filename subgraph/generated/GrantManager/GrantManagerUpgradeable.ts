@@ -10,28 +10,6 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
-export class FeeUpdated extends ethereum.Event {
-  get params(): FeeUpdated__Params {
-    return new FeeUpdated__Params(this);
-  }
-}
-
-export class FeeUpdated__Params {
-  _event: FeeUpdated;
-
-  constructor(event: FeeUpdated) {
-    this._event = event;
-  }
-
-  get authorSharePercent(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
-  }
-
-  get protocolSharePercent(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-}
-
 export class FundingPoolUpdated extends ethereum.Event {
   get params(): FundingPoolUpdated__Params {
     return new FundingPoolUpdated__Params(this);
@@ -47,6 +25,32 @@ export class FundingPoolUpdated__Params {
 
   get newFundingPool(): Address {
     return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class GrantCancelled extends ethereum.Event {
+  get params(): GrantCancelled__Params {
+    return new GrantCancelled__Params(this);
+  }
+}
+
+export class GrantCancelled__Params {
+  _event: GrantCancelled;
+
+  constructor(event: GrantCancelled) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get ideaId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get deadline(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
   }
 }
 
@@ -194,6 +198,40 @@ export class MilestoneRejected__Params {
   }
 }
 
+export class MilestoneReviewExpired extends ethereum.Event {
+  get params(): MilestoneReviewExpired__Params {
+    return new MilestoneReviewExpired__Params(this);
+  }
+}
+
+export class MilestoneReviewExpired__Params {
+  _event: MilestoneReviewExpired;
+
+  constructor(event: MilestoneReviewExpired) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get ideaId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._event.parameters[2].value.toI32();
+  }
+
+  get requestId(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+
+  get deadline(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
+}
+
 export class MilestoneReviewed extends ethereum.Event {
   get params(): MilestoneReviewed__Params {
     return new MilestoneReviewed__Params(this);
@@ -268,6 +306,32 @@ export class RoundFunded__Params {
   }
 }
 
+export class UnclaimedGrantExpired extends ethereum.Event {
+  get params(): UnclaimedGrantExpired__Params {
+    return new UnclaimedGrantExpired__Params(this);
+  }
+}
+
+export class UnclaimedGrantExpired__Params {
+  _event: UnclaimedGrantExpired;
+
+  constructor(event: UnclaimedGrantExpired) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get ideaId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get deadline(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class Unpaused extends ethereum.Event {
   get params(): Unpaused__Params {
     return new Unpaused__Params(this);
@@ -304,38 +368,6 @@ export class VotingSystemUpdated__Params {
   }
 }
 
-export class GrantManagerUpgradeable__calculateDistributionResult {
-  value0: BigInt;
-  value1: BigInt;
-  value2: BigInt;
-
-  constructor(value0: BigInt, value1: BigInt, value2: BigInt) {
-    this.value0 = value0;
-    this.value1 = value1;
-    this.value2 = value2;
-  }
-
-  toMap(): TypedMap<string, ethereum.Value> {
-    let map = new TypedMap<string, ethereum.Value>();
-    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
-    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
-    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
-    return map;
-  }
-
-  getAuthorAmount(): BigInt {
-    return this.value0;
-  }
-
-  getProtocolAmount(): BigInt {
-    return this.value1;
-  }
-
-  getTotalAmount(): BigInt {
-    return this.value2;
-  }
-}
-
 export class GrantManagerUpgradeable__canClaimGrantResult {
   value0: boolean;
   value1: string;
@@ -369,6 +401,9 @@ export class GrantManagerUpgradeable__getGrantPayoutResult {
   value4: boolean;
   value5: boolean;
   value6: boolean;
+  value7: BigInt;
+  value8: BigInt;
+  value9: boolean;
 
   constructor(
     value0: BigInt,
@@ -378,6 +413,9 @@ export class GrantManagerUpgradeable__getGrantPayoutResult {
     value4: boolean,
     value5: boolean,
     value6: boolean,
+    value7: BigInt,
+    value8: BigInt,
+    value9: boolean,
   ) {
     this.value0 = value0;
     this.value1 = value1;
@@ -386,6 +424,9 @@ export class GrantManagerUpgradeable__getGrantPayoutResult {
     this.value4 = value4;
     this.value5 = value5;
     this.value6 = value6;
+    this.value7 = value7;
+    this.value8 = value8;
+    this.value9 = value9;
   }
 
   toMap(): TypedMap<string, ethereum.Value> {
@@ -397,6 +438,9 @@ export class GrantManagerUpgradeable__getGrantPayoutResult {
     map.set("value4", ethereum.Value.fromBoolean(this.value4));
     map.set("value5", ethereum.Value.fromBoolean(this.value5));
     map.set("value6", ethereum.Value.fromBoolean(this.value6));
+    map.set("value7", ethereum.Value.fromUnsignedBigInt(this.value7));
+    map.set("value8", ethereum.Value.fromUnsignedBigInt(this.value8));
+    map.set("value9", ethereum.Value.fromBoolean(this.value9));
     return map;
   }
 
@@ -426,6 +470,18 @@ export class GrantManagerUpgradeable__getGrantPayoutResult {
 
   getCompletionPaid(): boolean {
     return this.value6;
+  }
+
+  getInitialClaimedAt(): BigInt {
+    return this.value7;
+  }
+
+  getInProcessPaidAt(): BigInt {
+    return this.value8;
+  }
+
+  getCancelled(): boolean {
+    return this.value9;
   }
 }
 
@@ -568,6 +624,45 @@ export class GrantManagerUpgradeable__getRoundInfoResult {
   }
 }
 
+export class GrantManagerUpgradeable__previewGrantResult {
+  value0: BigInt;
+  value1: BigInt;
+  value2: BigInt;
+  value3: BigInt;
+
+  constructor(value0: BigInt, value1: BigInt, value2: BigInt, value3: BigInt) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    return map;
+  }
+
+  getTotalGrant(): BigInt {
+    return this.value0;
+  }
+
+  getInitialPayout(): BigInt {
+    return this.value1;
+  }
+
+  getInProcessPayout(): BigInt {
+    return this.value2;
+  }
+
+  getCompletionPayout(): BigInt {
+    return this.value3;
+  }
+}
+
 export class GrantManagerUpgradeable extends ethereum.SmartContract {
   static bind(address: Address): GrantManagerUpgradeable {
     return new GrantManagerUpgradeable("GrantManagerUpgradeable", address);
@@ -640,6 +735,52 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toI32());
+  }
+
+  COMPLETION_SUBMISSION_WINDOW(): BigInt {
+    let result = super.call(
+      "COMPLETION_SUBMISSION_WINDOW",
+      "COMPLETION_SUBMISSION_WINDOW():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_COMPLETION_SUBMISSION_WINDOW(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "COMPLETION_SUBMISSION_WINDOW",
+      "COMPLETION_SUBMISSION_WINDOW():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  GRANT_CLAIM_WINDOW(): BigInt {
+    let result = super.call(
+      "GRANT_CLAIM_WINDOW",
+      "GRANT_CLAIM_WINDOW():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_GRANT_CLAIM_WINDOW(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "GRANT_CLAIM_WINDOW",
+      "GRANT_CLAIM_WINDOW():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   INITIAL_PAYOUT_PERCENT(): BigInt {
@@ -757,6 +898,29 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toI32());
   }
 
+  IN_PROCESS_SUBMISSION_WINDOW(): BigInt {
+    let result = super.call(
+      "IN_PROCESS_SUBMISSION_WINDOW",
+      "IN_PROCESS_SUBMISSION_WINDOW():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_IN_PROCESS_SUBMISSION_WINDOW(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "IN_PROCESS_SUBMISSION_WINDOW",
+      "IN_PROCESS_SUBMISSION_WINDOW():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   MILESTONE_RESUBMIT_COOLDOWN(): BigInt {
     let result = super.call(
       "MILESTONE_RESUBMIT_COOLDOWN",
@@ -771,6 +935,29 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
     let result = super.tryCall(
       "MILESTONE_RESUBMIT_COOLDOWN",
       "MILESTONE_RESUBMIT_COOLDOWN():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  MILESTONE_REVIEW_WINDOW(): BigInt {
+    let result = super.call(
+      "MILESTONE_REVIEW_WINDOW",
+      "MILESTONE_REVIEW_WINDOW():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_MILESTONE_REVIEW_WINDOW(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "MILESTONE_REVIEW_WINDOW",
+      "MILESTONE_REVIEW_WINDOW():(uint256)",
       [],
     );
     if (result.reverted) {
@@ -801,51 +988,6 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  calculateDistribution(
-    roundId: BigInt,
-    ideaId: BigInt,
-  ): GrantManagerUpgradeable__calculateDistributionResult {
-    let result = super.call(
-      "calculateDistribution",
-      "calculateDistribution(uint256,uint256):(uint256,uint256,uint256)",
-      [
-        ethereum.Value.fromUnsignedBigInt(roundId),
-        ethereum.Value.fromUnsignedBigInt(ideaId),
-      ],
-    );
-
-    return new GrantManagerUpgradeable__calculateDistributionResult(
-      result[0].toBigInt(),
-      result[1].toBigInt(),
-      result[2].toBigInt(),
-    );
-  }
-
-  try_calculateDistribution(
-    roundId: BigInt,
-    ideaId: BigInt,
-  ): ethereum.CallResult<GrantManagerUpgradeable__calculateDistributionResult> {
-    let result = super.tryCall(
-      "calculateDistribution",
-      "calculateDistribution(uint256,uint256):(uint256,uint256,uint256)",
-      [
-        ethereum.Value.fromUnsignedBigInt(roundId),
-        ethereum.Value.fromUnsignedBigInt(ideaId),
-      ],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(
-      new GrantManagerUpgradeable__calculateDistributionResult(
-        value[0].toBigInt(),
-        value[1].toBigInt(),
-        value[2].toBigInt(),
-      ),
-    );
   }
 
   canClaimGrant(roundId: BigInt): GrantManagerUpgradeable__canClaimGrantResult {
@@ -901,7 +1043,7 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
   ): GrantManagerUpgradeable__getGrantPayoutResult {
     let result = super.call(
       "getGrantPayout",
-      "getGrantPayout(uint256):(uint256,address,uint256,uint256,bool,bool,bool)",
+      "getGrantPayout(uint256):(uint256,address,uint256,uint256,bool,bool,bool,uint256,uint256,bool)",
       [ethereum.Value.fromUnsignedBigInt(roundId)],
     );
 
@@ -913,6 +1055,9 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
       result[4].toBoolean(),
       result[5].toBoolean(),
       result[6].toBoolean(),
+      result[7].toBigInt(),
+      result[8].toBigInt(),
+      result[9].toBoolean(),
     );
   }
 
@@ -921,7 +1066,7 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
   ): ethereum.CallResult<GrantManagerUpgradeable__getGrantPayoutResult> {
     let result = super.tryCall(
       "getGrantPayout",
-      "getGrantPayout(uint256):(uint256,address,uint256,uint256,bool,bool,bool)",
+      "getGrantPayout(uint256):(uint256,address,uint256,uint256,bool,bool,bool,uint256,uint256,bool)",
       [ethereum.Value.fromUnsignedBigInt(roundId)],
     );
     if (result.reverted) {
@@ -937,6 +1082,9 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
         value[4].toBoolean(),
         value[5].toBoolean(),
         value[6].toBoolean(),
+        value[7].toBigInt(),
+        value[8].toBigInt(),
+        value[9].toBoolean(),
       ),
     );
   }
@@ -998,29 +1146,6 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
         value[9].toBoolean(),
       ),
     );
-  }
-
-  getProtocolShare(): BigInt {
-    let result = super.call(
-      "getProtocolShare",
-      "getProtocolShare():(uint256)",
-      [],
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_getProtocolShare(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "getProtocolShare",
-      "getProtocolShare():(uint256)",
-      [],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   getRoundInfo(roundId: BigInt): GrantManagerUpgradeable__getRoundInfoResult {
@@ -1103,6 +1228,53 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
+  previewGrant(
+    roundId: BigInt,
+    ideaId: BigInt,
+  ): GrantManagerUpgradeable__previewGrantResult {
+    let result = super.call(
+      "previewGrant",
+      "previewGrant(uint256,uint256):(uint256,uint256,uint256,uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(roundId),
+        ethereum.Value.fromUnsignedBigInt(ideaId),
+      ],
+    );
+
+    return new GrantManagerUpgradeable__previewGrantResult(
+      result[0].toBigInt(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+    );
+  }
+
+  try_previewGrant(
+    roundId: BigInt,
+    ideaId: BigInt,
+  ): ethereum.CallResult<GrantManagerUpgradeable__previewGrantResult> {
+    let result = super.tryCall(
+      "previewGrant",
+      "previewGrant(uint256,uint256):(uint256,uint256,uint256,uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(roundId),
+        ethereum.Value.fromUnsignedBigInt(ideaId),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new GrantManagerUpgradeable__previewGrantResult(
+        value[0].toBigInt(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+      ),
+    );
+  }
+
   roles(): Address {
     let result = super.call("roles", "roles():(address)", []);
 
@@ -1160,6 +1332,36 @@ export class ConstructorCall__Outputs {
   }
 }
 
+export class CancelExpiredGrantCall extends ethereum.Call {
+  get inputs(): CancelExpiredGrantCall__Inputs {
+    return new CancelExpiredGrantCall__Inputs(this);
+  }
+
+  get outputs(): CancelExpiredGrantCall__Outputs {
+    return new CancelExpiredGrantCall__Outputs(this);
+  }
+}
+
+export class CancelExpiredGrantCall__Inputs {
+  _call: CancelExpiredGrantCall;
+
+  constructor(call: CancelExpiredGrantCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class CancelExpiredGrantCall__Outputs {
+  _call: CancelExpiredGrantCall;
+
+  constructor(call: CancelExpiredGrantCall) {
+    this._call = call;
+  }
+}
+
 export class ClaimGrantCall extends ethereum.Call {
   get inputs(): ClaimGrantCall__Inputs {
     return new ClaimGrantCall__Inputs(this);
@@ -1186,6 +1388,70 @@ export class ClaimGrantCall__Outputs {
   _call: ClaimGrantCall;
 
   constructor(call: ClaimGrantCall) {
+    this._call = call;
+  }
+}
+
+export class ExpireMilestoneReviewCall extends ethereum.Call {
+  get inputs(): ExpireMilestoneReviewCall__Inputs {
+    return new ExpireMilestoneReviewCall__Inputs(this);
+  }
+
+  get outputs(): ExpireMilestoneReviewCall__Outputs {
+    return new ExpireMilestoneReviewCall__Outputs(this);
+  }
+}
+
+export class ExpireMilestoneReviewCall__Inputs {
+  _call: ExpireMilestoneReviewCall;
+
+  constructor(call: ExpireMilestoneReviewCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._call.inputValues[1].value.toI32();
+  }
+}
+
+export class ExpireMilestoneReviewCall__Outputs {
+  _call: ExpireMilestoneReviewCall;
+
+  constructor(call: ExpireMilestoneReviewCall) {
+    this._call = call;
+  }
+}
+
+export class ExpireUnclaimedGrantCall extends ethereum.Call {
+  get inputs(): ExpireUnclaimedGrantCall__Inputs {
+    return new ExpireUnclaimedGrantCall__Inputs(this);
+  }
+
+  get outputs(): ExpireUnclaimedGrantCall__Outputs {
+    return new ExpireUnclaimedGrantCall__Outputs(this);
+  }
+}
+
+export class ExpireUnclaimedGrantCall__Inputs {
+  _call: ExpireUnclaimedGrantCall;
+
+  constructor(call: ExpireUnclaimedGrantCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class ExpireUnclaimedGrantCall__Outputs {
+  _call: ExpireUnclaimedGrantCall;
+
+  constructor(call: ExpireUnclaimedGrantCall) {
     this._call = call;
   }
 }
@@ -1292,36 +1558,6 @@ export class ReviewMilestoneProofCall__Outputs {
   _call: ReviewMilestoneProofCall;
 
   constructor(call: ReviewMilestoneProofCall) {
-    this._call = call;
-  }
-}
-
-export class SetAuthorShareCall extends ethereum.Call {
-  get inputs(): SetAuthorShareCall__Inputs {
-    return new SetAuthorShareCall__Inputs(this);
-  }
-
-  get outputs(): SetAuthorShareCall__Outputs {
-    return new SetAuthorShareCall__Outputs(this);
-  }
-}
-
-export class SetAuthorShareCall__Inputs {
-  _call: SetAuthorShareCall;
-
-  constructor(call: SetAuthorShareCall) {
-    this._call = call;
-  }
-
-  get newSharePercent(): BigInt {
-    return this._call.inputValues[0].value.toBigInt();
-  }
-}
-
-export class SetAuthorShareCall__Outputs {
-  _call: SetAuthorShareCall;
-
-  constructor(call: SetAuthorShareCall) {
     this._call = call;
   }
 }

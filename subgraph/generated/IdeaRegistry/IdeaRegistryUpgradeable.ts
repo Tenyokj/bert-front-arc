@@ -28,6 +28,24 @@ export class AuthorMinStakeUpdated__Params {
   }
 }
 
+export class ConditionalPledgeMigrationInitialized extends ethereum.Event {
+  get params(): ConditionalPledgeMigrationInitialized__Params {
+    return new ConditionalPledgeMigrationInitialized__Params(this);
+  }
+}
+
+export class ConditionalPledgeMigrationInitialized__Params {
+  _event: ConditionalPledgeMigrationInitialized;
+
+  constructor(event: ConditionalPledgeMigrationInitialized) {
+    this._event = event;
+  }
+
+  get firstConditionalFundingIdeaId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+}
+
 export class FundingPoolUpdated extends ethereum.Event {
   get params(): FundingPoolUpdated__Params {
     return new FundingPoolUpdated__Params(this);
@@ -42,6 +60,42 @@ export class FundingPoolUpdated__Params {
   }
 
   get newFundingPool(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class HumanOnlyIdeaCreationUpdated extends ethereum.Event {
+  get params(): HumanOnlyIdeaCreationUpdated__Params {
+    return new HumanOnlyIdeaCreationUpdated__Params(this);
+  }
+}
+
+export class HumanOnlyIdeaCreationUpdated__Params {
+  _event: HumanOnlyIdeaCreationUpdated;
+
+  constructor(event: HumanOnlyIdeaCreationUpdated) {
+    this._event = event;
+  }
+
+  get enabled(): boolean {
+    return this._event.parameters[0].value.toBoolean();
+  }
+}
+
+export class HumanVerifierUpdated extends ethereum.Event {
+  get params(): HumanVerifierUpdated__Params {
+    return new HumanVerifierUpdated__Params(this);
+  }
+}
+
+export class HumanVerifierUpdated__Params {
+  _event: HumanVerifierUpdated;
+
+  constructor(event: HumanVerifierUpdated) {
+    this._event = event;
+  }
+
+  get newHumanVerifier(): Address {
     return this._event.parameters[0].value.toAddress();
   }
 }
@@ -175,6 +229,32 @@ export class Initialized__Params {
 
   get version(): BigInt {
     return this._event.parameters[0].value.toBigInt();
+  }
+}
+
+export class LegacyFundingProposalConfigured extends ethereum.Event {
+  get params(): LegacyFundingProposalConfigured__Params {
+    return new LegacyFundingProposalConfigured__Params(this);
+  }
+}
+
+export class LegacyFundingProposalConfigured__Params {
+  _event: LegacyFundingProposalConfigured;
+
+  constructor(event: LegacyFundingProposalConfigured) {
+    this._event = event;
+  }
+
+  get ideaId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get author(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get minimumNetFunding(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
   }
 }
 
@@ -531,6 +611,76 @@ export class IdeaRegistryUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  createFundingProposal(
+    _title: string,
+    _description: string,
+    _link: string,
+    _authorBond: BigInt,
+    _minimumNetFunding: BigInt,
+  ): BigInt {
+    let result = super.call(
+      "createFundingProposal",
+      "createFundingProposal(string,string,string,uint256,uint256):(uint256)",
+      [
+        ethereum.Value.fromString(_title),
+        ethereum.Value.fromString(_description),
+        ethereum.Value.fromString(_link),
+        ethereum.Value.fromUnsignedBigInt(_authorBond),
+        ethereum.Value.fromUnsignedBigInt(_minimumNetFunding),
+      ],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_createFundingProposal(
+    _title: string,
+    _description: string,
+    _link: string,
+    _authorBond: BigInt,
+    _minimumNetFunding: BigInt,
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "createFundingProposal",
+      "createFundingProposal(string,string,string,uint256,uint256):(uint256)",
+      [
+        ethereum.Value.fromString(_title),
+        ethereum.Value.fromString(_description),
+        ethereum.Value.fromString(_link),
+        ethereum.Value.fromUnsignedBigInt(_authorBond),
+        ethereum.Value.fromUnsignedBigInt(_minimumNetFunding),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  firstConditionalFundingIdeaId(): BigInt {
+    let result = super.call(
+      "firstConditionalFundingIdeaId",
+      "firstConditionalFundingIdeaId():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_firstConditionalFundingIdeaId(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "firstConditionalFundingIdeaId",
+      "firstConditionalFundingIdeaId():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   fundingPool(): Address {
     let result = super.call("fundingPool", "fundingPool():(address)", []);
 
@@ -743,6 +893,48 @@ export class IdeaRegistryUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toI32());
   }
 
+  humanOnlyIdeaCreation(): boolean {
+    let result = super.call(
+      "humanOnlyIdeaCreation",
+      "humanOnlyIdeaCreation():(bool)",
+      [],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_humanOnlyIdeaCreation(): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "humanOnlyIdeaCreation",
+      "humanOnlyIdeaCreation():(bool)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  humanVerifier(): Address {
+    let result = super.call("humanVerifier", "humanVerifier():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_humanVerifier(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "humanVerifier",
+      "humanVerifier():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   ideaReviews(
     param0: BigInt,
     param1: BigInt,
@@ -831,6 +1023,52 @@ export class IdeaRegistryUpgradeable extends ethereum.SmartContract {
         value[8].toI32(),
       ),
     );
+  }
+
+  isFundingProposal(ideaId: BigInt): boolean {
+    let result = super.call(
+      "isFundingProposal",
+      "isFundingProposal(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(ideaId)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isFundingProposal(ideaId: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isFundingProposal",
+      "isFundingProposal(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(ideaId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  minimumNetFundingByIdea(param0: BigInt): BigInt {
+    let result = super.call(
+      "minimumNetFundingByIdea",
+      "minimumNetFundingByIdea(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_minimumNetFundingByIdea(param0: BigInt): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "minimumNetFundingByIdea",
+      "minimumNetFundingByIdea(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   reputationSystem(): Address {
@@ -1004,20 +1242,54 @@ export class AddVoteCall__Outputs {
   }
 }
 
-export class CreateIdeaCall extends ethereum.Call {
-  get inputs(): CreateIdeaCall__Inputs {
-    return new CreateIdeaCall__Inputs(this);
+export class ConfigureLegacyFundingProposalCall extends ethereum.Call {
+  get inputs(): ConfigureLegacyFundingProposalCall__Inputs {
+    return new ConfigureLegacyFundingProposalCall__Inputs(this);
   }
 
-  get outputs(): CreateIdeaCall__Outputs {
-    return new CreateIdeaCall__Outputs(this);
+  get outputs(): ConfigureLegacyFundingProposalCall__Outputs {
+    return new ConfigureLegacyFundingProposalCall__Outputs(this);
   }
 }
 
-export class CreateIdeaCall__Inputs {
-  _call: CreateIdeaCall;
+export class ConfigureLegacyFundingProposalCall__Inputs {
+  _call: ConfigureLegacyFundingProposalCall;
 
-  constructor(call: CreateIdeaCall) {
+  constructor(call: ConfigureLegacyFundingProposalCall) {
+    this._call = call;
+  }
+
+  get ideaId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get minimumNetFunding(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class ConfigureLegacyFundingProposalCall__Outputs {
+  _call: ConfigureLegacyFundingProposalCall;
+
+  constructor(call: ConfigureLegacyFundingProposalCall) {
+    this._call = call;
+  }
+}
+
+export class CreateFundingProposalCall extends ethereum.Call {
+  get inputs(): CreateFundingProposalCall__Inputs {
+    return new CreateFundingProposalCall__Inputs(this);
+  }
+
+  get outputs(): CreateFundingProposalCall__Outputs {
+    return new CreateFundingProposalCall__Outputs(this);
+  }
+}
+
+export class CreateFundingProposalCall__Inputs {
+  _call: CreateFundingProposalCall;
+
+  constructor(call: CreateFundingProposalCall) {
     this._call = call;
   }
 
@@ -1033,16 +1305,24 @@ export class CreateIdeaCall__Inputs {
     return this._call.inputValues[2].value.toString();
   }
 
-  get _amount(): BigInt {
+  get _authorBond(): BigInt {
     return this._call.inputValues[3].value.toBigInt();
+  }
+
+  get _minimumNetFunding(): BigInt {
+    return this._call.inputValues[4].value.toBigInt();
   }
 }
 
-export class CreateIdeaCall__Outputs {
-  _call: CreateIdeaCall;
+export class CreateFundingProposalCall__Outputs {
+  _call: CreateFundingProposalCall;
 
-  constructor(call: CreateIdeaCall) {
+  constructor(call: CreateFundingProposalCall) {
     this._call = call;
+  }
+
+  get ideaId(): BigInt {
+    return this._call.outputValues[0].value.toBigInt();
   }
 }
 
@@ -1080,6 +1360,32 @@ export class InitializeCall__Outputs {
   _call: InitializeCall;
 
   constructor(call: InitializeCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeConditionalPledgeMigrationCall extends ethereum.Call {
+  get inputs(): InitializeConditionalPledgeMigrationCall__Inputs {
+    return new InitializeConditionalPledgeMigrationCall__Inputs(this);
+  }
+
+  get outputs(): InitializeConditionalPledgeMigrationCall__Outputs {
+    return new InitializeConditionalPledgeMigrationCall__Outputs(this);
+  }
+}
+
+export class InitializeConditionalPledgeMigrationCall__Inputs {
+  _call: InitializeConditionalPledgeMigrationCall;
+
+  constructor(call: InitializeConditionalPledgeMigrationCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeConditionalPledgeMigrationCall__Outputs {
+  _call: InitializeConditionalPledgeMigrationCall;
+
+  constructor(call: InitializeConditionalPledgeMigrationCall) {
     this._call = call;
   }
 }
@@ -1200,6 +1506,66 @@ export class SetFundingPoolCall__Outputs {
   _call: SetFundingPoolCall;
 
   constructor(call: SetFundingPoolCall) {
+    this._call = call;
+  }
+}
+
+export class SetHumanOnlyIdeaCreationCall extends ethereum.Call {
+  get inputs(): SetHumanOnlyIdeaCreationCall__Inputs {
+    return new SetHumanOnlyIdeaCreationCall__Inputs(this);
+  }
+
+  get outputs(): SetHumanOnlyIdeaCreationCall__Outputs {
+    return new SetHumanOnlyIdeaCreationCall__Outputs(this);
+  }
+}
+
+export class SetHumanOnlyIdeaCreationCall__Inputs {
+  _call: SetHumanOnlyIdeaCreationCall;
+
+  constructor(call: SetHumanOnlyIdeaCreationCall) {
+    this._call = call;
+  }
+
+  get enabled(): boolean {
+    return this._call.inputValues[0].value.toBoolean();
+  }
+}
+
+export class SetHumanOnlyIdeaCreationCall__Outputs {
+  _call: SetHumanOnlyIdeaCreationCall;
+
+  constructor(call: SetHumanOnlyIdeaCreationCall) {
+    this._call = call;
+  }
+}
+
+export class SetHumanVerifierCall extends ethereum.Call {
+  get inputs(): SetHumanVerifierCall__Inputs {
+    return new SetHumanVerifierCall__Inputs(this);
+  }
+
+  get outputs(): SetHumanVerifierCall__Outputs {
+    return new SetHumanVerifierCall__Outputs(this);
+  }
+}
+
+export class SetHumanVerifierCall__Inputs {
+  _call: SetHumanVerifierCall;
+
+  constructor(call: SetHumanVerifierCall) {
+    this._call = call;
+  }
+
+  get _newHumanVerifier(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class SetHumanVerifierCall__Outputs {
+  _call: SetHumanVerifierCall;
+
+  constructor(call: SetHumanVerifierCall) {
     this._call = call;
   }
 }
