@@ -11,6 +11,16 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    id: "v2-2-conditional-pledges",
+    image: "/news-v2-2.png",
+    alt: "BERT V2.2 conditional pledge funding release banner",
+    href: "https://bertdao-docs.vercel.app",
+    aspectRatio: "2172 / 724",
+    objectFit: "cover",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#070b16]",
+  },
+  {
     id: "v3-arc-testnet-release",
     image: "/news-v3-release.png",
     alt: "BERT V3 release on Arc Testnet banner",
