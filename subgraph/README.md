@@ -99,7 +99,7 @@ npm run build:arc
 ```bash
 graph deploy --studio <SUBGRAPH_SLUG> subgraph.yaml
 ```
-   The V2.1 proxy upgrade preserves every data-source address, so do not create a
+   The BERT V2.2 proxy upgrade preserves every data-source address, so do not create a
    replacement subgraph or change `NEXT_PUBLIC_SUBGRAPH_URL`. A new version is
    required because conditional pledges introduce new events and schema entities.
 7. Wait until the new version reaches `Synced`, then keep the same query URL in frontend:
