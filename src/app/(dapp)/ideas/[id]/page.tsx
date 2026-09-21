@@ -412,6 +412,14 @@ export default function IdeaDetailsPage() {
     query: { enabled: Boolean(address && contracts.rolesRegistry && curatorRoleId) },
   });
 
+  const { data: minimumNetFundingRaw } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "minimumNetFundingByIdea",
+    args: Number.isFinite(Number(params?.id)) ? [BigInt(Number(params?.id))] : undefined,
+    query: { enabled: Boolean(contracts.ideaRegistry && Number.isFinite(Number(params?.id))) },
+  });
+
   const { data: canClaimGrantRaw } = useReadContract({
     address: contracts.grantManager,
     abi: grantManagerAbi,
@@ -701,7 +709,7 @@ export default function IdeaDetailsPage() {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 xl:grid-cols-5">
           <div className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
             <p className="mb-1">Author:</p>
             <AddressIdentity address={idea.author} />
@@ -710,7 +718,10 @@ export default function IdeaDetailsPage() {
             Created: {formatDateTimeFromUnix(idea.createdAt)}
           </p>
           <p className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
-            Total votes: {formatTokenAmount(idea.totalVotes)} USDC
+            Total pledges: {formatTokenAmount(idea.totalVotes)} USDC
+          </p>
+          <p className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
+            Minimum net target: {formatTokenAmount(minimumNetFundingRaw as bigint | undefined)} USDC
           </p>
           <p className="min-w-0 rounded-lg border border-white/10 bg-[#242735] px-3 py-2">
             Status code: {String(idea.statusCode)}

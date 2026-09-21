@@ -11,6 +11,7 @@ import { AddressIdentity } from "@/components/AddressIdentity";
 import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import {
   contracts,
+  fundingPoolAbi,
   grantManagerAbi,
   ideaRegistryAbi,
   usdcAbi,
@@ -42,10 +43,29 @@ type RoundIdea = {
   description: string;
   totalVotesOverall: bigint;
   roundVotes: bigint;
+  minimumNetFunding: bigint;
   statusCode: bigint;
   votersCount: number;
   isReviewed: boolean;
 };
+
+type Pledge = {
+  ideaId: bigint;
+  amount: bigint;
+  refundClaimed: boolean;
+};
+
+function toPledge(row: unknown): Pledge {
+  if (Array.isArray(row)) {
+    return {
+      ideaId: BigInt(row[0] ?? 0),
+      amount: BigInt(row[1] ?? 0),
+      refundClaimed: Boolean(row[2]),
+    };
+  }
+
+  return { ideaId: 0n, amount: 0n, refundClaimed: false };
+}
 
 function safeParseAmount(value: string) {
   const input = value.trim();
@@ -77,6 +97,8 @@ function prettyRoundError(message?: string) {
   if (message.includes("AlreadyDistributed")) return "Initial 30% has already been claimed for this winning idea.";
   if (message.includes("NotAuthor")) return "Only the winning idea author can claim the initial 30%.";
   if (message.includes("NoWinner")) return "There is no winning idea yet for this round.";
+  if (message.includes("PledgeRefundUnavailable")) return "This pledge is not refundable in the current funding-round state.";
+  if (message.includes("FundingTargetNotMet")) return "No proposal reached its required post-fee funding target, so the round will settle without a winner.";
   if (message.includes("Internal error")) return "Transaction reverted by contract rules. Check round state and wallet permissions.";
   return message;
 }
@@ -139,6 +161,17 @@ export default function RoundDetailsPage() {
     hash: claimTxHash,
   });
 
+  const {
+    data: refundTxHash,
+    isPending: isRefundPending,
+    error: refundError,
+    writeContract: writeRefund,
+  } = useWriteContract();
+  const sendRefund = writeRefund as unknown as (variables: Record<string, unknown>) => void;
+  const { isLoading: isRefundConfirming, isSuccess: isRefundConfirmed } = useWaitForTransactionReceipt({
+    hash: refundTxHash,
+  });
+
   const roundId = Number(params?.id);
 
   const { data: minStake } = useReadContract({
@@ -199,11 +232,41 @@ export default function RoundDetailsPage() {
       enabled: Boolean(contracts.grantManager && Number.isFinite(roundId)),
     },
   });
+  const { data: pledgeRaw, refetch: refetchPledge } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "getPledge",
+    args: Number.isFinite(roundId) && address ? [BigInt(roundId), address] : undefined,
+    query: { enabled: Boolean(contracts.fundingPool && address && Number.isFinite(roundId)) },
+  });
+  const { data: fundingRoundSettlementRaw } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "getFundingRoundSettlement",
+    args: Number.isFinite(roundId) ? [BigInt(roundId)] : undefined,
+    query: { enabled: Boolean(contracts.fundingPool && Number.isFinite(roundId)) },
+  });
+  const { data: grantRefundActiveRaw } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "grantRefundActive",
+    args: Number.isFinite(roundId) ? [BigInt(roundId)] : undefined,
+    query: { enabled: Boolean(contracts.fundingPool && Number.isFinite(roundId)) },
+  });
   const minStakeValue = minStake as bigint | undefined;
   const maxVoteAmountValue = maxVoteAmount as bigint | undefined;
   const allowanceValue = allowance as bigint | undefined;
   const tokenBalanceValue = tokenBalance as bigint | undefined;
   const userHasVotedValue = userHasVoted as boolean | undefined;
+  const pledge = toPledge(pledgeRaw);
+  const fundingRoundSettlement = Array.isArray(fundingRoundSettlementRaw)
+    ? {
+        opened: Boolean(fundingRoundSettlementRaw[0]),
+        settled: Boolean(fundingRoundSettlementRaw[1]),
+        winningIdeaId: BigInt(fundingRoundSettlementRaw[2] ?? 0),
+      }
+    : { opened: false, settled: false, winningIdeaId: 0n };
+  const grantRefundActive = Boolean(grantRefundActiveRaw);
   const normalizedAddress = address?.toLowerCase() ?? null;
 
   const canClaimGrant = Array.isArray(canClaimGrantRaw) ? Boolean(canClaimGrantRaw[0]) : false;
@@ -214,6 +277,13 @@ export default function RoundDetailsPage() {
   const winnerAuthor = winnerIdea?.author;
   const isWinnerAuthor = Boolean(address && winnerAuthor && address.toLowerCase() === winnerAuthor.toLowerCase());
   const canClaimByWallet = canClaimGrant && isWinnerAuthor;
+  const hasPledge = pledge.amount > 0n;
+  const pledgeWon = hasPledge && pledge.ideaId === fundingRoundSettlement.winningIdeaId;
+  const canClaimPledgeRefund =
+    fundingRoundSettlement.settled &&
+    hasPledge &&
+    !pledge.refundClaimed &&
+    (fundingRoundSettlement.winningIdeaId === 0n || !pledgeWon || grantRefundActive);
 
   useEffect(() => {
     if (!isApproveConfirmed) return;
@@ -222,8 +292,13 @@ export default function RoundDetailsPage() {
 
   useEffect(() => {
     if (!isVoteConfirmed) return;
-    void Promise.all([refetchAllowance(), refetchTokenBalance()]);
-  }, [isVoteConfirmed, refetchAllowance, refetchTokenBalance]);
+    void Promise.all([refetchAllowance(), refetchTokenBalance(), refetchPledge()]);
+  }, [isVoteConfirmed, refetchAllowance, refetchPledge, refetchTokenBalance]);
+
+  useEffect(() => {
+    if (!isRefundConfirmed) return;
+    void Promise.all([refetchPledge(), refetchTokenBalance()]);
+  }, [isRefundConfirmed, refetchPledge, refetchTokenBalance]);
 
   useEffect(() => {
     setAllowanceOwner(null);
@@ -301,6 +376,7 @@ export default function RoundDetailsPage() {
                     description: idea.description,
                     totalVotesOverall: BigInt(idea.totalVotes || "0"),
                     roundVotes: voteSumsByIdea.get(ideaId) ?? 0n,
+                    minimumNetFunding: 0n,
                     statusCode: BigInt(idea.status || "0"),
                     votersCount: votersByIdea.get(ideaId)?.size ?? 0,
                     isReviewed: false,
@@ -309,24 +385,24 @@ export default function RoundDetailsPage() {
                 .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
               if (contracts.ideaRegistry && ideaDetails.length > 0) {
-                const reviewedRows = await Promise.all(
+                const minimumFundingRows = await Promise.all(
                   ideaDetails.map(async (entry) => {
                     try {
-                      const count = (await readContract({
+                      const minimumNetFunding = (await readContract({
                         address: contracts.ideaRegistry!,
                         abi: ideaRegistryAbi,
-                        functionName: "getReviewCount",
+                        functionName: "minimumNetFundingByIdea",
                         args: [BigInt(entry.id)],
                       })) as bigint;
-                      return [entry.id, count > 0n] as const;
+                      return [entry.id, minimumNetFunding] as const;
                     } catch {
-                      return [entry.id, false] as const;
+                      return [entry.id, 0n] as const;
                     }
                   })
                 );
-                const reviewedMap = new Map<number, boolean>(reviewedRows);
+                const minimumFundingMap = new Map<number, bigint>(minimumFundingRows);
                 for (const entry of ideaDetails) {
-                  entry.isReviewed = reviewedMap.get(entry.id) ?? false;
+                  entry.minimumNetFunding = minimumFundingMap.get(entry.id) ?? 0n;
                 }
               }
 
@@ -377,7 +453,7 @@ export default function RoundDetailsPage() {
 
         const ideaDetails = await Promise.all(
           nextRound.ideaIds.map(async (ideaId) => {
-            const [idea, ideaRoundVotes, ideaVoters, reviewCount] = (await Promise.all([
+            const [idea, ideaRoundVotes, ideaVoters, reviewCount, minimumNetFunding] = (await Promise.all([
               readContract({
                 address: contracts.ideaRegistry!,
                 abi: ideaRegistryAbi,
@@ -402,10 +478,17 @@ export default function RoundDetailsPage() {
                 functionName: "getReviewCount",
                 args: [BigInt(ideaId)],
               }),
+              readContract({
+                address: contracts.ideaRegistry!,
+                abi: ideaRegistryAbi,
+                functionName: "minimumNetFundingByIdea",
+                args: [BigInt(ideaId)],
+              }),
             ])) as [
               readonly [bigint, string, string, string, string, bigint, bigint, bigint],
               bigint,
               string[],
+              bigint,
               bigint,
             ];
 
@@ -416,6 +499,7 @@ export default function RoundDetailsPage() {
               description: idea[3],
               totalVotesOverall: idea[6],
               roundVotes: ideaRoundVotes,
+              minimumNetFunding,
               statusCode: idea[7],
               votersCount: ideaVoters.length,
               isReviewed: reviewCount > 0n,
@@ -516,15 +600,20 @@ export default function RoundDetailsPage() {
             1. Inspect the ideas competing in this round.
           </div>
           <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
-            2. If the round is live, allocate one USDC-backed vote to the strongest proposal.
+            2. If the round is live, make one USDC pledge to the proposal you want to fund.
           </div>
           <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
-            3. After finalization, the winning idea moves into staged grant release.
+            3. After settlement, losing pledges are refundable and a viable winner moves into staged grant release.
           </div>
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <p className="text-sm text-slate-200">Total votes: {formatUsdc(round.totalVotes)}</p>
+          {fundingRoundSettlement.settled && fundingRoundSettlement.winningIdeaId === 0n && (
+            <span className="rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-100">
+              No proposal cleared its funding target
+            </span>
+          )}
           {shouldShowEndRoundButton ? (
             <button
               disabled={!isConnected || !canEndRound || isEndPending || isEndConfirming}
@@ -595,9 +684,49 @@ export default function RoundDetailsPage() {
         )}
         {contracts.usdc && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
-            Wallet voting context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum vote size {formatUsdc(minStakeValue)} | max vote amount {formatUsdc(maxVoteAmountValue)}
+            Wallet pledge context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum pledge {formatUsdc(minStakeValue)} | max pledge {formatUsdc(maxVoteAmountValue)}
           </p>
         )}
+
+        {isConnected && contracts.fundingPool && (
+          <div className="mt-4 rounded-xl border border-cyan-300/20 bg-cyan-500/5 p-4 text-sm text-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold text-white">Your pledge</p>
+                <p className="mt-1 text-xs text-slate-300">
+                  {hasPledge
+                    ? `${formatUsdc(pledge.amount)} pledged to Idea #${pledge.ideaId.toString()}.`
+                    : "This wallet has not pledged in this round."}
+                  {pledge.refundClaimed ? " Refund already claimed." : ""}
+                </p>
+              </div>
+              {canClaimPledgeRefund && (
+                <button
+                  type="button"
+                  disabled={isRefundPending || isRefundConfirming}
+                  onClick={() => {
+                    if (!contracts.fundingPool) return;
+                    sendRefund({
+                      address: contracts.fundingPool,
+                      abi: fundingPoolAbi,
+                      functionName: "claimPledgeRefund",
+                      args: [BigInt(round.id)],
+                      gas: 500_000n,
+                    });
+                  }}
+                  className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isRefundPending ? "Awaiting signature..." : isRefundConfirming ? "Returning pledge..." : "Claim pledge refund"}
+                </button>
+              )}
+            </div>
+            {hasPledge && fundingRoundSettlement.settled && !canClaimPledgeRefund && !pledge.refundClaimed && pledgeWon && !grantRefundActive && (
+              <p className="mt-2 text-xs text-slate-300">Your pledge backs the selected winner and is held as grant escrow until the grant completes, expires, or is cancelled.</p>
+            )}
+          </div>
+        )}
+        {refundError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(refundError.message)}</p>}
+        {refundTxHash && <p className="mt-2 break-all text-xs text-slate-300">Refund transaction reference: {refundTxHash}</p>}
 
         <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#2a2d3a]">
           <div className="overflow-x-auto">
@@ -635,7 +764,7 @@ export default function RoundDetailsPage() {
         <h2 className="font-[var(--font-display)] text-2xl text-white sm:text-3xl md:text-4xl">Ideas in this round</h2>
         <p className="mt-2 text-sm text-slate-300">On-chain `ideaIds`: {round.ideaIds.join(", ") || "-"}</p>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Open an idea card to inspect the full proposal. If the round is still live, you can cast one vote in this round after approving the amount you want to allocate.
+          Open a proposal to inspect its funding target. During a live round, you can make one pledge after approving the amount; that pledge is not routed to another proposal if your choice loses.
         </p>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
@@ -680,7 +809,10 @@ export default function RoundDetailsPage() {
 
                 <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                   <p className="rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
-                    Round votes: {formatUsdc(idea.roundVotes)}
+                    Gross pledges: {formatUsdc(idea.roundVotes)}
+                  </p>
+                  <p className="rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
+                    Minimum net target: {idea.minimumNetFunding > 0n ? formatUsdc(idea.minimumNetFunding) : "Not available"}
                   </p>
                   <p className="rounded-lg border border-white/10 bg-[#232632] px-2.5 py-2">
                     Voters: {idea.votersCount}
@@ -705,7 +837,7 @@ export default function RoundDetailsPage() {
                       }));
                     }}
                     className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#232632] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60"
-                    placeholder="How much USDC do you want to allocate?"
+                    placeholder="How much USDC do you want to pledge?"
                   />
                   {needApprove ? (
                     <button
@@ -741,13 +873,13 @@ export default function RoundDetailsPage() {
                     }}
                     className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isVotePending ? "Sign..." : isVoteConfirming ? "Voting..." : "Vote"}
+                    {isVotePending ? "Sign..." : isVoteConfirming ? "Pledging..." : "Pledge USDC"}
                   </button>
                   )}
                 </div>
-                {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance for this vote amount.</p>}
-                {belowMinStake && <p className="mt-2 text-xs text-rose-300">Amount is below `minStake`.</p>}
-                {aboveMaxVoteAmount && <p className="mt-2 text-xs text-rose-300">Amount is above the `maxVoteAmount` cap.</p>}
+                {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance for this pledge.</p>}
+                {belowMinStake && <p className="mt-2 text-xs text-rose-300">Pledge is below `minStake`.</p>}
+                {aboveMaxVoteAmount && <p className="mt-2 text-xs text-rose-300">Pledge is above the `maxVoteAmount` cap.</p>}
                 {isOwnIdea && <p className="mt-2 text-xs text-rose-300">You cannot vote for your own idea.</p>}
                 {!isOwnIdea && userHasVotedValue && <p className="mt-2 text-xs text-rose-300">You already voted in this round (one vote per wallet per round).</p>}
               </div>

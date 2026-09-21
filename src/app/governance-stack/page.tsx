@@ -73,7 +73,7 @@ export default function GovernanceStackPage() {
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Core Contracts</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 <strong>IdeaRegistry</strong> is the source of truth for proposal metadata and statuses. <strong>VotingSystem</strong> owns round lifecycle,
-                vote accounting, and winner resolution. <strong>FundingPool</strong> maintains treasury balances and proposal-linked accounting. <strong>GrantManager</strong> applies payout logic from settled governance outcomes. <strong>USDC</strong> is the settlement asset used across participation thresholds, treasury movement, and grant execution.
+                pledge accounting, conditional winner resolution, and refund eligibility. <strong>FundingPool</strong> maintains per-round pledge escrow and protocol reserve. <strong>GrantManager</strong> applies 30/40/30 payout logic from settled viable outcomes. <strong>USDC</strong> is the settlement asset used across participation thresholds, pledge custody, refunds, and grant execution.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Each core contract has clear scope to reduce hidden side effects and simplify reasoning about failures.

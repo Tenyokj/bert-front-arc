@@ -410,15 +410,15 @@ export function FundingPoolHero() {
           {formatUsdc(totalPoolBalance as bigint | undefined)} USDC
         </h1>
         <p className="mt-4 max-w-2xl text-sm text-slate-100/90 sm:text-base md:text-lg">
-          Treasury capital available for winning projects. Deposits expand how much funding BERT can route into milestone-based grants.
+          Protocol reserve and voluntary treasury capital. V2 grants are funded by winning round pledges; only the configured pledge fee is retained as protocol reserve after a grant is claimed.
         </p>
         <p className="mt-2 text-xs text-slate-200/90 sm:text-sm">
           Projects funded: {distributionCount === undefined ? "..." : String(distributionCount)} | My deposits:{" "}
           {formatUsdc(donorBalance as bigint | undefined)} USDC
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2 text-xs text-slate-200">
-          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">For contributors: add treasury capital</span>
-          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">For builders: grants are paid from this pool</span>
+          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">For contributors: add protocol reserve capital</span>
+          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">For builders: grants come from winning pledges</span>
         </div>
         <div className="mt-5 flex w-full max-w-lg flex-col items-stretch gap-2 sm:flex-row sm:items-center">
           <input

@@ -229,7 +229,7 @@ function RoundsPageContent() {
     sendWrite({
       address: contracts.votingSystem,
       abi: votingSystemAbi,
-      functionName: "startVotingRound",
+      functionName: "startFundingRound",
       gas: 3_000_000n,
     });
   };
@@ -244,8 +244,7 @@ function RoundsPageContent() {
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Stablecoin Voting</p>
         <h1 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-6xl">Voting Rounds</h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
-          A voting round groups multiple ideas into one decision window. Compare proposals, inspect current traction,
-          and back the strongest builder with stablecoin voting power.
+          A funding round groups multiple proposals into one decision window. Each vote is a USDC pledge held in escrow: losing pledges are refundable, while a viable winner receives the post-fee pledge pool through milestones.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
@@ -266,7 +265,7 @@ function RoundsPageContent() {
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Treasury operations</p>
               <p className="mt-1 text-sm text-slate-300">
-                Starting a new round is an operator action. Regular users can still browse and evaluate all existing rounds below.
+                Starting a new funding round is an operator action. The protocol draws the next fixed slate of eligible proposals; regular users can browse and evaluate all rounds below.
               </p>
             </div>
             <button
@@ -282,7 +281,7 @@ function RoundsPageContent() {
               }
               className="rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isPending ? "Awaiting signature..." : isConfirming ? "Creating round..." : "Start round"}
+              {isPending ? "Awaiting signature..." : isConfirming ? "Creating round..." : "Start funding round"}
             </button>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -295,7 +294,7 @@ function RoundsPageContent() {
         {error?.message && (
           <p className="mt-3 text-xs text-rose-300">
             {error.message.includes("NotEnoughIdeas")
-              ? `Need ${missingIdeas || ideasPerRound?.toString() || "..."} ideas to start a round.`
+              ? `Need ${missingIdeas || ideasPerRound?.toString() || "..."} eligible proposals to start a round.`
               : error.message.includes("EnforcedPause")
                 ? "Voting system is paused."
                 : "Failed to start round. Check wallet/network and try again."}

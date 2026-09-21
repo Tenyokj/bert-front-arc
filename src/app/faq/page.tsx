@@ -36,7 +36,7 @@ const sections: FaqSection[] = [
       {
         question: "What economic model does BERT use?",
         answer:
-          "BERT is designed around USDC-native funding flows. Proposal deposits, vote commitments, treasury balances, and grant payouts all run through USDC.",
+          "BERT is designed around USDC-native funding flows. Author bonds, round pledges, protocol reserve, refunds, and grant payouts all run through USDC.",
       },
       {
         question: "What problem does BERT solve?",
@@ -51,7 +51,7 @@ const sections: FaqSection[] = [
       {
         question: "How does BERT work at a high level?",
         answer:
-          "A builder submits an idea with a USDC-backed proposal deposit, participants commit USDC votes in a round, treasury balances accumulate onchain, the winner moves into GrantManager, and milestone approvals unlock staged capital release.",
+          "A builder submits a proposal with an author bond and a minimum net funding target. Participants pledge USDC to one proposal in a round; losing pledges are refundable, and a viable winner moves into GrantManager where milestone approvals unlock staged capital release.",
       },
       {
         question: "Is BERT non-custodial?",
