@@ -39,7 +39,7 @@ export const demoHighlights = [
   {
     title: "Winners unlock milestone grants",
     description:
-      "Treasury release follows a 30 / 40 / 30 structure so the final payout depends on validated delivery.",
+      "V2.3 treasury release follows a 20 / 40 / 40 structure, with later tranches controlled by winning backers.",
   },
 ];
 

@@ -140,7 +140,7 @@ export default function TreasuryPoliciesPage() {
             <section id="allocation" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Allocation Rules</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Allocation follows conditional winner resolution from round settlement. A winner must clear its declared net target after <code>pledgeFeeBps</code>; the remaining winner pledges fund the grant, released 30/40/30 after the author and reviewer gates. Parameter changes are governance-sensitive and should be treated as policy-level updates, not routine UI edits.
+                Allocation follows conditional winner resolution from round settlement. A winner must clear its declared net target after <code>pledgeFeeBps</code> and have at least three distinct backers. Its own pledges fund a 20/40/40 grant: the first tranche is author-claimed, and each later tranche requires backer-controlled proof approval. Parameter changes are governance-sensitive and should be treated as policy-level updates, not routine UI edits.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Treasury policy should avoid hidden discretionary payouts. If a payout cannot be derived from round outcomes and configured rules,
@@ -151,7 +151,7 @@ export default function TreasuryPoliciesPage() {
             <section id="workflow" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Distribution Workflow</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Standard workflow is: <strong>round settled -&gt; viable winner identified -&gt; losing pledges become refundable -&gt; winner claims -&gt; 30/40/30 milestones release -&gt; fee finalizes to reserve</strong>.
+                Standard workflow is: <strong>round settled -&gt; viable winner identified -&gt; losing pledges become refundable -&gt; winner claims 20% -&gt; winning backers approve two 40% milestones -&gt; fee finalizes to reserve as author tranches are claimed</strong>.
                 Funding Pool and Grant Manager split responsibilities so pledge custody and payout logic are not mixed in one contract.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
@@ -163,7 +163,7 @@ export default function TreasuryPoliciesPage() {
             <section id="reserves" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Reserve & Risk Limits</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Treasury policy keeps reserve capital separate from grant escrow. A winning pledge is not transferred to the protocol reserve before the author claims; if the grant expires or is cancelled, the contract reopens the appropriate pledge-refund path.
+                Treasury policy keeps reserve capital separate from grant escrow. A winning pledge is not transferred to the protocol reserve before the author claims; if a V2.3 grant is cancelled because of a missed deadline, failed second proof, or unresolved review, its unreleased escrow reopens the winning-pledger refund path.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 High-impact parameter changes (stake thresholds, pledge fee, round size) should be evaluated against treasury sustainability,

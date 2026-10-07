@@ -21,7 +21,7 @@ const concepts = [
   {
     title: "Treasury + Milestones",
     description:
-      "Winning ideas do not get one blind payout. Funding is released through milestone checks on a 30 / 40 / 30 rail.",
+      "Winning ideas do not get one blind payout. V2.3 uses a 20 / 40 / 40 rail with milestone proof approved by winning backers.",
     icon: FaCoins,
   },
 ];
@@ -29,7 +29,7 @@ const concepts = [
 const flow = [
   "Submit an idea with execution context and required stake.",
   "Enter a round and compete for community-backed USDC voting.",
-  "If the idea wins, unlock the grant through milestone proof and reviewer validation.",
+  "If the idea wins, unlock the grant through milestone proof and winning-backer validation.",
 ];
 
 const rolePaths = [

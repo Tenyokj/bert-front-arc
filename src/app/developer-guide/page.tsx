@@ -67,8 +67,9 @@ export default function DeveloperGuidePage() {
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 For integrators, the practical consequence is simple: round creation and voting stay conceptually familiar,
-                but the post-settlement path is now richer. Indexers, frontend pages, and operational runbooks should account
-                for review events, low-quality markers, staged payouts, milestone proof requests, and reviewer validation outcomes.
+                but the V2.3 post-settlement path is richer. Indexers, frontend pages, and operational runbooks should account
+                for refundable losing pledges, viability checks, staged payouts, milestone proof requests, winning-backer
+                votes, quorum and approval outcomes, grace periods, and individual winning-participation claims.
               </p>
             </section>
 

@@ -92,7 +92,7 @@ const sections: FaqSection[] = [
       {
         question: "Where does committed USDC go?",
         answer:
-          "Committed USDC flows into FundingPool accounting. That treasury state becomes the capital base for subsequent grant releases once a winning idea enters execution.",
+          "Committed USDC is held by FundingPool as escrow for the idea you selected. It is not redirected to another idea: losing pledges are pull-refundable after settlement, while only a viable winning idea can use its own pledges for a grant.",
       },
       {
         question: "Why do I need to approve USDC first?",
@@ -149,7 +149,7 @@ const sections: FaqSection[] = [
       {
         question: "How are grants released?",
         answer:
-          "Winning ideas move through a milestone rail. The default release pattern is 30% initial claim, 40% after in-process proof approval, and 30% after final launch proof approval.",
+          "New V2.3 winning ideas move through a 20% initial claim, 40% in-process release, and 40% completion release. The 5% fee is reserved proportionally as each author tranche is claimed, so the author receives 19% / 38% / 38% of gross winning pledges.",
       },
       {
         question: "Who approves milestone proofs?",
@@ -169,7 +169,7 @@ const sections: FaqSection[] = [
       {
         question: "What happens if a milestone is rejected?",
         answer:
-          "No capital advances automatically. In V2.3, a quorum rejection gives the author one 48-hour correction and resubmission. A second rejection, or failure to reach quorum after the 14-day review and 7-day grace period, cancels the unreleased grant and makes the remaining escrow refundable to winning pledgers.",
+          "No capital advances automatically. In V2.3, a rejected proof after quorum gives the author one 48-hour correction and resubmission. A second rejected proof cancels the unreleased grant. If the 14-day review misses quorum, a one-time 7-day grace period opens; continued silence also cancels. In both cases, unreleased escrow becomes pull-refundable to winning pledgers.",
       },
     ],
   },
