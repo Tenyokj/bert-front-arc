@@ -21,8 +21,8 @@ const pillars = [
   },
   {
     label: "Release Rail",
-    value: "30 / 40 / 30",
-    note: "Initial release, milestone release, and final release after reviewer validation.",
+    value: "20 / 40 / 40",
+    note: "Initial claim followed by two backer-approved milestone releases.",
   },
   {
     label: "Verified Voting",
@@ -35,12 +35,12 @@ const flowSteps = [
   {
     title: "1. Builder submits an idea",
     body:
-      "A builder creates an idea in IdeaRegistry and deposits at least 50 USDC. The deposit is locked in FundingPool and the idea enters the pipeline with clear onchain metadata and status.",
+      "A builder creates an idea in IdeaRegistry, posts at least a 50 USDC author bond, declares a minimum net funding target, and commits an immutable milestone-plan hash and URI before the idea can enter a V2.3 round.",
   },
   {
     title: "2. A voting round opens",
     body:
-      "VotingSystem groups eligible ideas into a live round. Participants review the round and commit USDC directly onchain instead of relying on a separate governance asset.",
+      "VotingSystem starts a round only after 30 eligible V2.3 ideas are queued. The round stays open for 14 days, so participants have time to compare scope, targets, and the committed delivery plan.",
   },
   {
     title: "3. Voters activate verification first",
@@ -48,30 +48,30 @@ const flowSteps = [
       "On Arc Testnet, a wallet activates clearly labelled Demo verification and finalizes its signed payload onchain through PoPVerifierUpgradeable. Mainnet will replace this test-only path with production World ID proof-of-personhood.",
   },
   {
-    title: "4. USDC commitments accumulate in treasury",
+    title: "4. USDC pledges stay idea-specific",
     body:
-      "Every valid vote routes committed USDC into the treasury path. The per-wallet 10,000 USDC cap reduces single-wallet dominance; production World ID will add Sybil resistance after testnet." ,
+      "Every valid pledge is held as escrow for its selected idea in FundingPool. The per-wallet 10,000 USDC cap reduces single-wallet dominance; losing pledges never fund another idea and become refundable after settlement.",
   },
   {
     title: "5. Winner enters grant execution",
     body:
-      "After the round closes and settlement succeeds, the winning idea moves into GrantManager. At that point the protocol stops being only a voting system and becomes a capital release system.",
+      "After settlement, only the highest-funded viable idea enters GrantManager. Viability requires its declared post-fee target and at least three distinct winning backers. If no idea qualifies, pledges remain refundable.",
   },
   {
     title: "6. Milestones unlock funding",
     body:
-      "Grant release is milestone-based. Builders claim the initial tranche, submit implementation proof, then submit final delivery proof. Reviewers validate each stage before the next release can execute.",
+      "The author claims 20%, then submits proof for each 40% stage. Only the winning pledgers can vote on proof: 40% pledge-weight quorum, two-thirds approval of participating weight, and three approving verified backers are required.",
   },
 ];
 
 const safetyChecks = [
   "USDC commitments use explicit allowance checks before protocol actions execute.",
-  "Round voting enforces one vote per address per idea and blocks self-voting.",
+  "Round voting permits one pledge per wallet per round and blocks an author from pledging to their own idea.",
   "Protected voting requires an active onchain verification record; Arc Testnet uses Demo PoP and mainnet will use World ID.",
   "Per-idea vote size is capped at 10,000 USDC per wallet to reduce single-wallet control.",
-  "Treasury release follows milestone state transitions instead of one-shot payouts.",
+  "New V2.3 grants use a 20 / 40 / 40 rail; unreleased escrow is refundable if the backer-controlled path fails.",
   "Pause controls remain available for incident handling and controlled rollout.",
-  "Role-gated review and grant functions keep validator actions explicit and auditable.",
+  "Only the winning pledge cohort can validate V2.3 proof; the author has no milestone vote.",
 ];
 
 const communityModes = [
@@ -148,7 +148,7 @@ export default function HowItWorksPage() {
             </h1>
             <p className="max-w-4xl text-lg leading-relaxed text-slate-700 dark:text-slate-200">
               The protocol is a programmable capital allocation system: builders post a USDC author bond and declare a minimum viable grant,
-              contributors make refundable USDC pledges to one proposal, and only a viable winner unlocks milestone-based releases through validator review.
+              contributors make refundable USDC pledges to one proposal, and only a viable winner unlocks milestone-based releases controlled by its own backers.
             </p>
           </section>
 
@@ -166,16 +166,15 @@ export default function HowItWorksPage() {
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Funding flow</h2>
               <p className="max-w-4xl text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                BERT coordinates one continuous funding path. Proposal deposits filter out spam, round voting directs
-                capital toward the strongest ideas, treasury accounting preserves visibility over committed and released
-                balances, testnet verification exercises protected paths, and milestone releases keep grant execution
-                measurable.
+                BERT coordinates one continuous funding path. Proposal bonds filter out spam, a 14-day round records
+                idea-specific pledges, settlement refunds losing paths, and a viable winner moves into backer-controlled
+                milestone releases. Capital is never silently redirected from one idea to another.
               </p>
             </div>
             <div className="mt-6 overflow-hidden rounded-3xl border border-white/15 bg-black/10 p-3">
               <Image
                 src="/illustrations/how-flow-arc.svg"
-                alt="BERT Arc funding flow from proposal deposit to milestone-based USDC release"
+                alt="BERT V2.3 funding flow from author bond and refundable pledges to backer-approved milestone releases"
                 width={1600}
                 height={760}
                 className="h-auto w-full"
@@ -184,9 +183,9 @@ export default function HowItWorksPage() {
             </div>
           </section>
 
-          <section className="grid gap-5 lg:grid-cols-5">
+          <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {flowSteps.map((step) => (
-              <div key={step.title} className="rounded-2xl border border-white/12 bg-white/[0.02] p-5 lg:col-span-1">
+              <div key={step.title} className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{step.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">{step.body}</p>
               </div>
@@ -245,13 +244,16 @@ export default function HowItWorksPage() {
                   sequence so capital follows proof of execution rather than hype.
                 </p>
                 <p>
-                  The default rail is <strong>30% / 40% / 30%</strong>. The builder claims the first release, then submits
-                  proof for the implementation milestone, then submits proof for the final launch milestone. Reviewers
-                  confirm each stage before the next tranche can move.
+                  The V2.3 rail is <strong>20% / 40% / 40%</strong>. The builder claims the initial 20%, then submits
+                  proof for the in-process and completion stages. The winning pledge cohort has 14 days to review each
+                  proof. A release requires 40% of total winning pledge weight to participate, two-thirds approval of
+                  that participating weight, and three approving verified backers.
                 </p>
                 <p>
-                  That makes BERT useful as treasury infrastructure, not just proposal coordination. Capital remains
-                  programmable until work is actually delivered.
+                  A vote remains open through its full review window, so reaching quorum never closes out other
+                  backers. If there is no quorum, a one-time 7-day grace period begins. Silence never releases capital:
+                  an unresolved review, missed author deadline, or second failed review makes all unreleased escrow
+                  pull-refundable pro rata to the winning pledgers.
                 </p>
               </div>
             </div>
@@ -376,7 +378,7 @@ export default function HowItWorksPage() {
                 { href: "/ideas/new", label: "Create an idea", icon: FaExternalLinkAlt },
                 { href: "/rounds", label: "Inspect live rounds", icon: FaBook },
                 { href: "/policy-docs", label: "Read policy docs", icon: FaBook },
-                { href: "/docs/ARCHITECTURE.md", label: "Open architecture docs", icon: FaBook },
+                { href: "https://bertdao-docs.vercel.app/whitepaper/BERTDAO-Protocol-Whitepaper.pdf", label: "Read BERTDAO Whitepaper", icon: FaBook },
               ].map((link) => {
                 const Icon = link.icon;
                 return (

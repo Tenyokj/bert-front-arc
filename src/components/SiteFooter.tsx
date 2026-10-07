@@ -17,6 +17,14 @@ export default function SiteFooter() {
           <a className="footer-link" href="https://bertdao-docs.vercel.app/">
             Docs
           </a>
+          <a
+            className="footer-link"
+            href="https://bertdao-docs.vercel.app/whitepaper/BERTDAO-Protocol-Whitepaper.pdf"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Whitepaper
+          </a>
           <Link className="footer-link" href="/privacy-notice">
             Privacy Notice
           </Link>
@@ -77,6 +85,14 @@ export default function SiteFooter() {
             <Link className="footer-link" href="/treasury-policies">
               Treasury policies
             </Link>
+            <a
+              className="footer-link"
+              href="https://bertdao-docs.vercel.app/whitepaper/BERTDAO-Protocol-Whitepaper.pdf"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Whitepaper
+            </a>
           </div>
         </div>
 

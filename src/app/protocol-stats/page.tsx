@@ -144,6 +144,41 @@ export default function ProtocolStatsPage() {
     query: { enabled: Boolean(contracts.votingSystem) },
   });
 
+  const { data: backerMilestonesEnabled } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "backerMilestonesEnabled",
+    query: { enabled: Boolean(contracts.votingSystem) },
+  });
+
+  const { data: backerInitialPayout } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "BACKER_INITIAL_PAYOUT_PERCENT",
+    query: { enabled: Boolean(contracts.grantManager) },
+  });
+
+  const { data: backerMilestoneQuorumBps } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "BACKER_MILESTONE_QUORUM_BPS",
+    query: { enabled: Boolean(contracts.grantManager) },
+  });
+
+  const { data: backerMinApproveBackers } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "BACKER_MIN_APPROVE_BACKERS",
+    query: { enabled: Boolean(contracts.grantManager) },
+  });
+
+  const { data: backerMilestoneGraceWindow } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "BACKER_MILESTONE_GRACE_WINDOW",
+    query: { enabled: Boolean(contracts.grantManager) },
+  });
+
   const { data: totalIdeas } = useReadContract({
     address: contracts.ideaRegistry,
     abi: ideaRegistryAbi,
@@ -281,6 +316,23 @@ export default function ProtocolStatsPage() {
               </p>
               <p className="mt-1 text-xs text-slate-500">Voting access requires an active onchain verification record</p>
             </article>
+          </section>
+
+          <section className="rounded-2xl border border-cyan-300/20 bg-[linear-gradient(135deg,rgba(8,145,178,0.12),rgba(49,46,129,0.14))] p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">V2.3 Backer Milestones</p>
+                <h2 className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Live delivery safeguards</h2>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300">Applies to rounds started after V2.3 activation.</p>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mode</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerMilestonesEnabled === undefined ? "—" : backerMilestonesEnabled ? "Enabled" : "Disabled"}</p><p className="mt-1 text-xs text-slate-500">Winning pledgers validate proof</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Release Rail</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerInitialPayout === undefined ? "—" : `${backerInitialPayout.toString()} / 40 / 40`}</p><p className="mt-1 text-xs text-slate-500">Gross winning pledge allocation</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Proof Quorum</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerMilestoneQuorumBps === undefined ? "—" : `${Number(backerMilestoneQuorumBps) / 100}%`}</p><p className="mt-1 text-xs text-slate-500">Of total winning pledge weight</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Approval Floor</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">2/3 + {backerMinApproveBackers?.toString() ?? "—"}</p><p className="mt-1 text-xs text-slate-500">Participating weight + backers</p></article>
+            </div>
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Review window: 14 days. No quorum opens one {formatSeconds(backerMilestoneGraceWindow as bigint | undefined)} grace period; continued silence makes unreleased escrow refundable rather than releasing it automatically.</p>
           </section>
 
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

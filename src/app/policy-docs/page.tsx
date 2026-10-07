@@ -5,6 +5,7 @@ import { useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import {
   contracts,
+  grantManagerAbi,
   votingSystemAbi,
   fundingPoolAbi,
 } from "@/lib/contracts";
@@ -54,11 +55,18 @@ export default function PolicyDocsPage() {
     query: { enabled: Boolean(contracts.votingSystem) },
   });
 
-  const { data: maxVotersPerIdea } = useReadContract({
+  const { data: backerMilestonesEnabled } = useReadContract({
     address: contracts.votingSystem,
     abi: votingSystemAbi,
-    functionName: "MAX_VOTERS_PER_IDEA",
+    functionName: "backerMilestonesEnabled",
     query: { enabled: Boolean(contracts.votingSystem) },
+  });
+
+  const { data: backerMilestoneQuorumBps } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "BACKER_MILESTONE_QUORUM_BPS",
+    query: { enabled: Boolean(contracts.grantManager) },
   });
 
   const { data: pledgeFeeBps } = useReadContract({
@@ -136,7 +144,8 @@ export default function PolicyDocsPage() {
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">IDEAS_PER_ROUND</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{ideasPerRound?.toString() ?? "—"}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">VOTING_DURATION</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatSeconds(votingDuration as bigint | undefined)}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">minStake</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(minStake as bigint | undefined)} USDC</p></div>
-                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">MAX_VOTERS_PER_IDEA</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{maxVotersPerIdea?.toString() ?? "—"}</p></div>
+                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">V2.3 backer milestones</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{backerMilestonesEnabled === undefined ? "—" : backerMilestonesEnabled ? "Enabled" : "Disabled"}</p></div>
+                <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Backer proof quorum</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{backerMilestoneQuorumBps === undefined ? "—" : `${Number(backerMilestoneQuorumBps) / 100}%`}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">pledgeFeeBps</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{pledgeFeeBps === undefined ? "—" : `${Number(pledgeFeeBps) / 100}%`}</p></div>
                 <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 text-sm"><p className="text-slate-500">Pool Balance</p><p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(totalPoolBalance as bigint | undefined)} USDC</p></div>
               </div>
@@ -155,7 +164,7 @@ export default function PolicyDocsPage() {
             <section id="voting" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Voting Rules</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Voting is pledge-backed. A pledge is accepted only if all guardrails pass: active round, valid time window, <code>minStake</code> threshold, proposal included in that round, and no self-voting. One address can pledge once per round.
+                Voting is pledge-backed. A pledge is accepted only if all guardrails pass: active round, valid time window, <code>minStake</code> threshold, proposal included in that round, and no self-voting. One wallet can pledge once per round; winning participation credit is claimed individually after settlement, so V2.3 does not impose a 30-voter settlement cap.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Losing pledges are refundable. A proposal wins only when its gross pledge total is highest among viable proposals and remains at or above its declared <code>minimumNetFunding</code> after the round fee.
@@ -175,7 +184,7 @@ export default function PolicyDocsPage() {
             <section id="grants" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Grant Distribution Policy</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Treasury flow is separated by responsibility: Funding Pool holds pledge escrow and Grant Manager executes the 30/40/30 release schedule under eligibility checks. The configured <code>pledgeFeeBps</code> is withheld only from a selected winner and is finalized to protocol reserve after the grant is claimed.
+                Treasury flow is separated by responsibility: Funding Pool holds idea-specific pledge escrow and Grant Manager executes the V2.3 20/40/40 release schedule. The first tranche is author-claimed; later tranches require a 40% winning-weight quorum, two-thirds approval of participating weight, and three approving backers. The configured <code>pledgeFeeBps</code> is reserved proportionally as author tranches are claimed.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 The protocol policy is to prefer explicit payout traceability over implicit off-chain accounting. Every critical transfer path should remain externally auditable.
