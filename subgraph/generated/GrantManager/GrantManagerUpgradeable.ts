@@ -10,6 +10,100 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
+export class BackerMilestoneGraceStarted extends ethereum.Event {
+  get params(): BackerMilestoneGraceStarted__Params {
+    return new BackerMilestoneGraceStarted__Params(this);
+  }
+}
+
+export class BackerMilestoneGraceStarted__Params {
+  _event: BackerMilestoneGraceStarted;
+
+  constructor(event: BackerMilestoneGraceStarted) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
+
+  get requestId(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get graceDeadline(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+}
+
+export class BackerMilestoneProofHashCommitted extends ethereum.Event {
+  get params(): BackerMilestoneProofHashCommitted__Params {
+    return new BackerMilestoneProofHashCommitted__Params(this);
+  }
+}
+
+export class BackerMilestoneProofHashCommitted__Params {
+  _event: BackerMilestoneProofHashCommitted;
+
+  constructor(event: BackerMilestoneProofHashCommitted) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
+
+  get requestId(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get proofHash(): Bytes {
+    return this._event.parameters[3].value.toBytes();
+  }
+}
+
+export class BackerMilestoneVoteCast extends ethereum.Event {
+  get params(): BackerMilestoneVoteCast__Params {
+    return new BackerMilestoneVoteCast__Params(this);
+  }
+}
+
+export class BackerMilestoneVoteCast__Params {
+  _event: BackerMilestoneVoteCast;
+
+  constructor(event: BackerMilestoneVoteCast) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
+
+  get backer(): Address {
+    return this._event.parameters[2].value.toAddress();
+  }
+
+  get approved(): boolean {
+    return this._event.parameters[3].value.toBoolean();
+  }
+
+  get weight(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
+}
+
 export class FundingPoolUpdated extends ethereum.Event {
   get params(): FundingPoolUpdated__Params {
     return new FundingPoolUpdated__Params(this);
@@ -393,6 +487,45 @@ export class GrantManagerUpgradeable__canClaimGrantResult {
   }
 }
 
+export class GrantManagerUpgradeable__getBackerMilestoneTallyResult {
+  value0: BigInt;
+  value1: BigInt;
+  value2: BigInt;
+  value3: BigInt;
+
+  constructor(value0: BigInt, value1: BigInt, value2: BigInt, value3: BigInt) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    return map;
+  }
+
+  getApproveWeight(): BigInt {
+    return this.value0;
+  }
+
+  getRejectWeight(): BigInt {
+    return this.value1;
+  }
+
+  getApproveBackerCount(): BigInt {
+    return this.value2;
+  }
+
+  getGraceDeadline(): BigInt {
+    return this.value3;
+  }
+}
+
 export class GrantManagerUpgradeable__getGrantPayoutResult {
   value0: BigInt;
   value1: Address;
@@ -666,6 +799,98 @@ export class GrantManagerUpgradeable__previewGrantResult {
 export class GrantManagerUpgradeable extends ethereum.SmartContract {
   static bind(address: Address): GrantManagerUpgradeable {
     return new GrantManagerUpgradeable("GrantManagerUpgradeable", address);
+  }
+
+  BACKER_INITIAL_PAYOUT_PERCENT(): BigInt {
+    let result = super.call(
+      "BACKER_INITIAL_PAYOUT_PERCENT",
+      "BACKER_INITIAL_PAYOUT_PERCENT():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_BACKER_INITIAL_PAYOUT_PERCENT(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "BACKER_INITIAL_PAYOUT_PERCENT",
+      "BACKER_INITIAL_PAYOUT_PERCENT():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  BACKER_MILESTONE_GRACE_WINDOW(): BigInt {
+    let result = super.call(
+      "BACKER_MILESTONE_GRACE_WINDOW",
+      "BACKER_MILESTONE_GRACE_WINDOW():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_BACKER_MILESTONE_GRACE_WINDOW(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "BACKER_MILESTONE_GRACE_WINDOW",
+      "BACKER_MILESTONE_GRACE_WINDOW():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  BACKER_MILESTONE_QUORUM_BPS(): BigInt {
+    let result = super.call(
+      "BACKER_MILESTONE_QUORUM_BPS",
+      "BACKER_MILESTONE_QUORUM_BPS():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_BACKER_MILESTONE_QUORUM_BPS(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "BACKER_MILESTONE_QUORUM_BPS",
+      "BACKER_MILESTONE_QUORUM_BPS():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  BACKER_MIN_APPROVE_BACKERS(): BigInt {
+    let result = super.call(
+      "BACKER_MIN_APPROVE_BACKERS",
+      "BACKER_MIN_APPROVE_BACKERS():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_BACKER_MIN_APPROVE_BACKERS(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "BACKER_MIN_APPROVE_BACKERS",
+      "BACKER_MIN_APPROVE_BACKERS():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   COMPLETION_APPROVAL_THRESHOLD(): i32 {
@@ -1038,6 +1263,85 @@ export class GrantManagerUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  getBackerMilestoneProofHash(roundId: BigInt, stage: i32): Bytes {
+    let result = super.call(
+      "getBackerMilestoneProofHash",
+      "getBackerMilestoneProofHash(uint256,uint8):(bytes32)",
+      [
+        ethereum.Value.fromUnsignedBigInt(roundId),
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(stage)),
+      ],
+    );
+
+    return result[0].toBytes();
+  }
+
+  try_getBackerMilestoneProofHash(
+    roundId: BigInt,
+    stage: i32,
+  ): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "getBackerMilestoneProofHash",
+      "getBackerMilestoneProofHash(uint256,uint8):(bytes32)",
+      [
+        ethereum.Value.fromUnsignedBigInt(roundId),
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(stage)),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  getBackerMilestoneTally(
+    roundId: BigInt,
+    stage: i32,
+  ): GrantManagerUpgradeable__getBackerMilestoneTallyResult {
+    let result = super.call(
+      "getBackerMilestoneTally",
+      "getBackerMilestoneTally(uint256,uint8):(uint256,uint256,uint256,uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(roundId),
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(stage)),
+      ],
+    );
+
+    return new GrantManagerUpgradeable__getBackerMilestoneTallyResult(
+      result[0].toBigInt(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+    );
+  }
+
+  try_getBackerMilestoneTally(
+    roundId: BigInt,
+    stage: i32,
+  ): ethereum.CallResult<GrantManagerUpgradeable__getBackerMilestoneTallyResult> {
+    let result = super.tryCall(
+      "getBackerMilestoneTally",
+      "getBackerMilestoneTally(uint256,uint8):(uint256,uint256,uint256,uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(roundId),
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(stage)),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new GrantManagerUpgradeable__getBackerMilestoneTallyResult(
+        value[0].toBigInt(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+      ),
+    );
+  }
+
   getGrantPayout(
     roundId: BigInt,
   ): GrantManagerUpgradeable__getGrantPayoutResult {
@@ -1362,6 +1666,44 @@ export class CancelExpiredGrantCall__Outputs {
   }
 }
 
+export class CastBackerMilestoneVoteCall extends ethereum.Call {
+  get inputs(): CastBackerMilestoneVoteCall__Inputs {
+    return new CastBackerMilestoneVoteCall__Inputs(this);
+  }
+
+  get outputs(): CastBackerMilestoneVoteCall__Outputs {
+    return new CastBackerMilestoneVoteCall__Outputs(this);
+  }
+}
+
+export class CastBackerMilestoneVoteCall__Inputs {
+  _call: CastBackerMilestoneVoteCall;
+
+  constructor(call: CastBackerMilestoneVoteCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._call.inputValues[1].value.toI32();
+  }
+
+  get approved(): boolean {
+    return this._call.inputValues[2].value.toBoolean();
+  }
+}
+
+export class CastBackerMilestoneVoteCall__Outputs {
+  _call: CastBackerMilestoneVoteCall;
+
+  constructor(call: CastBackerMilestoneVoteCall) {
+    this._call = call;
+  }
+}
+
 export class ClaimGrantCall extends ethereum.Call {
   get inputs(): ClaimGrantCall__Inputs {
     return new ClaimGrantCall__Inputs(this);
@@ -1452,6 +1794,40 @@ export class ExpireUnclaimedGrantCall__Outputs {
   _call: ExpireUnclaimedGrantCall;
 
   constructor(call: ExpireUnclaimedGrantCall) {
+    this._call = call;
+  }
+}
+
+export class FinalizeBackerMilestoneCall extends ethereum.Call {
+  get inputs(): FinalizeBackerMilestoneCall__Inputs {
+    return new FinalizeBackerMilestoneCall__Inputs(this);
+  }
+
+  get outputs(): FinalizeBackerMilestoneCall__Outputs {
+    return new FinalizeBackerMilestoneCall__Outputs(this);
+  }
+}
+
+export class FinalizeBackerMilestoneCall__Inputs {
+  _call: FinalizeBackerMilestoneCall;
+
+  constructor(call: FinalizeBackerMilestoneCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._call.inputValues[1].value.toI32();
+  }
+}
+
+export class FinalizeBackerMilestoneCall__Outputs {
+  _call: FinalizeBackerMilestoneCall;
+
+  constructor(call: FinalizeBackerMilestoneCall) {
     this._call = call;
   }
 }
@@ -1648,6 +2024,52 @@ export class SetVotingSystemCall__Outputs {
   _call: SetVotingSystemCall;
 
   constructor(call: SetVotingSystemCall) {
+    this._call = call;
+  }
+}
+
+export class SubmitBackerMilestoneProofCall extends ethereum.Call {
+  get inputs(): SubmitBackerMilestoneProofCall__Inputs {
+    return new SubmitBackerMilestoneProofCall__Inputs(this);
+  }
+
+  get outputs(): SubmitBackerMilestoneProofCall__Outputs {
+    return new SubmitBackerMilestoneProofCall__Outputs(this);
+  }
+}
+
+export class SubmitBackerMilestoneProofCall__Inputs {
+  _call: SubmitBackerMilestoneProofCall;
+
+  constructor(call: SubmitBackerMilestoneProofCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get stage(): i32 {
+    return this._call.inputValues[1].value.toI32();
+  }
+
+  get metadataURI(): string {
+    return this._call.inputValues[2].value.toString();
+  }
+
+  get details(): string {
+    return this._call.inputValues[3].value.toString();
+  }
+
+  get proofHash(): Bytes {
+    return this._call.inputValues[4].value.toBytes();
+  }
+}
+
+export class SubmitBackerMilestoneProofCall__Outputs {
+  _call: SubmitBackerMilestoneProofCall;
+
+  constructor(call: SubmitBackerMilestoneProofCall) {
     this._call = call;
   }
 }

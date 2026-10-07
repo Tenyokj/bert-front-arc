@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "sync:v2-artifacts": "node scripts/sync-v2-artifacts.mjs",
     "sync:v3-artifact": "node scripts/sync-v3-community-artifact.mjs"
   },
   "dependencies": {

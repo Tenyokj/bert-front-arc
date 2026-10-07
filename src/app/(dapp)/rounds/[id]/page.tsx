@@ -97,6 +97,8 @@ function prettyRoundError(message?: string) {
   if (message.includes("AlreadyDistributed")) return "Initial 30% has already been claimed for this winning idea.";
   if (message.includes("NotAuthor")) return "Only the winning idea author can claim the initial 30%.";
   if (message.includes("NoWinner")) return "There is no winning idea yet for this round.";
+  if (message.includes("WinningParticipationUnavailable")) return "This wallet does not have an eligible winning pledge for participation credit.";
+  if (message.includes("WinningParticipationAlreadyClaimed")) return "Participation credit was already claimed by this wallet.";
   if (message.includes("PledgeRefundUnavailable")) return "This pledge is not refundable in the current funding-round state.";
   if (message.includes("FundingTargetNotMet")) return "No proposal reached its required post-fee funding target, so the round will settle without a winner.";
   if (message.includes("Internal error")) return "Transaction reverted by contract rules. Check round state and wallet permissions.";
@@ -170,6 +172,16 @@ export default function RoundDetailsPage() {
   const sendRefund = writeRefund as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isRefundConfirming, isSuccess: isRefundConfirmed } = useWaitForTransactionReceipt({
     hash: refundTxHash,
+  });
+  const {
+    data: participationTxHash,
+    isPending: isParticipationPending,
+    error: participationError,
+    writeContract: writeParticipation,
+  } = useWriteContract();
+  const sendParticipation = writeParticipation as unknown as (variables: Record<string, unknown>) => void;
+  const { isLoading: isParticipationConfirming, isSuccess: isParticipationConfirmed } = useWaitForTransactionReceipt({
+    hash: participationTxHash,
   });
 
   const roundId = Number(params?.id);
@@ -253,6 +265,20 @@ export default function RoundDetailsPage() {
     args: Number.isFinite(roundId) ? [BigInt(roundId)] : undefined,
     query: { enabled: Boolean(contracts.fundingPool && Number.isFinite(roundId)) },
   });
+  const { data: isBackerMilestoneRoundRaw } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "isBackerMilestoneRound",
+    args: Number.isFinite(roundId) ? [BigInt(roundId)] : undefined,
+    query: { enabled: Boolean(contracts.votingSystem && Number.isFinite(roundId)) },
+  });
+  const { data: winningParticipationClaimedRaw, refetch: refetchWinningParticipation } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "winningParticipationClaimed",
+    args: Number.isFinite(roundId) && address ? [BigInt(roundId), address] : undefined,
+    query: { enabled: Boolean(contracts.votingSystem && Number.isFinite(roundId) && address) },
+  });
   const minStakeValue = minStake as bigint | undefined;
   const maxVoteAmountValue = maxVoteAmount as bigint | undefined;
   const allowanceValue = allowance as bigint | undefined;
@@ -267,6 +293,8 @@ export default function RoundDetailsPage() {
       }
     : { opened: false, settled: false, winningIdeaId: 0n };
   const grantRefundActive = Boolean(grantRefundActiveRaw);
+  const isBackerMilestoneRound = Boolean(isBackerMilestoneRoundRaw);
+  const winningParticipationClaimed = Boolean(winningParticipationClaimedRaw);
   const normalizedAddress = address?.toLowerCase() ?? null;
 
   const canClaimGrant = Array.isArray(canClaimGrantRaw) ? Boolean(canClaimGrantRaw[0]) : false;
@@ -284,6 +312,7 @@ export default function RoundDetailsPage() {
     hasPledge &&
     !pledge.refundClaimed &&
     (fundingRoundSettlement.winningIdeaId === 0n || !pledgeWon || grantRefundActive);
+  const canClaimWinningParticipation = Boolean(round?.ended && pledgeWon && !grantRefundActive && !winningParticipationClaimed);
 
   useEffect(() => {
     if (!isApproveConfirmed) return;
@@ -299,6 +328,11 @@ export default function RoundDetailsPage() {
     if (!isRefundConfirmed) return;
     void Promise.all([refetchPledge(), refetchTokenBalance()]);
   }, [isRefundConfirmed, refetchPledge, refetchTokenBalance]);
+
+  useEffect(() => {
+    if (!isParticipationConfirmed) return;
+    void refetchWinningParticipation();
+  }, [isParticipationConfirmed, refetchWinningParticipation]);
 
   useEffect(() => {
     setAllowanceOwner(null);
@@ -650,7 +684,16 @@ export default function RoundDetailsPage() {
               }}
               className="rounded-lg bg-emerald-500/90 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isClaimPending ? "Awaiting signature..." : isClaimConfirming ? "Claiming..." : "Claim Initial 30%"}
+              {isClaimPending ? "Awaiting signature..." : isClaimConfirming ? "Claiming..." : `Claim Initial ${isBackerMilestoneRound ? "20" : "30"}%`}
+            </button>
+          ) : null}
+          {canClaimWinningParticipation ? (
+            <button
+              disabled={!isConnected || isParticipationPending || isParticipationConfirming}
+              onClick={() => sendParticipation({ address: contracts.votingSystem!, abi: votingSystemAbi, functionName: "claimWinningParticipation", args: [BigInt(round.id)], gas: 500_000n })}
+              className="rounded-lg border border-cyan-300/40 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isParticipationPending ? "Awaiting signature..." : isParticipationConfirming ? "Claiming..." : "Claim winning participation"}
             </button>
           ) : null}
         </div>
@@ -667,6 +710,8 @@ export default function RoundDetailsPage() {
         {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Claim transaction reference: {claimTxHash}</p>}
         {endError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(endError.message)}</p>}
         {endTxHash && <p className="mt-2 break-all text-xs text-slate-300">Round-finalization transaction reference: {endTxHash}</p>}
+        {participationError?.message && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyRoundError(participationError.message)}</p>}
+        {participationTxHash && <p className="mt-2 break-all text-xs text-slate-300">Participation transaction reference: {participationTxHash}</p>}
         {contracts.grantManager && (
           <p className="mt-2 text-xs text-slate-300">
             Grant claim status: {canClaimByWallet ? "eligible for this connected wallet" : "not yet available for this connected wallet"}
@@ -679,7 +724,9 @@ export default function RoundDetailsPage() {
         )}
         {round.winningIdeaId > 0n && (
           <p className="mt-2 text-xs text-slate-300">
-            New payout flow: claim 30% here, then submit and review milestone proofs on the winning idea page for the 40% in-process and final 30% release.
+            {isBackerMilestoneRound
+              ? "V2.3 flow: the winner claims 20%, then winning pledgers review two 40% milestones on the idea page."
+              : "Legacy flow: claim 30% here, then submit and review milestone proofs on the winning idea page for the 40% in-process and final 30% release."}
           </p>
         )}
         {contracts.usdc && contracts.fundingPool && (

@@ -494,6 +494,19 @@ export class Round extends Entity {
     this.set("distributedAmount", Value.fromBigInt(value));
   }
 
+  get backerMilestones(): boolean {
+    let value = this.get("backerMilestones");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set backerMilestones(value: boolean) {
+    this.set("backerMilestones", Value.fromBoolean(value));
+  }
+
   get createdAtBlock(): BigInt {
     let value = this.get("createdAtBlock");
     if (!value || value.kind == ValueKind.NULL) {
@@ -709,6 +722,32 @@ export class Idea extends Entity {
 
   set minimumNetFunding(value: BigInt) {
     this.set("minimumNetFunding", Value.fromBigInt(value));
+  }
+
+  get milestonePlanURI(): string {
+    let value = this.get("milestonePlanURI");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set milestonePlanURI(value: string) {
+    this.set("milestonePlanURI", Value.fromString(value));
+  }
+
+  get milestonePlanHash(): Bytes {
+    let value = this.get("milestonePlanHash");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set milestonePlanHash(value: Bytes) {
+    this.set("milestonePlanHash", Value.fromBytes(value));
   }
 
   get reviewCount(): i32 {
@@ -1925,6 +1964,71 @@ export class MilestoneRequest extends Entity {
 
   set lastReviewApproved(value: boolean) {
     this.set("lastReviewApproved", Value.fromBoolean(value));
+  }
+
+  get proofHash(): Bytes {
+    let value = this.get("proofHash");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set proofHash(value: Bytes) {
+    this.set("proofHash", Value.fromBytes(value));
+  }
+
+  get backerApproveWeight(): BigInt {
+    let value = this.get("backerApproveWeight");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set backerApproveWeight(value: BigInt) {
+    this.set("backerApproveWeight", Value.fromBigInt(value));
+  }
+
+  get backerRejectWeight(): BigInt {
+    let value = this.get("backerRejectWeight");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set backerRejectWeight(value: BigInt) {
+    this.set("backerRejectWeight", Value.fromBigInt(value));
+  }
+
+  get backerApproveCount(): BigInt {
+    let value = this.get("backerApproveCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set backerApproveCount(value: BigInt) {
+    this.set("backerApproveCount", Value.fromBigInt(value));
+  }
+
+  get graceDeadline(): BigInt {
+    let value = this.get("graceDeadline");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set graceDeadline(value: BigInt) {
+    this.set("graceDeadline", Value.fromBigInt(value));
   }
 
   get createdAtBlock(): BigInt {

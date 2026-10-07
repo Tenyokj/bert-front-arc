@@ -46,6 +46,36 @@ export class ConditionalPledgeMigrationInitialized__Params {
   }
 }
 
+export class FundingMilestonePlanCommitted extends ethereum.Event {
+  get params(): FundingMilestonePlanCommitted__Params {
+    return new FundingMilestonePlanCommitted__Params(this);
+  }
+}
+
+export class FundingMilestonePlanCommitted__Params {
+  _event: FundingMilestonePlanCommitted;
+
+  constructor(event: FundingMilestonePlanCommitted) {
+    this._event = event;
+  }
+
+  get ideaId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get author(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get planURI(): string {
+    return this._event.parameters[2].value.toString();
+  }
+
+  get planHash(): Bytes {
+    return this._event.parameters[3].value.toBytes();
+  }
+}
+
 export class FundingPoolUpdated extends ethereum.Event {
   get params(): FundingPoolUpdated__Params {
     return new FundingPoolUpdated__Params(this);
@@ -681,6 +711,56 @@ export class IdeaRegistryUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  fundingMilestonePlanHashByIdea(param0: BigInt): Bytes {
+    let result = super.call(
+      "fundingMilestonePlanHashByIdea",
+      "fundingMilestonePlanHashByIdea(uint256):(bytes32)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBytes();
+  }
+
+  try_fundingMilestonePlanHashByIdea(
+    param0: BigInt,
+  ): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "fundingMilestonePlanHashByIdea",
+      "fundingMilestonePlanHashByIdea(uint256):(bytes32)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  fundingMilestonePlanURIByIdea(param0: BigInt): string {
+    let result = super.call(
+      "fundingMilestonePlanURIByIdea",
+      "fundingMilestonePlanURIByIdea(uint256):(string)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toString();
+  }
+
+  try_fundingMilestonePlanURIByIdea(
+    param0: BigInt,
+  ): ethereum.CallResult<string> {
+    let result = super.tryCall(
+      "fundingMilestonePlanURIByIdea",
+      "fundingMilestonePlanURIByIdea(uint256):(string)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toString());
+  }
+
   fundingPool(): Address {
     let result = super.call("fundingPool", "fundingPool():(address)", []);
 
@@ -891,6 +971,29 @@ export class IdeaRegistryUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toI32());
+  }
+
+  hasFundingMilestonePlan(ideaId: BigInt): boolean {
+    let result = super.call(
+      "hasFundingMilestonePlan",
+      "hasFundingMilestonePlan(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(ideaId)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_hasFundingMilestonePlan(ideaId: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "hasFundingMilestonePlan",
+      "hasFundingMilestonePlan(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(ideaId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
   humanOnlyIdeaCreation(): boolean {
@@ -1238,6 +1341,44 @@ export class AddVoteCall__Outputs {
   _call: AddVoteCall;
 
   constructor(call: AddVoteCall) {
+    this._call = call;
+  }
+}
+
+export class CommitFundingMilestonePlanCall extends ethereum.Call {
+  get inputs(): CommitFundingMilestonePlanCall__Inputs {
+    return new CommitFundingMilestonePlanCall__Inputs(this);
+  }
+
+  get outputs(): CommitFundingMilestonePlanCall__Outputs {
+    return new CommitFundingMilestonePlanCall__Outputs(this);
+  }
+}
+
+export class CommitFundingMilestonePlanCall__Inputs {
+  _call: CommitFundingMilestonePlanCall;
+
+  constructor(call: CommitFundingMilestonePlanCall) {
+    this._call = call;
+  }
+
+  get ideaId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get planURI(): string {
+    return this._call.inputValues[1].value.toString();
+  }
+
+  get planHash(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
+  }
+}
+
+export class CommitFundingMilestonePlanCall__Outputs {
+  _call: CommitFundingMilestonePlanCall;
+
+  constructor(call: CommitFundingMilestonePlanCall) {
     this._call = call;
   }
 }

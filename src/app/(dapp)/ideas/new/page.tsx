@@ -311,9 +311,9 @@ export default function NewIdeaPage() {
             </p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">3. Lock only the author bond</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">3. Commit a V2.3 milestone plan</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-200">
-              Your wallet approves only the author bond now. Funding is pledged by voters later, inside the round where the proposal competes.
+              After creation, open the proposal page and permanently commit a public plan URI and content hash. V2.3 rounds accept only ideas with this plan.
             </p>
           </div>
         </div>
@@ -416,6 +416,7 @@ export default function NewIdeaPage() {
               <p>Write enough context so a reviewer understands the value in under a minute.</p>
               <p>Include a public link to docs, deck, repo, or research if you have one.</p>
               <p>Set a realistic minimum funding target. It determines whether your proposal can become the round winner.</p>
+              <p>For V2.3, prepare a public milestone plan now. After creation, commit its URL and 32-byte content hash on the proposal page before the proposal enters a round.</p>
               <p>Make sure your wallet has enough USDC for the author bond and gas.</p>
             </div>
           </div>
@@ -496,7 +497,7 @@ export default function NewIdeaPage() {
         {createTxHash && <p className="mt-3 break-all text-xs text-slate-300">Submission transaction reference: {createTxHash}</p>}
         {isCreateSuccess && (
           <p className="mt-3 text-sm font-semibold text-emerald-300">
-            Funding proposal created successfully. Its author bond is locked on-chain; the funding target will be evaluated when a round settles.
+            Funding proposal created successfully. Its author bond is locked on-chain; open the new proposal from the ideas list and commit its milestone plan before it enters a V2.3 round.
           </p>
         )}
       </div>

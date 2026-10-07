@@ -35,6 +35,7 @@ type Round @entity(immutable: false) {
   refundedAmount: BigInt!
   fundingReserved: BigInt!
   distributedAmount: BigInt!
+  backerMilestones: Boolean!
   createdAtBlock: BigInt!
   updatedAtBlock: BigInt!
 }
@@ -52,6 +53,8 @@ type Idea @entity(immutable: false) {
   isLowQuality: Boolean!
   authorStake: BigInt!
   minimumNetFunding: BigInt!
+  milestonePlanURI: String!
+  milestonePlanHash: Bytes!
   reviewCount: Int!
   roundId: BigInt
   round: Round
@@ -148,6 +151,11 @@ type MilestoneRequest @entity(immutable: false) {
   lastReviewedAt: BigInt
   lastReviewer: Bytes
   lastReviewApproved: Boolean
+  proofHash: Bytes!
+  backerApproveWeight: BigInt!
+  backerRejectWeight: BigInt!
+  backerApproveCount: BigInt!
+  graceDeadline: BigInt!
   createdAtBlock: BigInt!
   updatedAtBlock: BigInt!
 }
