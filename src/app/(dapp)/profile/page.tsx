@@ -345,10 +345,10 @@ function ProfilePageContent() {
           <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 md:p-6">
             <h2 className="font-[var(--font-display)] text-3xl text-white">Grant release flow</h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-300">
-              Funded ideas now move through a staged payout pipeline: 30% after grant claim, 40% after in-process proof approval, and the final 30% after launch proof approval.
+              Legacy V2.2 grants use the reviewer-gated 30% / 40% / 30% flow. New V2.3 rounds use 20% / 40% / 40% and let only the winning idea&apos;s pledgers validate milestone proof with pledge-weighted voting.
             </p>
             <p className="mt-2 text-sm text-slate-400">
-              Use each idea page to submit proof materials and, if you have Reviewer role, validate milestone requests.
+              Open a winning idea to see the on-chain round mode, its committed milestone plan, proof package, and the validation rights available to your wallet.
             </p>
           </div>
 

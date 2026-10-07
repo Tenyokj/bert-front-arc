@@ -10,6 +10,24 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
+export class BackerMilestonesEnabledUpdated extends ethereum.Event {
+  get params(): BackerMilestonesEnabledUpdated__Params {
+    return new BackerMilestonesEnabledUpdated__Params(this);
+  }
+}
+
+export class BackerMilestonesEnabledUpdated__Params {
+  _event: BackerMilestonesEnabledUpdated;
+
+  constructor(event: BackerMilestonesEnabledUpdated) {
+    this._event = event;
+  }
+
+  get enabled(): boolean {
+    return this._event.parameters[0].value.toBoolean();
+  }
+}
+
 export class FundingPoolUpdated extends ethereum.Event {
   get params(): FundingPoolUpdated__Params {
     return new FundingPoolUpdated__Params(this);
@@ -348,6 +366,28 @@ export class VotingSystemInitialized__Params {
   }
 }
 
+export class WinningParticipationClaimed extends ethereum.Event {
+  get params(): WinningParticipationClaimed__Params {
+    return new WinningParticipationClaimed__Params(this);
+  }
+}
+
+export class WinningParticipationClaimed__Params {
+  _event: WinningParticipationClaimed;
+
+  constructor(event: WinningParticipationClaimed) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get voter(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+}
+
 export class VotingSystemUpgradeable__canStartNewRoundResult {
   value0: boolean;
   value1: string;
@@ -535,29 +575,6 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  MAX_VOTERS_PER_IDEA(): BigInt {
-    let result = super.call(
-      "MAX_VOTERS_PER_IDEA",
-      "MAX_VOTERS_PER_IDEA():(uint256)",
-      [],
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_MAX_VOTERS_PER_IDEA(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "MAX_VOTERS_PER_IDEA",
-      "MAX_VOTERS_PER_IDEA():(uint256)",
-      [],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   VOTING_DURATION(): BigInt {
     let result = super.call(
       "VOTING_DURATION",
@@ -579,6 +596,75 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  backerHumanVerifierByRound(param0: BigInt): Address {
+    let result = super.call(
+      "backerHumanVerifierByRound",
+      "backerHumanVerifierByRound(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_backerHumanVerifierByRound(param0: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "backerHumanVerifierByRound",
+      "backerHumanVerifierByRound(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  backerMilestonesByRound(param0: BigInt): boolean {
+    let result = super.call(
+      "backerMilestonesByRound",
+      "backerMilestonesByRound(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_backerMilestonesByRound(param0: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "backerMilestonesByRound",
+      "backerMilestonesByRound(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  backerMilestonesEnabled(): boolean {
+    let result = super.call(
+      "backerMilestonesEnabled",
+      "backerMilestonesEnabled():(bool)",
+      [],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_backerMilestonesEnabled(): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "backerMilestonesEnabled",
+      "backerMilestonesEnabled():(bool)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
   canStartNewRound(): VotingSystemUpgradeable__canStartNewRoundResult {
@@ -924,6 +1010,29 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  isBackerMilestoneRound(roundId: BigInt): boolean {
+    let result = super.call(
+      "isBackerMilestoneRound",
+      "isBackerMilestoneRound(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(roundId)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isBackerMilestoneRound(roundId: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isBackerMilestoneRound",
+      "isBackerMilestoneRound(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(roundId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
   isPaused(): boolean {
     let result = super.call("isPaused", "isPaused():(bool)", []);
 
@@ -1082,6 +1191,38 @@ export class VotingSystemUpgradeable extends ethereum.SmartContract {
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
+
+  winningParticipationClaimed(param0: BigInt, param1: Address): boolean {
+    let result = super.call(
+      "winningParticipationClaimed",
+      "winningParticipationClaimed(uint256,address):(bool)",
+      [
+        ethereum.Value.fromUnsignedBigInt(param0),
+        ethereum.Value.fromAddress(param1),
+      ],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_winningParticipationClaimed(
+    param0: BigInt,
+    param1: Address,
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "winningParticipationClaimed",
+      "winningParticipationClaimed(uint256,address):(bool)",
+      [
+        ethereum.Value.fromUnsignedBigInt(param0),
+        ethereum.Value.fromAddress(param1),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
 }
 
 export class ConstructorCall extends ethereum.Call {
@@ -1106,6 +1247,36 @@ export class ConstructorCall__Outputs {
   _call: ConstructorCall;
 
   constructor(call: ConstructorCall) {
+    this._call = call;
+  }
+}
+
+export class ClaimWinningParticipationCall extends ethereum.Call {
+  get inputs(): ClaimWinningParticipationCall__Inputs {
+    return new ClaimWinningParticipationCall__Inputs(this);
+  }
+
+  get outputs(): ClaimWinningParticipationCall__Outputs {
+    return new ClaimWinningParticipationCall__Outputs(this);
+  }
+}
+
+export class ClaimWinningParticipationCall__Inputs {
+  _call: ClaimWinningParticipationCall;
+
+  constructor(call: ClaimWinningParticipationCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class ClaimWinningParticipationCall__Outputs {
+  _call: ClaimWinningParticipationCall;
+
+  constructor(call: ClaimWinningParticipationCall) {
     this._call = call;
   }
 }
@@ -1212,6 +1383,36 @@ export class PauseCall__Outputs {
   _call: PauseCall;
 
   constructor(call: PauseCall) {
+    this._call = call;
+  }
+}
+
+export class SetBackerMilestonesEnabledCall extends ethereum.Call {
+  get inputs(): SetBackerMilestonesEnabledCall__Inputs {
+    return new SetBackerMilestonesEnabledCall__Inputs(this);
+  }
+
+  get outputs(): SetBackerMilestonesEnabledCall__Outputs {
+    return new SetBackerMilestonesEnabledCall__Outputs(this);
+  }
+}
+
+export class SetBackerMilestonesEnabledCall__Inputs {
+  _call: SetBackerMilestonesEnabledCall;
+
+  constructor(call: SetBackerMilestonesEnabledCall) {
+    this._call = call;
+  }
+
+  get enabled(): boolean {
+    return this._call.inputValues[0].value.toBoolean();
+  }
+}
+
+export class SetBackerMilestonesEnabledCall__Outputs {
+  _call: SetBackerMilestonesEnabledCall;
+
+  constructor(call: SetBackerMilestonesEnabledCall) {
     this._call = call;
   }
 }

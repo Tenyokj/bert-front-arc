@@ -15,6 +15,7 @@ import {
 import { AddressIdentity } from "@/components/AddressIdentity";
 import {
   contracts,
+  fundingPoolAbi,
   grantManagerAbi,
   ideaRegistryAbi,
   rolesRegistryAbi,
@@ -92,6 +93,13 @@ type VotingRoundInfo = {
   winningVotes: bigint;
 };
 
+type BackerMilestoneTally = {
+  approveWeight: bigint;
+  rejectWeight: bigint;
+  approveBackerCount: bigint;
+  graceDeadline: bigint;
+};
+
 const IN_PROCESS_STAGE = 1;
 const COMPLETION_STAGE = 2;
 
@@ -140,6 +148,21 @@ function prettyTxError(message?: string) {
   if (message.includes("MilestoneCooldownActive")) {
     return "This milestone was recently rejected. Wait for the cooldown before resubmitting proof.";
   }
+  if (message.includes("MilestonePlanMissing")) {
+    return "This V2.3 round requires a committed milestone plan for every participating idea.";
+  }
+  if (message.includes("MilestonePlanAlreadyCommitted")) {
+    return "A milestone plan is already committed for this idea and cannot be replaced.";
+  }
+  if (message.includes("BackerMilestoneVotingRequired")) {
+    return "This V2.3 round is reviewed by winning pledgers, not protocol reviewers.";
+  }
+  if (message.includes("BackerMilestoneVoteUnavailable")) {
+    return "Only wallets that pledged to the winning idea may vote on this milestone.";
+  }
+  if (message.includes("BackerMilestoneFinalizationTooEarly")) {
+    return "The 14-day backer review window is still open.";
+  }
   if (message.includes("CannotReviewOwnIdea")) {
     return "Idea author cannot review their own milestone proof.";
   }
@@ -150,6 +173,10 @@ function prettyTxError(message?: string) {
     return "Transaction reverted by contract rules. Check role, idea status, and payout phase.";
   }
   return message;
+}
+
+function isBytes32(value: string) {
+  return /^0x[0-9a-fA-F]{64}$/.test(value.trim());
 }
 
 function toGrantPayout(row: unknown): GrantPayout {
@@ -199,6 +226,113 @@ function toVotingRoundInfo(row: unknown): VotingRoundInfo {
     winningIdeaId: pickField<bigint>(row, 7, "winningIdeaId", 0n),
     winningVotes: pickField<bigint>(row, 8, "winningVotes", 0n),
   };
+}
+
+function toBackerMilestoneTally(row: unknown): BackerMilestoneTally {
+  return {
+    approveWeight: pickField<bigint>(row, 0, "approveWeight", 0n),
+    rejectWeight: pickField<bigint>(row, 1, "rejectWeight", 0n),
+    approveBackerCount: pickField<bigint>(row, 2, "approveBackerCount", 0n),
+    graceDeadline: pickField<bigint>(row, 3, "graceDeadline", 0n),
+  };
+}
+
+function BackerMilestoneCard({
+  stage,
+  request,
+  tally,
+  proofHash,
+  authorView,
+  pledgerView,
+  metadataURI,
+  onMetadataURIChange,
+  details,
+  onDetailsChange,
+  proofHashInput,
+  onProofHashInputChange,
+  onSubmit,
+  onVote,
+  onFinalize,
+  submitBusy,
+  voteBusy,
+  finalizeBusy,
+}: {
+  stage: number;
+  request: MilestoneRequest;
+  tally: BackerMilestoneTally;
+  proofHash: string;
+  authorView: boolean;
+  pledgerView: boolean;
+  metadataURI: string;
+  onMetadataURIChange: (value: string) => void;
+  details: string;
+  onDetailsChange: (value: string) => void;
+  proofHashInput: string;
+  onProofHashInputChange: (value: string) => void;
+  onSubmit: () => void;
+  onVote: (approved: boolean) => void;
+  onFinalize: () => void;
+  submitBusy: boolean;
+  voteBusy: boolean;
+  finalizeBusy: boolean;
+}) {
+  const participation = tally.approveWeight + tally.rejectWeight;
+  const reviewEndsAt = request.submittedAt + 14n * 24n * 60n * 60n;
+
+  return (
+    <div className="rounded-2xl border border-cyan-300/25 bg-[#232632] p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h4 className="text-lg font-semibold text-white">{mapMilestoneStage(stage)}</h4>
+          <p className="mt-1 text-xs text-cyan-100">V2.3 backer vote: 40% pledge-weighted quorum, then 2/3 approval.</p>
+        </div>
+        <span className="rounded-full border border-cyan-300/35 bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-200">
+          Stage {stage}
+        </span>
+      </div>
+
+      <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
+        <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Status: {request.active ? "Backer review open" : request.requestId > 0n ? "Settled" : "Not submitted"}</p>
+        <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Review ends: {request.active ? formatDateTimeFromUnix(reviewEndsAt) : "-"}</p>
+        <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Approve weight: {formatTokenAmount(tally.approveWeight)} USDC</p>
+        <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Reject weight: {formatTokenAmount(tally.rejectWeight)} USDC</p>
+        <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Participating weight: {formatTokenAmount(participation)} USDC</p>
+        <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Approve backers: {tally.approveBackerCount.toString()}/3 minimum</p>
+      </div>
+
+      {request.metadataURI ? (
+        <div className="mt-3 rounded-xl border border-white/10 bg-[#1d202b] p-3 text-sm text-slate-300">
+          <p className="font-semibold text-slate-100">Proof package</p>
+          <a href={request.metadataURI} target="_blank" rel="noreferrer" className="mt-2 block break-all text-cyan-200 hover:text-cyan-100">{request.metadataURI}</a>
+          {request.details ? <p className="mt-2 leading-relaxed">{request.details}</p> : null}
+          {proofHash !== "0x0000000000000000000000000000000000000000000000000000000000000000" ? <p className="mt-2 break-all text-xs text-slate-400">Content hash: {proofHash}</p> : null}
+        </div>
+      ) : null}
+
+      {authorView ? (
+        <div className="mt-4 grid gap-2">
+          <input value={metadataURI} onChange={(event) => onMetadataURIChange(event.target.value)} placeholder="Proof package URL: IPFS, GitHub, Notion, etc." className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60" />
+          <textarea value={details} onChange={(event) => onDetailsChange(event.target.value)} placeholder="Short release notes and exactly what backers should verify" className="min-h-24 rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60" />
+          <input value={proofHashInput} onChange={(event) => onProofHashInputChange(event.target.value)} placeholder="0x... 32-byte hash of the proof package" className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2 font-mono text-sm text-slate-100 outline-none focus:border-cyan-400/60" />
+          <button type="button" disabled={submitBusy || request.active || !metadataURI.trim() || !isBytes32(proofHashInput)} onClick={onSubmit} className="rounded-lg bg-indigo-500/90 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            {submitBusy ? "Submitting..." : request.active ? "Proof already active" : `Open ${mapMilestoneStage(stage)} review`}
+          </button>
+        </div>
+      ) : null}
+
+      {pledgerView && request.active ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" disabled={voteBusy} onClick={() => onVote(true)} className="rounded-lg border border-emerald-300/45 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60">{voteBusy ? "Submitting..." : "Approve with my pledge"}</button>
+          <button type="button" disabled={voteBusy} onClick={() => onVote(false)} className="rounded-lg border border-rose-300/45 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 disabled:cursor-not-allowed disabled:opacity-60">{voteBusy ? "Submitting..." : "Reject with my pledge"}</button>
+        </div>
+      ) : null}
+
+      {request.active ? (
+        <button type="button" disabled={finalizeBusy} onClick={onFinalize} className="mt-4 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 disabled:cursor-not-allowed disabled:opacity-60">{finalizeBusy ? "Finalizing..." : "Finalize after review window"}</button>
+      ) : null}
+      {request.active && tally.graceDeadline > 0n ? <p className="mt-3 text-xs text-amber-200">Quorum was not reached. The author has until {formatDateTimeFromUnix(tally.graceDeadline)} to receive further participation; after that, anyone can finalize the cancellation and unlock refunds.</p> : null}
+    </div>
+  );
 }
 
 function MilestoneCard({
@@ -318,8 +452,12 @@ export default function IdeaDetailsPage() {
   const [reviewText, setReviewText] = useState("");
   const [stageOneMetadata, setStageOneMetadata] = useState("");
   const [stageOneDetails, setStageOneDetails] = useState("");
+  const [stageOneProofHash, setStageOneProofHash] = useState("");
   const [stageTwoMetadata, setStageTwoMetadata] = useState("");
   const [stageTwoDetails, setStageTwoDetails] = useState("");
+  const [stageTwoProofHash, setStageTwoProofHash] = useState("");
+  const [milestonePlanURI, setMilestonePlanURI] = useState("");
+  const [milestonePlanHash, setMilestonePlanHash] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -328,6 +466,18 @@ export default function IdeaDetailsPage() {
     isPending: isReviewPending,
     error: reviewError,
     writeContract: writeReview,
+  } = useWriteContract();
+  const {
+    data: planTxHash,
+    isPending: isPlanPending,
+    error: planError,
+    writeContract: writePlan,
+  } = useWriteContract();
+  const {
+    data: backerFinalizeTxHash,
+    isPending: isBackerFinalizePending,
+    error: backerFinalizeError,
+    writeContract: writeBackerFinalize,
   } = useWriteContract();
   const {
     data: markTxHash,
@@ -359,12 +509,16 @@ export default function IdeaDetailsPage() {
   const sendClaim = writeClaim as unknown as (variables: Record<string, unknown>) => void;
   const sendMilestoneSubmit = writeMilestoneSubmit as unknown as (variables: Record<string, unknown>) => void;
   const sendMilestoneReview = writeMilestoneReview as unknown as (variables: Record<string, unknown>) => void;
+  const sendPlan = writePlan as unknown as (variables: Record<string, unknown>) => void;
+  const sendBackerFinalize = writeBackerFinalize as unknown as (variables: Record<string, unknown>) => void;
 
   const { isLoading: isReviewConfirming, isSuccess: isReviewSuccess } = useWaitForTransactionReceipt({ hash: reviewTxHash });
   const { isLoading: isMarkConfirming, isSuccess: isMarkSuccess } = useWaitForTransactionReceipt({ hash: markTxHash });
   const { isLoading: isClaimConfirming, isSuccess: isClaimSuccess } = useWaitForTransactionReceipt({ hash: claimTxHash });
   const { isLoading: isMilestoneSubmitConfirming, isSuccess: isMilestoneSubmitSuccess } = useWaitForTransactionReceipt({ hash: milestoneSubmitTxHash });
   const { isLoading: isMilestoneReviewConfirming, isSuccess: isMilestoneReviewSuccess } = useWaitForTransactionReceipt({ hash: milestoneReviewTxHash });
+  const { isLoading: isPlanConfirming, isSuccess: isPlanSuccess } = useWaitForTransactionReceipt({ hash: planTxHash });
+  const { isLoading: isBackerFinalizeConfirming, isSuccess: isBackerFinalizeSuccess } = useWaitForTransactionReceipt({ hash: backerFinalizeTxHash });
 
   const { data: isReviewer } = useReadContract({
     address: contracts.voterProgression,
@@ -420,6 +574,29 @@ export default function IdeaDetailsPage() {
     query: { enabled: Boolean(contracts.ideaRegistry && Number.isFinite(Number(params?.id))) },
   });
 
+  const ideaId = Number.isFinite(Number(params?.id)) ? BigInt(Number(params?.id)) : undefined;
+  const { data: hasMilestonePlanRaw } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "hasFundingMilestonePlan",
+    args: ideaId === undefined ? undefined : [ideaId],
+    query: { enabled: Boolean(contracts.ideaRegistry && ideaId !== undefined) },
+  });
+  const { data: milestonePlanURIOnChain } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "fundingMilestonePlanURIByIdea",
+    args: ideaId === undefined ? undefined : [ideaId],
+    query: { enabled: Boolean(contracts.ideaRegistry && ideaId !== undefined) },
+  });
+  const { data: milestonePlanHashOnChain } = useReadContract({
+    address: contracts.ideaRegistry,
+    abi: ideaRegistryAbi,
+    functionName: "fundingMilestonePlanHashByIdea",
+    args: ideaId === undefined ? undefined : [ideaId],
+    query: { enabled: Boolean(contracts.ideaRegistry && ideaId !== undefined) },
+  });
+
   const { data: canClaimGrantRaw } = useReadContract({
     address: contracts.grantManager,
     abi: grantManagerAbi,
@@ -452,6 +629,28 @@ export default function IdeaDetailsPage() {
     query: { enabled: Boolean(contracts.votingSystem && roundId !== null) },
   });
 
+  const { data: isBackerMilestoneRoundRaw } = useReadContract({
+    address: contracts.votingSystem,
+    abi: votingSystemAbi,
+    functionName: "isBackerMilestoneRound",
+    args: roundId !== null ? [BigInt(roundId)] : undefined,
+    query: { enabled: Boolean(contracts.votingSystem && roundId !== null) },
+  });
+  const { data: winningGrossPledgeRaw } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "winningGrossPledgeByRound",
+    args: roundId !== null ? [BigInt(roundId)] : undefined,
+    query: { enabled: Boolean(contracts.fundingPool && roundId !== null) },
+  });
+  const { data: walletPledgeRaw } = useReadContract({
+    address: contracts.fundingPool,
+    abi: fundingPoolAbi,
+    functionName: "getPledge",
+    args: roundId !== null && address ? [BigInt(roundId), address] : undefined,
+    query: { enabled: Boolean(contracts.fundingPool && roundId !== null && address) },
+  });
+
   const { data: inProcessRequestRaw } = useReadContract({
     address: contracts.grantManager,
     abi: grantManagerAbi,
@@ -466,6 +665,34 @@ export default function IdeaDetailsPage() {
     functionName: "getMilestoneRequest",
     args: roundId !== null ? [BigInt(roundId), COMPLETION_STAGE] : undefined,
     query: { enabled: Boolean(contracts.grantManager && roundId !== null) },
+  });
+  const { data: inProcessTallyRaw } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "getBackerMilestoneTally",
+    args: roundId !== null ? [BigInt(roundId), IN_PROCESS_STAGE] : undefined,
+    query: { enabled: Boolean(contracts.grantManager && roundId !== null && isBackerMilestoneRoundRaw) },
+  });
+  const { data: completionTallyRaw } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "getBackerMilestoneTally",
+    args: roundId !== null ? [BigInt(roundId), COMPLETION_STAGE] : undefined,
+    query: { enabled: Boolean(contracts.grantManager && roundId !== null && isBackerMilestoneRoundRaw) },
+  });
+  const { data: inProcessProofHashRaw } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "getBackerMilestoneProofHash",
+    args: roundId !== null ? [BigInt(roundId), IN_PROCESS_STAGE] : undefined,
+    query: { enabled: Boolean(contracts.grantManager && roundId !== null && isBackerMilestoneRoundRaw) },
+  });
+  const { data: completionProofHashRaw } = useReadContract({
+    address: contracts.grantManager,
+    abi: grantManagerAbi,
+    functionName: "getBackerMilestoneProofHash",
+    args: roundId !== null ? [BigInt(roundId), COMPLETION_STAGE] : undefined,
+    query: { enabled: Boolean(contracts.grantManager && roundId !== null && isBackerMilestoneRoundRaw) },
   });
 
   useEffect(() => {
@@ -615,7 +842,7 @@ export default function IdeaDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [client, params?.id, isReviewSuccess, isMarkSuccess, isClaimSuccess, isMilestoneSubmitSuccess, isMilestoneReviewSuccess]);
+  }, [client, params?.id, isReviewSuccess, isMarkSuccess, isClaimSuccess, isMilestoneSubmitSuccess, isMilestoneReviewSuccess, isPlanSuccess, isBackerFinalizeSuccess]);
 
   useEffect(() => {
     if (isReviewSuccess) {
@@ -650,6 +877,14 @@ export default function IdeaDetailsPage() {
   const votingRoundInfo = votingRoundInfoRaw ? toVotingRoundInfo(votingRoundInfoRaw) : null;
   const inProcessRequest = inProcessRequestRaw ? toMilestoneRequest(inProcessRequestRaw) : toMilestoneRequest(undefined);
   const completionRequest = completionRequestRaw ? toMilestoneRequest(completionRequestRaw) : toMilestoneRequest(undefined);
+  const isBackerMilestoneRound = Boolean(isBackerMilestoneRoundRaw);
+  const hasMilestonePlan = Boolean(hasMilestonePlanRaw);
+  const inProcessTally = toBackerMilestoneTally(inProcessTallyRaw);
+  const completionTally = toBackerMilestoneTally(completionTallyRaw);
+  const winningGrossPledge = (winningGrossPledgeRaw as bigint | undefined) ?? 0n;
+  const walletPledgeRow = Array.isArray(walletPledgeRaw) ? walletPledgeRaw : [];
+  const walletPledgeIdeaId = (walletPledgeRow[0] as bigint | undefined) ?? 0n;
+  const walletPledgeAmount = (walletPledgeRow[1] as bigint | undefined) ?? 0n;
   const isWinningIdea = Boolean(
     votingRoundInfo?.ended &&
     grantRoundInfo &&
@@ -662,6 +897,9 @@ export default function IdeaDetailsPage() {
   const canAuthorSubmitStageTwo = Boolean(isAuthor && payout?.inProcessPaid && !payout?.completionPaid && statusCodeValue === 6n);
   const canReviewerReviewStageOne = Boolean(hasReviewerRole && inProcessRequest.active && !isAuthor);
   const canReviewerReviewStageTwo = Boolean(hasReviewerRole && completionRequest.active && !isAuthor);
+  const canWinningPledgerReview = Boolean(
+    address && !isAuthor && walletPledgeAmount > 0n && walletPledgeIdeaId === BigInt(idea.id)
+  );
   const releaseProgress = payout?.totalGrant ? Number((payout.released * 100n) / payout.totalGrant) : 0;
 
   return (
@@ -728,6 +966,42 @@ export default function IdeaDetailsPage() {
           </p>
         </div>
 
+        <div className="mt-5 rounded-2xl border border-cyan-300/20 bg-cyan-500/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-white">V2.3 milestone plan</h3>
+              <p className="mt-1 max-w-3xl text-sm text-slate-300">New V2.3 rounds only admit ideas with an immutable public plan. It lets pledgers evaluate the planned 20% / 40% / 40% release before they commit USDC.</p>
+            </div>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${hasMilestonePlan ? "border border-emerald-300/40 bg-emerald-500/10 text-emerald-200" : "border border-amber-300/40 bg-amber-500/10 text-amber-100"}`}>
+              {hasMilestonePlan ? "Plan committed" : "Plan required for V2.3"}
+            </span>
+          </div>
+
+          {hasMilestonePlan ? (
+            <div className="mt-3 rounded-xl border border-white/10 bg-[#232632] p-3 text-sm text-slate-300">
+              <p className="font-semibold text-slate-100">Committed plan</p>
+              <a href={String(milestonePlanURIOnChain ?? "")} target="_blank" rel="noreferrer" className="mt-2 block break-all text-cyan-200 hover:text-cyan-100">{String(milestonePlanURIOnChain ?? "-")}</a>
+              <p className="mt-2 break-all font-mono text-xs text-slate-400">{String(milestonePlanHashOnChain ?? "")}</p>
+            </div>
+          ) : isAuthor ? (
+            <div className="mt-4 grid gap-2">
+              <input value={milestonePlanURI} onChange={(event) => setMilestonePlanURI(event.target.value)} placeholder="Public milestone plan URL: IPFS, GitHub, Notion, etc." className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60" />
+              <input value={milestonePlanHash} onChange={(event) => setMilestonePlanHash(event.target.value)} placeholder="0x... 32-byte content hash of the plan" className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2 font-mono text-sm text-slate-100 outline-none focus:border-cyan-400/60" />
+              <button type="button" disabled={isPlanPending || isPlanConfirming || !milestonePlanURI.trim() || !isBytes32(milestonePlanHash)} onClick={() => {
+                if (!contracts.ideaRegistry || ideaId === undefined) return;
+                sendPlan({ address: contracts.ideaRegistry, abi: ideaRegistryAbi, functionName: "commitFundingMilestonePlan", args: [ideaId, milestonePlanURI.trim(), milestonePlanHash.trim()], gas: 600_000n });
+              }} className="w-fit rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+                {isPlanPending ? "Sign..." : isPlanConfirming ? "Committing..." : "Commit milestone plan"}
+              </button>
+              <p className="text-xs text-slate-400">The plan URL and hash are immutable after confirmation. Publish a complete scope, evidence expectations, and delivery timeline before committing it.</p>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-amber-100">The author has not committed a milestone plan yet, so this idea cannot enter a V2.3 round.</p>
+          )}
+          {planError ? <p className="mt-3 text-xs text-rose-300">{prettyTxError(planError.message)}</p> : null}
+          {planTxHash ? <p className="mt-2 break-all text-xs text-slate-400">Plan transaction reference: {planTxHash}</p> : null}
+        </div>
+
         {contracts.grantManager && shouldShowGrantPipeline ? (
           <div className="mt-5 rounded-2xl border border-white/10 bg-[#2a2d3a] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -747,9 +1021,9 @@ export default function IdeaDetailsPage() {
             </div>
 
             <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
-              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Initial 30%: {payout?.initialClaimed ? "Paid" : "Pending"}</p>
+              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Initial {isBackerMilestoneRound ? "20" : "30"}%: {payout?.initialClaimed ? "Paid" : "Pending"}</p>
               <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">In-process 40%: {payout?.inProcessPaid ? "Paid" : "Pending"}</p>
-              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Launch 30%: {payout?.completionPaid ? "Paid" : "Pending"}</p>
+              <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Launch {isBackerMilestoneRound ? "40" : "30"}%: {payout?.completionPaid ? "Paid" : "Pending"}</p>
             </div>
 
             <div className="mt-4 rounded-2xl border border-white/10 bg-[#232632] p-4">
@@ -761,13 +1035,13 @@ export default function IdeaDetailsPage() {
               </div>
               <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 xl:grid-cols-4">
                 <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Winner idea: {isWinningIdea ? "Yes" : "No"}</p>
-                <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Reviewer role: {hasReviewerRole ? "Yes" : "No"}</p>
+                <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Validation mode: {isBackerMilestoneRound ? "Winning pledgers" : "Protocol reviewers"}</p>
                 <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Author wallet: {isAuthor ? "Yes" : "No"}</p>
                 <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Round ended: {votingRoundInfo?.ended ? "Yes" : "No"}</p>
                 <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Stage 1 request: {inProcessRequest.active ? "Active" : inProcessRequest.requestId > 0n ? "Settled" : "None"}</p>
                 <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Stage 2 request: {completionRequest.active ? "Active" : completionRequest.requestId > 0n ? "Settled" : "None"}</p>
-                <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Can validate stage 1: {canReviewerReviewStageOne ? "Yes" : "No"}</p>
-                <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Can validate stage 2: {canReviewerReviewStageTwo ? "Yes" : "No"}</p>
+                <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Can validate: {isBackerMilestoneRound ? (canWinningPledgerReview ? "Winning pledge detected" : "No winning pledge") : (canReviewerReviewStageOne || canReviewerReviewStageTwo ? "Yes" : "No")}</p>
+                <p className="rounded-lg border border-white/10 bg-[#1d202b] px-3 py-2">Winning pledge: {isBackerMilestoneRound ? `${formatTokenAmount(winningGrossPledge)} USDC` : "Legacy reviewer flow"}</p>
               </div>
             </div>
 
@@ -788,7 +1062,7 @@ export default function IdeaDetailsPage() {
                   }}
                   className="rounded-lg bg-emerald-500/90 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isClaimPending ? "Sign..." : isClaimConfirming ? "Claiming..." : "Claim initial 30%"}
+                  {isClaimPending ? "Sign..." : isClaimConfirming ? "Claiming..." : `Claim initial ${isBackerMilestoneRound ? "20" : "30"}%`}
                 </button>
               </div>
             ) : null}
@@ -797,14 +1071,76 @@ export default function IdeaDetailsPage() {
               {!isAuthor
                 ? "Only the idea author can claim and submit proof for grant milestones."
                 : payout?.initialClaimed
-                  ? "Initial 30% has already been claimed. Continue with milestone proof flow below."
-                : canClaimGrant
-                  ? "Your idea is ready for the initial 30% claim."
+                  ? `Initial ${isBackerMilestoneRound ? "20" : "30"}% has already been claimed. Continue with milestone proof flow below.`
+                  : canClaimGrant
+                  ? `Your idea is ready for the initial ${isBackerMilestoneRound ? "20" : "30"}% claim.`
                   : claimGrantReason || "Claim will unlock once round settlement and eligibility checks pass."}
             </p>
             {claimError && <p className="mt-2 max-w-full overflow-hidden break-words text-xs text-rose-300">{prettyTxError(claimError.message)}</p>}
             {claimTxHash && <p className="mt-2 break-all text-xs text-slate-300">Grant transaction reference: {claimTxHash}</p>}
 
+            {isBackerMilestoneRound ? (
+              <div className="mt-5 grid gap-4 2xl:grid-cols-2">
+                <BackerMilestoneCard
+                  stage={IN_PROCESS_STAGE}
+                  request={inProcessRequest}
+                  tally={inProcessTally}
+                  proofHash={String(inProcessProofHashRaw ?? "")}
+                  authorView={canAuthorSubmitStageOne}
+                  pledgerView={canWinningPledgerReview}
+                  metadataURI={stageOneMetadata}
+                  onMetadataURIChange={setStageOneMetadata}
+                  details={stageOneDetails}
+                  onDetailsChange={setStageOneDetails}
+                  proofHashInput={stageOneProofHash}
+                  onProofHashInputChange={setStageOneProofHash}
+                  onSubmit={() => {
+                    if (!contracts.grantManager || roundId === null || !isBytes32(stageOneProofHash)) return;
+                    sendMilestoneSubmit({ address: contracts.grantManager, abi: grantManagerAbi, functionName: "submitBackerMilestoneProof", args: [BigInt(roundId), IN_PROCESS_STAGE, stageOneMetadata.trim(), stageOneDetails.trim(), stageOneProofHash.trim()], gas: 1_200_000n });
+                  }}
+                  onVote={(approved) => {
+                    if (!contracts.grantManager || roundId === null) return;
+                    sendMilestoneReview({ address: contracts.grantManager, abi: grantManagerAbi, functionName: "castBackerMilestoneVote", args: [BigInt(roundId), IN_PROCESS_STAGE, approved], gas: 700_000n });
+                  }}
+                  onFinalize={() => {
+                    if (!contracts.grantManager || roundId === null) return;
+                    sendBackerFinalize({ address: contracts.grantManager, abi: grantManagerAbi, functionName: "finalizeBackerMilestone", args: [BigInt(roundId), IN_PROCESS_STAGE], gas: 1_000_000n });
+                  }}
+                  submitBusy={isMilestoneSubmitPending || isMilestoneSubmitConfirming}
+                  voteBusy={isMilestoneReviewPending || isMilestoneReviewConfirming}
+                  finalizeBusy={isBackerFinalizePending || isBackerFinalizeConfirming}
+                />
+                <BackerMilestoneCard
+                  stage={COMPLETION_STAGE}
+                  request={completionRequest}
+                  tally={completionTally}
+                  proofHash={String(completionProofHashRaw ?? "")}
+                  authorView={canAuthorSubmitStageTwo}
+                  pledgerView={canWinningPledgerReview}
+                  metadataURI={stageTwoMetadata}
+                  onMetadataURIChange={setStageTwoMetadata}
+                  details={stageTwoDetails}
+                  onDetailsChange={setStageTwoDetails}
+                  proofHashInput={stageTwoProofHash}
+                  onProofHashInputChange={setStageTwoProofHash}
+                  onSubmit={() => {
+                    if (!contracts.grantManager || roundId === null || !isBytes32(stageTwoProofHash)) return;
+                    sendMilestoneSubmit({ address: contracts.grantManager, abi: grantManagerAbi, functionName: "submitBackerMilestoneProof", args: [BigInt(roundId), COMPLETION_STAGE, stageTwoMetadata.trim(), stageTwoDetails.trim(), stageTwoProofHash.trim()], gas: 1_200_000n });
+                  }}
+                  onVote={(approved) => {
+                    if (!contracts.grantManager || roundId === null) return;
+                    sendMilestoneReview({ address: contracts.grantManager, abi: grantManagerAbi, functionName: "castBackerMilestoneVote", args: [BigInt(roundId), COMPLETION_STAGE, approved], gas: 700_000n });
+                  }}
+                  onFinalize={() => {
+                    if (!contracts.grantManager || roundId === null) return;
+                    sendBackerFinalize({ address: contracts.grantManager, abi: grantManagerAbi, functionName: "finalizeBackerMilestone", args: [BigInt(roundId), COMPLETION_STAGE], gas: 1_000_000n });
+                  }}
+                  submitBusy={isMilestoneSubmitPending || isMilestoneSubmitConfirming}
+                  voteBusy={isMilestoneReviewPending || isMilestoneReviewConfirming}
+                  finalizeBusy={isBackerFinalizePending || isBackerFinalizeConfirming}
+                />
+              </div>
+            ) : (
             <div className="mt-5 grid gap-4 2xl:grid-cols-2">
               <MilestoneCard
                 stage={IN_PROCESS_STAGE}
@@ -892,30 +1228,35 @@ export default function IdeaDetailsPage() {
                 reviewBusy={isMilestoneReviewPending || isMilestoneReviewConfirming}
               />
             </div>
+            )}
 
             {milestoneSubmitError && <p className="mt-3 text-xs text-rose-300">{prettyTxError(milestoneSubmitError.message)}</p>}
             {milestoneSubmitTxHash && <p className="mt-2 break-all text-xs text-slate-300">Proof transaction reference: {milestoneSubmitTxHash}</p>}
             {milestoneReviewError && <p className="mt-2 text-xs text-rose-300">{prettyTxError(milestoneReviewError.message)}</p>}
             {milestoneReviewTxHash && <p className="mt-2 break-all text-xs text-slate-300">Review transaction reference: {milestoneReviewTxHash}</p>}
+            {backerFinalizeError && <p className="mt-2 text-xs text-rose-300">{prettyTxError(backerFinalizeError.message)}</p>}
+            {backerFinalizeTxHash && <p className="mt-2 break-all text-xs text-slate-300">Backer milestone finalization reference: {backerFinalizeTxHash}</p>}
             <p className="mt-3 text-xs text-slate-400">
-              If a milestone proof is rejected, the author can submit a new request after a 48-hour cooldown.
+              {isBackerMilestoneRound
+                ? "V2.3 keeps the review open for the full 14 days. A quorum rejection allows one 48-hour correction and resubmission; a second rejection or missed quorum ends the unreleased grant and enables refunds."
+                : "If a milestone proof is rejected, the author can submit a new request after a 48-hour cooldown."}
             </p>
-            {!hasReviewerRole && (inProcessRequest.active || completionRequest.active) && !isAuthor && (
+            {!isBackerMilestoneRound && !hasReviewerRole && (inProcessRequest.active || completionRequest.active) && !isAuthor && (
               <p className="mt-3 text-xs text-amber-200">
                 Active validation exists, but this wallet cannot review it yet. Reviewer role is required.
               </p>
             )}
-            {hasReviewerRole && isAuthor && (inProcessRequest.active || completionRequest.active) && (
+            {!isBackerMilestoneRound && hasReviewerRole && isAuthor && (inProcessRequest.active || completionRequest.active) && (
               <p className="mt-3 text-xs text-amber-200">
                 Reviewer role detected, but the idea author cannot validate their own proof request.
               </p>
             )}
-            {hasReviewerRole && !isAuthor && !inProcessRequest.active && !completionRequest.active && (
+            {!isBackerMilestoneRound && hasReviewerRole && !isAuthor && !inProcessRequest.active && !completionRequest.active && (
               <p className="mt-3 text-xs text-slate-400">
                 No active validation request is open right now. Approve/reject buttons appear automatically when the author submits a proof for the current eligible stage.
               </p>
             )}
-            {hasReviewerRole && (
+            {!isBackerMilestoneRound && hasReviewerRole && (
               <p className="mt-3 text-xs text-slate-400">
                 Reviewer flow: stage 1 needs 3 approvals out of 5 reviewers; stage 2 needs 2 approvals out of 3 reviewers.
               </p>

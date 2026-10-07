@@ -1,8 +1,9 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 import {
   IdeaCreated,
   IdeaMarkedLowQuality,
+  FundingMilestonePlanCommitted,
   IdeaRegistryUpgradeable,
   IdeaStatusUpdated,
   LegacyFundingProposalConfigured,
@@ -26,6 +27,9 @@ import {
 import {
   GrantCancelled,
   GrantManagerUpgradeable,
+  BackerMilestoneGraceStarted,
+  BackerMilestoneProofHashCommitted,
+  BackerMilestoneVoteCast,
   MilestoneApproved,
   MilestoneProofSubmitted,
   MilestoneRejected,
@@ -44,6 +48,7 @@ import {
   VoteCast,
   VotingRoundEnded,
   VotingRoundStarted,
+  VotingSystemUpgradeable,
 } from "../generated/VotingSystem/VotingSystemUpgradeable";
 import {
   ProgressionReset,
@@ -114,6 +119,7 @@ function ensureRound(roundId: BigInt, blockNumber: BigInt): Round {
     round.refundedAmount = ZERO;
     round.fundingReserved = ZERO;
     round.distributedAmount = ZERO;
+    round.backerMilestones = false;
     round.createdAtBlock = blockNumber;
   }
   round.updatedAtBlock = blockNumber;
@@ -151,6 +157,8 @@ function ensureIdea(ideaId: BigInt, blockNumber: BigInt): Idea {
     idea.isLowQuality = false;
     idea.authorStake = ZERO;
     idea.minimumNetFunding = ZERO;
+    idea.milestonePlanURI = "";
+    idea.milestonePlanHash = Bytes.empty();
     idea.reviewCount = 0;
     idea.createdAtBlock = blockNumber;
   }
@@ -200,6 +208,11 @@ function ensureMilestoneRequest(
     request.maxReviewers = 0;
     request.approvalThreshold = 0;
     request.active = false;
+    request.proofHash = Bytes.empty();
+    request.backerApproveWeight = ZERO;
+    request.backerRejectWeight = ZERO;
+    request.backerApproveCount = ZERO;
+    request.graceDeadline = ZERO;
     request.createdAtBlock = blockNumber;
   }
   request.updatedAtBlock = blockNumber;
@@ -341,6 +354,11 @@ export function handleVotingRoundStarted(event: VotingRoundStarted): void {
   round.winningIdeaId = ZERO;
   round.winningVotes = ZERO;
   round.ideaIds = event.params.ideaIds;
+  const voting = VotingSystemUpgradeable.bind(event.address);
+  const backerMilestones = voting.try_isBackerMilestoneRound(event.params.roundId);
+  if (!backerMilestones.reverted) {
+    round.backerMilestones = backerMilestones.value;
+  }
   round.save();
 
   const stats = ensureProtocolStats(event.block.number);
@@ -488,6 +506,15 @@ export function handleLegacyFundingProposalConfigured(
     event.block.number,
   );
   idea.minimumNetFunding = event.params.minimumNetFunding;
+  idea.save();
+}
+
+export function handleFundingMilestonePlanCommitted(
+  event: FundingMilestonePlanCommitted,
+): void {
+  const idea = syncIdeaFromContract(event.address, event.params.ideaId, event.block.number);
+  idea.milestonePlanURI = event.params.planURI;
+  idea.milestonePlanHash = event.params.planHash;
   idea.save();
 }
 
@@ -689,6 +716,63 @@ export function handleGrantCancelled(event: GrantCancelled): void {
   round.cancelled = true;
   round.grantRefundActivated = true;
   round.save();
+}
+
+function syncBackerMilestoneTally(
+  contractAddress: Address,
+  roundId: BigInt,
+  stage: i32,
+  blockNumber: BigInt,
+): MilestoneRequest {
+  const request = syncMilestoneRequestFromContract(contractAddress, roundId, stage, blockNumber);
+  const contract = GrantManagerUpgradeable.bind(contractAddress);
+  const tally = contract.try_getBackerMilestoneTally(roundId, stage);
+  if (!tally.reverted) {
+    request.backerApproveWeight = tally.value.getApproveWeight();
+    request.backerRejectWeight = tally.value.getRejectWeight();
+    request.backerApproveCount = tally.value.getApproveBackerCount();
+    request.graceDeadline = tally.value.getGraceDeadline();
+    request.save();
+  }
+  return request;
+}
+
+export function handleBackerMilestoneProofHashCommitted(
+  event: BackerMilestoneProofHashCommitted,
+): void {
+  const request = syncBackerMilestoneTally(
+    event.address,
+    event.params.roundId,
+    event.params.stage,
+    event.block.number,
+  );
+  request.proofHash = event.params.proofHash;
+  request.save();
+}
+
+export function handleBackerMilestoneVoteCast(
+  event: BackerMilestoneVoteCast,
+): void {
+  ensureAccount(event.params.backer, event.block.number).save();
+  syncBackerMilestoneTally(
+    event.address,
+    event.params.roundId,
+    event.params.stage,
+    event.block.number,
+  );
+}
+
+export function handleBackerMilestoneGraceStarted(
+  event: BackerMilestoneGraceStarted,
+): void {
+  const request = syncBackerMilestoneTally(
+    event.address,
+    event.params.roundId,
+    event.params.stage,
+    event.block.number,
+  );
+  request.graceDeadline = event.params.graceDeadline;
+  request.save();
 }
 
 export function handleWinningVoteRegistered(

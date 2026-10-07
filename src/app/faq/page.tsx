@@ -154,7 +154,7 @@ const sections: FaqSection[] = [
       {
         question: "Who approves milestone proofs?",
         answer:
-          "Reviewer-gated flows approve or reject milestone submissions. This keeps treasury release tied to evidence of execution rather than only to vote outcome.",
+          "Legacy V2.2 rounds use protocol reviewers. New V2.3 rounds are reviewed only by wallets that pledged to the winning idea: their USDC pledge determines vote weight, while the author cannot vote. V2.3 needs 40% of winning pledge weight to participate and 2/3 approval among participating weight, plus three approving backers.",
       },
       {
         question: "Can the full grant be released immediately?",
@@ -169,7 +169,7 @@ const sections: FaqSection[] = [
       {
         question: "What happens if a milestone is rejected?",
         answer:
-          "The release stays locked until valid proof is submitted again and approved through the configured reviewer flow. Rejection does not automatically advance any capital.",
+          "No capital advances automatically. In V2.3, a quorum rejection gives the author one 48-hour correction and resubmission. A second rejection, or failure to reach quorum after the 14-day review and 7-day grace period, cancels the unreleased grant and makes the remaining escrow refundable to winning pledgers.",
       },
     ],
   },

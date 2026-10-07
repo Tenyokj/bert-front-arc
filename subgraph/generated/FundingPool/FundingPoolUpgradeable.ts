@@ -190,6 +190,32 @@ export class FundingRoundFeeFinalized__Params {
   }
 }
 
+export class FundingRoundFeeReleased extends ethereum.Event {
+  get params(): FundingRoundFeeReleased__Params {
+    return new FundingRoundFeeReleased__Params(this);
+  }
+}
+
+export class FundingRoundFeeReleased__Params {
+  _event: FundingRoundFeeReleased;
+
+  constructor(event: FundingRoundFeeReleased) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get cumulativeTrancheBps(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class FundingRoundOpened extends ethereum.Event {
   get params(): FundingRoundOpened__Params {
     return new FundingRoundOpened__Params(this);
@@ -514,6 +540,24 @@ export class PoolBalanceUpdated__Params {
   }
 }
 
+export class ProgressiveFundingRoundFeeStarted extends ethereum.Event {
+  get params(): ProgressiveFundingRoundFeeStarted__Params {
+    return new ProgressiveFundingRoundFeeStarted__Params(this);
+  }
+}
+
+export class ProgressiveFundingRoundFeeStarted__Params {
+  _event: ProgressiveFundingRoundFeeStarted;
+
+  constructor(event: ProgressiveFundingRoundFeeStarted) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+}
+
 export class ProtocolReserveAllocated extends ethereum.Event {
   get params(): ProtocolReserveAllocated__Params {
     return new ProtocolReserveAllocated__Params(this);
@@ -555,6 +599,28 @@ export class Unpaused__Params {
 
   get account(): Address {
     return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class UnvestedFundingRoundFeeRestored extends ethereum.Event {
+  get params(): UnvestedFundingRoundFeeRestored__Params {
+    return new UnvestedFundingRoundFeeRestored__Params(this);
+  }
+}
+
+export class UnvestedFundingRoundFeeRestored__Params {
+  _event: UnvestedFundingRoundFeeRestored;
+
+  constructor(event: UnvestedFundingRoundFeeRestored) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
   }
 }
 
@@ -1495,6 +1561,106 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  progressiveFeeReleasedByRound(param0: BigInt): BigInt {
+    let result = super.call(
+      "progressiveFeeReleasedByRound",
+      "progressiveFeeReleasedByRound(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_progressiveFeeReleasedByRound(
+    param0: BigInt,
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "progressiveFeeReleasedByRound",
+      "progressiveFeeReleasedByRound(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  progressiveFeeRestoredForRefund(param0: BigInt): boolean {
+    let result = super.call(
+      "progressiveFeeRestoredForRefund",
+      "progressiveFeeRestoredForRefund(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_progressiveFeeRestoredForRefund(
+    param0: BigInt,
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "progressiveFeeRestoredForRefund",
+      "progressiveFeeRestoredForRefund(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  progressiveFeeTrancheBpsByRound(param0: BigInt): BigInt {
+    let result = super.call(
+      "progressiveFeeTrancheBpsByRound",
+      "progressiveFeeTrancheBpsByRound(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_progressiveFeeTrancheBpsByRound(
+    param0: BigInt,
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "progressiveFeeTrancheBpsByRound",
+      "progressiveFeeTrancheBpsByRound(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  progressiveFundingRoundFeeStarted(param0: BigInt): boolean {
+    let result = super.call(
+      "progressiveFundingRoundFeeStarted",
+      "progressiveFundingRoundFeeStarted(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_progressiveFundingRoundFeeStarted(
+    param0: BigInt,
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "progressiveFundingRoundFeeStarted",
+      "progressiveFundingRoundFeeStarted(uint256):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
   protocolReserve(): BigInt {
     let result = super.call(
       "protocolReserve",
@@ -1708,6 +1874,36 @@ export class AllocateReserveToIdeaCall__Outputs {
   _call: AllocateReserveToIdeaCall;
 
   constructor(call: AllocateReserveToIdeaCall) {
+    this._call = call;
+  }
+}
+
+export class BeginProgressiveFundingRoundFeeCall extends ethereum.Call {
+  get inputs(): BeginProgressiveFundingRoundFeeCall__Inputs {
+    return new BeginProgressiveFundingRoundFeeCall__Inputs(this);
+  }
+
+  get outputs(): BeginProgressiveFundingRoundFeeCall__Outputs {
+    return new BeginProgressiveFundingRoundFeeCall__Outputs(this);
+  }
+}
+
+export class BeginProgressiveFundingRoundFeeCall__Inputs {
+  _call: BeginProgressiveFundingRoundFeeCall;
+
+  constructor(call: BeginProgressiveFundingRoundFeeCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class BeginProgressiveFundingRoundFeeCall__Outputs {
+  _call: BeginProgressiveFundingRoundFeeCall;
+
+  constructor(call: BeginProgressiveFundingRoundFeeCall) {
     this._call = call;
   }
 }
@@ -2134,6 +2330,40 @@ export class ReleaseAuthorStakeToAuthorCall__Outputs {
   _call: ReleaseAuthorStakeToAuthorCall;
 
   constructor(call: ReleaseAuthorStakeToAuthorCall) {
+    this._call = call;
+  }
+}
+
+export class ReleaseProgressiveFundingRoundFeeCall extends ethereum.Call {
+  get inputs(): ReleaseProgressiveFundingRoundFeeCall__Inputs {
+    return new ReleaseProgressiveFundingRoundFeeCall__Inputs(this);
+  }
+
+  get outputs(): ReleaseProgressiveFundingRoundFeeCall__Outputs {
+    return new ReleaseProgressiveFundingRoundFeeCall__Outputs(this);
+  }
+}
+
+export class ReleaseProgressiveFundingRoundFeeCall__Inputs {
+  _call: ReleaseProgressiveFundingRoundFeeCall;
+
+  constructor(call: ReleaseProgressiveFundingRoundFeeCall) {
+    this._call = call;
+  }
+
+  get roundId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get cumulativeTrancheBps(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class ReleaseProgressiveFundingRoundFeeCall__Outputs {
+  _call: ReleaseProgressiveFundingRoundFeeCall;
+
+  constructor(call: ReleaseProgressiveFundingRoundFeeCall) {
     this._call = call;
   }
 }

@@ -59,6 +59,8 @@ dataSources:
           handler: handleReviewAdded
         - event: LegacyFundingProposalConfigured(indexed uint256,indexed address,uint256)
           handler: handleLegacyFundingProposalConfigured
+        - event: FundingMilestonePlanCommitted(indexed uint256,indexed address,string,bytes32)
+          handler: handleFundingMilestonePlanCommitted
       file: ./src/mapping.ts
 
   - kind: ethereum
@@ -140,6 +142,12 @@ dataSources:
           handler: handleMilestoneApproved
         - event: GrantCancelled(indexed uint256,indexed uint256,uint256)
           handler: handleGrantCancelled
+        - event: BackerMilestoneProofHashCommitted(indexed uint256,indexed uint8,indexed uint256,bytes32)
+          handler: handleBackerMilestoneProofHashCommitted
+        - event: BackerMilestoneVoteCast(indexed uint256,indexed uint8,indexed address,bool,uint256)
+          handler: handleBackerMilestoneVoteCast
+        - event: BackerMilestoneGraceStarted(indexed uint256,indexed uint8,uint256,uint256)
+          handler: handleBackerMilestoneGraceStarted
       file: ./src/mapping.ts
 
   - kind: ethereum
