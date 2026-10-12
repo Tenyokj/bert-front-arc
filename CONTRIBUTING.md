@@ -2,6 +2,20 @@
 
 Thanks for helping improve BERT. This repository powers a live Arc Testnet application, so every change must preserve the contract as the source of truth.
 
+## Where Help Is Needed
+
+| Contribution area | Current need | Good first contribution |
+| --- | --- | --- |
+| Frontend development | Wallet UX, accessibility, mobile behavior, transaction recovery and readable state | Fix one focused route with a regression test or manual test evidence. |
+| Protocol QA | V2.3/V3.1 role, allowance, error and indexer-lag testing | Reproduce a matrix case with wallet, transaction hash and direct contract read. |
+| Web3 integration | ABI synchronization, module-aware V3.1 reads and RPC fallback resilience | Improve a direct-read path without inventing fallback state. |
+| Security review | Unsafe transaction construction, stale authorization UI and configuration drift | Submit a private report for exploitable impact; otherwise open a reproducible issue. |
+| Community and SMM | Accurate product walkthroughs, screenshots and release education | Coordinate factual content first; do not publish financial, audit or mainnet claims. |
+
+Use the public [BERT Telegram channel](https://t.me/bertdao) or a focused issue
+to coordinate. Contribution is open-source collaboration; it does not imply
+payment, repository write access, deployment rights or a token allocation.
+
 ## Before Opening a Pull Request
 
 1. Create a branch from the current target branch; do not commit directly to protected branches.
