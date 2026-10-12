@@ -1,6 +1,12 @@
 import { type Address, type PublicClient } from "viem";
 
-import { communityFactoryAbi, communityHubAbi } from "@/lib/community-contracts";
+import {
+  communityFactoryAbi,
+  communityHubAbi,
+  communityMembershipModuleAbi,
+  communityProposalModuleAbi,
+  communityVotingModuleAbi,
+} from "@/lib/community-contracts";
 import { fetchIndexedCommunities } from "@/lib/community-v3-subgraph";
 
 export type CommunityDeployment = { creator: Address; hub: Address; treasury: Address; createdAt: bigint; name?: string; metadataURI?: string };
@@ -13,6 +19,7 @@ export type CommunityProposal = {
 export type CommunityBinaryVote = { choice: number; stake: bigint };
 export type CommunityProposalBond = { amount: bigint; settled: boolean };
 export type CommunityRefundPreview = { amount: bigint; available: boolean };
+export type CommunityModules = { membership: Address; proposal: Address; voting: Address; milestone: Address };
 
 type ReadTuple = readonly unknown[] | Record<string, unknown>;
 
@@ -50,6 +57,29 @@ export function normalizeCommunityRefundPreview(value: unknown): CommunityRefund
 }
 
 const asRead = (client: PublicClient, request: Record<string, unknown>) => client.readContract(request as never) as Promise<unknown>;
+
+/** Resolves the immutable V3.1 modules that own a thin Hub's runtime state. */
+export async function getCommunityModules(client: PublicClient, hub: Address): Promise<CommunityModules> {
+  const [membership, proposal, voting, milestone] = await Promise.all([
+    asRead(client, { address: hub, abi: communityHubAbi, functionName: "membershipModule" }),
+    asRead(client, { address: hub, abi: communityHubAbi, functionName: "proposalModule" }),
+    asRead(client, { address: hub, abi: communityHubAbi, functionName: "votingModule" }),
+    asRead(client, { address: hub, abi: communityHubAbi, functionName: "milestoneManager" }),
+  ]);
+  return { membership: membership as Address, proposal: proposal as Address, voting: voting as Address, milestone: milestone as Address };
+}
+
+/** Reads proposal count from its V3.1 storage-owning module, not the thin Hub facade. */
+export async function getCommunityProposalCount(client: PublicClient, modules: CommunityModules): Promise<bigint> {
+  return asRead(client, { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "proposalCount" }) as Promise<bigint>;
+}
+
+/** Re-export module ABIs for imperative Community page reads. */
+export const communityModuleAbis = {
+  membership: communityMembershipModuleAbi,
+  proposal: communityProposalModuleAbi,
+  voting: communityVotingModuleAbi,
+} as const;
 
 /** Reads Factory deployment data and enriches it with indexed creation metadata when available. */
 export async function getCommunityDeployment(client: PublicClient, factory: Address, communityId: bigint): Promise<CommunityDeployment> {

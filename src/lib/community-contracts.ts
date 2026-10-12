@@ -168,6 +168,10 @@ export const communityHubAbi = [
   { type: "function", stateMutability: "view", name: "communityTreasury", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", stateMutability: "view", name: "communityStatus", inputs: [], outputs: [{ type: "uint8" }] },
   { type: "function", stateMutability: "view", name: "communityTime", inputs: [], outputs: [{ type: "uint64" }] },
+  { type: "function", stateMutability: "view", name: "membershipModule", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", stateMutability: "view", name: "proposalModule", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", stateMutability: "view", name: "votingModule", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", stateMutability: "view", name: "milestoneManager", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", stateMutability: "view", name: "entryStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "proposalBondUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "voteMinStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
@@ -236,6 +240,44 @@ export const communityHubAbi = [
   { type: "function", stateMutability: "nonpayable", name: "failExpiredPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
   { type: "function", stateMutability: "nonpayable", name: "claimFailedPlanRefund", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
   { type: "function", stateMutability: "nonpayable", name: "finalizeValidatorRewardEpoch", inputs: [{ name: "epochId", type: "uint256" }], outputs: [] },
+] as const satisfies Abi;
+
+/** Read-only surface of the V3.1 membership module deployed by each CommunityHub. */
+export const communityMembershipModuleAbi = [
+  { type: "function", stateMutability: "view", name: "entryStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "membershipExitCooldown", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorProposalPointsThreshold", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "adminCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "unresolvedObligationCount", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
+] as const satisfies Abi;
+
+/** Read-only surface of the V3.1 proposal and validator-review module. */
+export const communityProposalModuleAbi = [
+  { type: "function", stateMutability: "view", name: "proposalBondUSDC", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorApprovalThreshold", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validationWindow", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorRewardEpoch", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorActiveThresholdBps", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "proposalCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "pendingValidationProposalCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "currentValidatorRewardEpochId", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorDecisionCast", inputs: [{ name: "proposalId", type: "uint256" }, { name: "validator", type: "address" }], outputs: [{ type: "bool" }] },
+  { type: "function", stateMutability: "view", name: "validatorValidationCount", inputs: [{ name: "epochId", type: "uint256" }, { name: "validator", type: "address" }], outputs: [{ type: "uint256" }] },
+] as const satisfies Abi;
+
+/** Read-only surface of the V3.1 binary and Slate voting module. */
+export const communityVotingModuleAbi = [
+  { type: "function", stateMutability: "view", name: "voteMinStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "binaryVotingDuration", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "roundVotingDuration", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "binaryRejectionFeeBps", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "validatorRewardShareBps", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "roundCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "activeBinaryProposalCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "activeSlateRoundCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "hasExitBlockingObligation", inputs: [{ name: "member", type: "address" }], outputs: [{ type: "bool" }] },
+  { type: "function", stateMutability: "view", name: "getSlateVote", inputs: [{ name: "roundId", type: "uint256" }, { name: "voter", type: "address" }], outputs: [{ name: "proposalId", type: "uint256" }, { name: "stake", type: "uint256" }] },
 ] as const satisfies Abi;
 
 const executionPlan = {

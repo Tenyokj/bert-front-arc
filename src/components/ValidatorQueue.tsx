@@ -7,8 +7,8 @@ import { useAccount, usePublicClient, useReadContract, useWaitForTransactionRece
 import { ClientPagination } from "@/components/ClientPagination";
 import { ValidatorRewardsPanel } from "@/components/ValidatorRewardsPanel";
 import { ValidatorRoleExit } from "@/components/ValidatorRoleExit";
-import { communityHubAbi } from "@/lib/community-contracts";
-import type { CommunityProposal } from "@/lib/community-v3";
+import { communityHubAbi, communityProposalModuleAbi } from "@/lib/community-contracts";
+import { getCommunityModules, type CommunityProposal } from "@/lib/community-v3";
 
 const PAGE_SIZE = 6;
 const PENDING_VALIDATION = 0;
@@ -44,7 +44,8 @@ function ValidatorQueueContent({ hub, proposals, approvalThreshold, isValidator 
         if (!cancelled) setDecidedIds(new Set());
         return;
       }
-      const entries = await Promise.all(pending.map(async (proposal) => [proposal.id.toString(), await client.readContract({ address: hub, abi: communityHubAbi, functionName: "validatorDecisionCast", args: [proposal.id, address] })] as const));
+      const modules = await getCommunityModules(client, hub);
+      const entries = await Promise.all(pending.map(async (proposal) => [proposal.id.toString(), await client.readContract({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validatorDecisionCast", args: [proposal.id, address] })] as const));
       if (!cancelled) setDecidedIds(new Set(entries.filter(([, decided]) => decided).map(([id]) => id)));
     }
     void loadDecisions().catch(() => { if (!cancelled) setDecidedIds(new Set()); });

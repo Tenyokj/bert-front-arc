@@ -5,18 +5,20 @@ import { formatUnits, parseUnits } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { usdcAbi } from "@/lib/contracts";
-import { communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityTreasuryAbi, communityVotingModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage, communityTechnicalError } from "@/lib/community-errors";
+import { useCommunityModules } from "@/lib/use-community-modules";
 
 const BINARY_VOTING = 4;
 
 /** Sends an exact USDC approval to the Treasury before casting a binary CommunityHub vote. */
 export function BinaryVoteAction({ hub, treasury, proposalId, proposalStatus, proposalCreator, existingChoice }: { hub: `0x${string}`; treasury: `0x${string}`; proposalId: bigint; proposalStatus: number; proposalCreator: `0x${string}`; existingChoice?: number }) {
   const { address, chainId } = useAccount();
+  const { modules } = useCommunityModules(hub, chainId);
   const [choice, setChoice] = useState<1 | 2>(1);
   const [amount, setAmount] = useState("");
   const { data: member } = useReadContract({ address: hub, abi: communityHubAbi, functionName: "getMember", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address) } });
-  const { data: minimum } = useReadContract({ address: hub, abi: communityHubAbi, functionName: "voteMinStakeUSDC", chainId });
+  const { data: minimum } = useReadContract({ address: modules.voting, abi: communityVotingModuleAbi, functionName: "voteMinStakeUSDC", chainId, query: { enabled: Boolean(modules.voting) } });
   const { data: usdc } = useReadContract({ address: treasury, abi: communityTreasuryAbi, functionName: "usdc", chainId });
   const parsed = (() => { try { return amount.trim() ? parseUnits(amount, 6) : 0n; } catch { return -1n; } })();
   const { data: allowance, refetch: refetchAllowance } = useReadContract({ address: usdc, abi: usdcAbi, functionName: "allowance", args: address && usdc ? [address, treasury] : undefined, chainId, query: { enabled: Boolean(address && usdc) } });

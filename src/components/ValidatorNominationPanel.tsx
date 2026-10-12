@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { isAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityEventFromBlock, communityHubAbi } from "@/lib/community-contracts";
+import { communityEventFromBlock, communityHubAbi, communityProposalModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
+import { useCommunityModules } from "@/lib/use-community-modules";
 import { ClientPagination } from "@/components/ClientPagination";
 
 type MemberInfo = {
@@ -21,6 +22,7 @@ type EligibleCandidate = {
 /** Lets an admin appoint a former Member that has met this Community's local nomination threshold. */
 export function ValidatorNominationPanel({ hub }: { hub: `0x${string}` }) {
   const { chainId } = useAccount();
+  const { modules } = useCommunityModules(hub, chainId);
   const client = usePublicClient({ chainId });
   const [candidate, setCandidate] = useState("");
   const [eligibleCandidates, setEligibleCandidates] = useState<EligibleCandidate[]>([]);
@@ -28,7 +30,7 @@ export function ValidatorNominationPanel({ hub }: { hub: `0x${string}` }) {
   const [candidatePage, setCandidatePage] = useState(1);
   const candidateAddress = isAddress(candidate) ? candidate as Address : undefined;
   const thresholdRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "validatorProposalPointsThreshold", chainId });
-  const pendingValidationRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "pendingValidationProposalCount", chainId });
+  const pendingValidationRead = useReadContract({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "pendingValidationProposalCount", chainId, query: { enabled: Boolean(modules.proposal) } });
   const memberRead = useReadContract({
     address: hub,
     abi: communityHubAbi,
