@@ -11,6 +11,16 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    id: "v3-1-modular-community-layer",
+    image: "/news-v-3-1.jpg",
+    alt: "BERT V3.1 modular community layer release banner",
+    href: "https://bertdao-docs.vercel.app/v3.html",
+    aspectRatio: "640 / 213",
+    objectFit: "cover",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#070b16]",
+  },
+  {
     id: "v2-3-backer-milestones",
     image: "/news-v2-3.png",
     alt: "BERT V2.3 backer-controlled milestone release banner",
