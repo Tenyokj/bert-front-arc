@@ -55,7 +55,17 @@
     },
     {
       "inputs": [],
+      "name": "CommunityMilestoneManagerAlreadyConfigured",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "CommunityNotActive",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CommunityV31ModulesAlreadyConfigured",
       "type": "error"
     },
     {
@@ -104,6 +114,22 @@
         }
       ],
       "name": "InsufficientMembershipLocked",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "requested",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "available",
+          "type": "uint256"
+        }
+      ],
+      "name": "InsufficientMilestoneReserve",
       "type": "error"
     },
     {
@@ -196,6 +222,17 @@
         }
       ],
       "name": "NotCommunityHub",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "NotCommunityMilestoneManager",
       "type": "error"
     },
     {
@@ -545,6 +582,63 @@
         }
       ],
       "name": "CommunityHubConfigured",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "milestoneManager",
+          "type": "address"
+        }
+      ],
+      "name": "CommunityMilestoneManagerConfigured",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "membershipModule",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "proposalModule",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "votingModule",
+          "type": "address"
+        }
+      ],
+      "name": "CommunityV31ModulesConfigured",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "ExecutionPlanReserved",
       "type": "event"
     },
     {
@@ -972,6 +1066,29 @@
       "inputs": [
         {
           "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimExecutionPlanRefund",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
           "name": "proposalId",
           "type": "uint256"
         }
@@ -1336,6 +1453,70 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "membershipModule",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "milestoneManager",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        }
+      ],
+      "name": "milestoneRefundByPlan",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        }
+      ],
+      "name": "milestoneReserveByPlan",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1393,6 +1574,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "proposalModule",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1438,6 +1632,29 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "releaseExecutionTranche",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "member",
           "type": "address"
@@ -1449,6 +1666,24 @@
         }
       ],
       "name": "releaseMembershipStake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "reserveExecutionPlan",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1525,12 +1760,66 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "seedExecutionPlanRefund",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "communityHub_",
           "type": "address"
         }
       ],
       "name": "setCommunityHub",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "milestoneManager_",
+          "type": "address"
+        }
+      ],
+      "name": "setMilestoneManager",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "membershipModule_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "proposalModule_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "votingModule_",
+          "type": "address"
+        }
+      ],
+      "name": "setV31Modules",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1649,6 +1938,32 @@
     {
       "inputs": [],
       "name": "totalMembershipLocked",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalMilestoneRefundLiability",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalMilestoneReserved",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1813,6 +2128,19 @@
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "votingModule",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",

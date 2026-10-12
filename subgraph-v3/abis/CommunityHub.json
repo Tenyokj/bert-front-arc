@@ -103,6 +103,21 @@
               "internalType": "uint256",
               "name": "validatorProposalPointsThreshold",
               "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "executionRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint64",
+              "name": "milestoneReviewDuration",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "milestoneProofDuration",
+              "type": "uint64"
             }
           ],
           "internalType": "struct CommunityTypes.CommunityConfig",
@@ -122,49 +137,6 @@
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "AdminValidatorRoleConflict",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "AlreadyCommunityMember",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "voter",
-          "type": "address"
-        }
-      ],
-      "name": "BinaryVoteAlreadyCast",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "CannotRemoveLastAdmin",
-      "type": "error"
     },
     {
       "inputs": [
@@ -208,72 +180,6 @@
       "type": "error"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "CommunityProposalNotFound",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "roundId",
-          "type": "uint256"
-        }
-      ],
-      "name": "CommunityRoundNotFound",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint8",
-          "name": "field",
-          "type": "uint8"
-        }
-      ],
-      "name": "CommunityZeroAddress",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "ExitAlreadyRequested",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "availableAt",
-          "type": "uint256"
-        }
-      ],
-      "name": "ExitCooldownNotFinished",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "ExitNotRequested",
-      "type": "error"
-    },
-    {
       "inputs": [],
       "name": "InvalidAdminActionParameters",
       "type": "error"
@@ -281,50 +187,12 @@
     {
       "inputs": [
         {
-          "internalType": "uint8",
-          "name": "code",
-          "type": "uint8"
+          "internalType": "string",
+          "name": "field",
+          "type": "string"
         }
       ],
-      "name": "InvalidCommunityConfigCode",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "InvalidProposalState",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "InvalidRoundProposal",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "InvalidVoteChoice",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "MembershipExitBlocked",
+      "name": "InvalidCommunityConfig",
       "type": "error"
     },
     {
@@ -336,6 +204,17 @@
         }
       ],
       "name": "NotCommunityAdmin",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "NotCommunityHub",
       "type": "error"
     },
     {
@@ -361,143 +240,8 @@
       "type": "error"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "ProposalAlreadySettled",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "author",
-          "type": "address"
-        }
-      ],
-      "name": "ProposalAuthorCannotVote",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "ProposalNotSettled",
-      "type": "error"
-    },
-    {
       "inputs": [],
       "name": "ReentrancyGuardReentrantCall",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "feeBps",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "maxFeeBps",
-          "type": "uint256"
-        }
-      ],
-      "name": "RejectionFeeTooHigh",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "RoleAlreadyAssigned",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "RoleNotAssigned",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "roundId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "voter",
-          "type": "address"
-        }
-      ],
-      "name": "RoundVoteAlreadyCast",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "availableAt",
-          "type": "uint256"
-        }
-      ],
-      "name": "ValidationStillOpen",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "ValidationWindowClosed",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "validator",
-          "type": "address"
-        }
-      ],
-      "name": "ValidatorDecisionAlreadyCast",
       "type": "error"
     },
     {
@@ -522,28 +266,6 @@
       "type": "error"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "epochId",
-          "type": "uint256"
-        }
-      ],
-      "name": "ValidatorRewardEpochAlreadyFinalized",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "epochId",
-          "type": "uint256"
-        }
-      ],
-      "name": "ValidatorRewardEpochNotFound",
-      "type": "error"
-    },
-    {
       "inputs": [],
       "name": "ValidatorSetLocked",
       "type": "error"
@@ -551,114 +273,12 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "maxAllowed",
-          "type": "uint256"
-        }
-      ],
-      "name": "VoteAmountCapExceeded",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "voter",
-          "type": "address"
-        }
-      ],
-      "name": "VoteLockAlreadyCleared",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "voter",
-          "type": "address"
-        }
-      ],
-      "name": "VoteLockNotFound",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "supplied",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "required",
-          "type": "uint256"
-        }
-      ],
-      "name": "VoteStakeTooLow",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "VotingNotOpen",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "availableAt",
-          "type": "uint256"
-        }
-      ],
-      "name": "VotingStillOpen",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "VotingWindowClosed",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "string",
-          "name": "field",
+          "name": "paramName",
           "type": "string"
         }
       ],
-      "name": "ZeroLength",
+      "name": "ZeroAddress",
       "type": "error"
     },
     {
@@ -1217,104 +837,7 @@
     },
     {
       "inputs": [],
-      "name": "MAX_ACTIVE_VALIDATORS",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "MAX_SLATE_PROPOSALS_PER_ROUND",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "MAX_VOTE_STAKE_USDC",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "activeBinaryProposalCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "activeMemberProposalCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "activeSlateRoundCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "adminApprovalThreshold",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "adminCount",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1352,32 +875,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "binaryRejectionFeeBps",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "binaryVotingDuration",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1396,6 +893,24 @@
         }
       ],
       "name": "castBinaryVote",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "approved",
+          "type": "bool"
+        }
+      ],
+      "name": "castMilestoneReview",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1437,6 +952,19 @@
         }
       ],
       "name": "castValidationDecision",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimFailedPlanRefund",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1541,7 +1069,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "requestId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1570,7 +1098,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "proposalId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1599,7 +1127,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "proposalId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1618,7 +1146,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "roundId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1647,7 +1175,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "proposalId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1676,7 +1204,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "proposalId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1695,7 +1223,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "roundId",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -1710,32 +1238,6 @@
           "internalType": "address",
           "name": "",
           "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "currentValidatorRewardEpochId",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "entryStakeUSDC",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -1781,6 +1283,19 @@
       "inputs": [
         {
           "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        }
+      ],
+      "name": "failExpiredPlan",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
           "name": "proposalId",
           "type": "uint256"
         }
@@ -1793,6 +1308,19 @@
     {
       "inputs": [],
       "name": "finalizeMembershipExit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        }
+      ],
+      "name": "finalizeMilestoneReview",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1819,7 +1347,7 @@
         },
         {
           "internalType": "address",
-          "name": "voter",
+          "name": "voter_",
           "type": "address"
         }
       ],
@@ -2085,6 +1613,35 @@
       "inputs": [
         {
           "internalType": "uint256",
+          "name": "roundId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "voter_",
+          "type": "address"
+        }
+      ],
+      "name": "getSlateVote",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "stake",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
           "name": "epochId",
           "type": "uint256"
         }
@@ -2222,12 +1779,51 @@
     },
     {
       "inputs": [],
-      "name": "membershipExitCooldown",
+      "name": "membership",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "contract CommunityMembershipModule",
           "name": "",
-          "type": "uint256"
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "membershipModule",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "milestoneManager",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "milestones",
+      "outputs": [
+        {
+          "internalType": "contract CommunityMilestoneManager",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -2261,12 +1857,12 @@
     },
     {
       "inputs": [],
-      "name": "pendingValidationProposalCount",
+      "name": "proposalModule",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "address",
           "name": "",
-          "type": "uint256"
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -2274,25 +1870,12 @@
     },
     {
       "inputs": [],
-      "name": "proposalBondUSDC",
+      "name": "proposals",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "contract CommunityProposalModule",
           "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "proposalCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -2301,6 +1884,19 @@
     {
       "inputs": [],
       "name": "renounceValidatorRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        }
+      ],
+      "name": "reopenAfterCorrection",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -2317,32 +1913,6 @@
       "name": "rollValidatorRewardEpoch",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "roundCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "roundVotingDuration",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -2372,6 +1942,24 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "planId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "evidenceHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "submitMilestoneProof",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "totalPausedDuration",
       "outputs": [
@@ -2386,171 +1974,7 @@
     },
     {
       "inputs": [],
-      "name": "unresolvedMemberProposalCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "unresolvedVoteLockCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "validationEpochIdByProposal",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "validationWindow",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "validatorActiveThresholdBps",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "validatorApprovalThreshold",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "validatorApprovedProposal",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "validatorCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "validatorDecisionCast",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "validatorProposalPointsThreshold",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "validatorRewardEpoch",
       "outputs": [
         {
           "internalType": "uint256",
@@ -2575,48 +1999,13 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "validatorValidationCount",
+      "inputs": [],
+      "name": "voting",
       "outputs": [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
+          "internalType": "contract CommunityVotingModule",
           "name": "",
           "type": "address"
-        }
-      ],
-      "name": "voteLockCleared",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -2624,12 +2013,25 @@
     },
     {
       "inputs": [],
-      "name": "voteMinStakeUSDC",
+      "name": "votingModule",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "address",
           "name": "",
-          "type": "uint256"
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "winnerSnapshot",
+      "outputs": [
+        {
+          "internalType": "contract CommunityWinnerSnapshot",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",

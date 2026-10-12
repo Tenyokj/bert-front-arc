@@ -14,13 +14,12 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
-      entities:
-        - Community
-        - CommunityHubSource
-        - CommunityTreasurySource
+      entities: [Community, CommunityHubSource, CommunityTreasurySource, CommunityModuleSource]
       abis:
         - name: CommunityFactory
           file: ./abis/CommunityFactory.json
+        - name: CommunityHub
+          file: ./abis/CommunityHub.json
       eventHandlers:
         - event: CommunityTreasuryCreated(indexed uint256,indexed address,address,bytes32,string,string)
           handler: handleCommunityTreasuryCreated
@@ -29,25 +28,17 @@ dataSources:
       file: ./src/factory-mapping.ts
 
 templates:
+  # Hub owns lifecycle and quorum-protected administration actions. V3.1
+  # member, proposal, vote and milestone events are emitted by the modules below.
   - kind: ethereum
     name: CommunityHub
     network: arc-testnet
-    source:
-      abi: CommunityHub
+    source: { abi: CommunityHub }
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
-      entities:
-        - Community
-        - CommunityMember
-        - CommunityProposal
-        - CommunitySlateRound
-        - CommunityBinaryVote
-        - CommunitySlateVote
-        - CommunityValidatorDecision
-        - CommunityValidatorEpoch
-        - CommunityAdminAction
+      entities: [Community, CommunityAdminAction]
       abis:
         - name: CommunityHub
           file: ./abis/CommunityHub.json
@@ -56,14 +47,6 @@ templates:
           handler: handleCommunityStatusChanged
         - event: CommunityArchived(uint256)
           handler: handleCommunityArchived
-        - event: AdminAdded(indexed address)
-          handler: handleAdminAdded
-        - event: AdminRemoved(indexed address)
-          handler: handleAdminRemoved
-        - event: ValidatorAdded(indexed address)
-          handler: handleValidatorAdded
-        - event: ValidatorRemoved(indexed address)
-          handler: handleValidatorRemoved
         - event: AdminActionRequested(indexed uint256,uint8,indexed address,indexed address,uint256,uint256)
           handler: handleAdminActionRequested
         - event: AdminActionApproved(indexed uint256,indexed address)
@@ -72,23 +55,82 @@ templates:
           handler: handleAdminActionCancelled
         - event: AdminActionExecuted(indexed uint256,uint8,indexed address)
           handler: handleAdminActionExecuted
+      file: ./src/hub-mapping.ts
+
+  - kind: ethereum
+    name: CommunityMembershipModule
+    network: arc-testnet
+    source: { abi: CommunityMembershipModule }
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: [CommunityMember]
+      abis:
+        - name: CommunityMembershipModule
+          file: ./abis/CommunityMembershipModule.json
+      eventHandlers:
         - event: MemberJoined(indexed address,uint256)
           handler: handleMemberJoined
         - event: MembershipExitRequested(indexed address,uint256)
           handler: handleMembershipExitRequested
         - event: MembershipExited(indexed address,uint256)
           handler: handleMembershipExited
-        - event: ProposalCreated(indexed uint256,indexed address,uint8)
+        - event: AdminAdded(indexed address)
+          handler: handleAdminAdded
+        - event: AdminRemoved(indexed address)
+          handler: handleAdminRemoved
+        - event: ValidatorAdded(indexed address)
+          handler: handleValidatorAdded
+        - event: ValidatorRemoved(indexed address)
+          handler: handleValidatorRemoved
+        - event: ProposalPointAwarded(indexed uint256,indexed address,uint256)
+          handler: handleProposalPointAwarded
+        - event: ValidatorEligibilityReached(indexed address,uint256)
+          handler: handleValidatorEligibilityReached
+      file: ./src/membership-mapping.ts
+
+  - kind: ethereum
+    name: CommunityProposalModule
+    network: arc-testnet
+    source: { abi: CommunityProposalModule }
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: [CommunityProposal, CommunityValidatorDecision, CommunityValidatorEpoch]
+      abis:
+        - name: CommunityProposalModule
+          file: ./abis/CommunityProposalModule.json
+      eventHandlers:
+        - event: ProposalCreated(indexed uint256,indexed address,uint8,uint8)
           handler: handleProposalCreated
         - event: ValidatorDecisionCast(indexed uint256,indexed address,bool)
           handler: handleValidatorDecisionCast
         - event: ProposalValidationFinalized(indexed uint256,bool)
           handler: handleProposalValidationFinalized
+        - event: ValidatorRewardEpochRolled(indexed uint256,uint64,uint64)
+          handler: handleValidatorRewardEpochRolled
+      file: ./src/proposal-mapping.ts
+
+  - kind: ethereum
+    name: CommunityVotingModule
+    network: arc-testnet
+    source: { abi: CommunityVotingModule }
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: [CommunityProposal, CommunitySlateRound, CommunityBinaryVote, CommunitySlateVote]
+      abis:
+        - name: CommunityVotingModule
+          file: ./abis/CommunityVotingModule.json
+      eventHandlers:
         - event: BinaryVotingOpened(indexed uint256,uint256)
           handler: handleBinaryVotingOpened
         - event: BinaryVoteCast(indexed uint256,indexed address,uint8,uint256)
           handler: handleBinaryVoteCast
-        - event: BinaryProposalSettled(indexed uint256,bool)
+        - event: BinaryProposalSettled(indexed uint256,bool,uint256)
           handler: handleBinaryProposalSettled
         - event: SlateRoundCreated(indexed uint256,uint8,uint256)
           handler: handleSlateRoundCreated
@@ -96,33 +138,69 @@ templates:
           handler: handleSlateRoundVoteCast
         - event: SlateRoundSettled(indexed uint256,indexed uint256,uint256,uint256)
           handler: handleSlateRoundSettled
-        - event: ProposalPointAwarded(indexed uint256,indexed address,uint256)
-          handler: handleProposalPointAwarded
-        - event: ValidatorEligibilityReached(indexed address,uint256)
-          handler: handleValidatorEligibilityReached
-        - event: ValidatorRewardEpochFinalized(indexed uint256,uint256)
-          handler: handleValidatorRewardEpochFinalized
-        - event: ValidatorRewardEpochRolled(indexed uint256,uint256,uint256)
-          handler: handleValidatorRewardEpochRolled
-      file: ./src/hub-mapping.ts
+      file: ./src/voting-mapping.ts
 
   - kind: ethereum
-    name: CommunityTreasury
+    name: CommunityMilestoneManager
     network: arc-testnet
-    source:
-      abi: CommunityTreasury
+    source: { abi: CommunityMilestoneManager }
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
-      entities:
-        - Community
-        - CommunityMember
-        - CommunityProposal
-        - CommunitySlateRound
-        - CommunityWithdrawal
-        - CommunityValidatorEpoch
-        - CommunityValidatorRewardClaim
+      entities: [CommunityExecutionPlan, CommunityMilestoneReview, CommunityExecutionRefundClaim]
+      abis:
+        - name: CommunityMilestoneManager
+          file: ./abis/CommunityMilestoneManager.json
+      eventHandlers:
+        - event: ExecutionPlanStarted(indexed uint256,indexed uint256,uint256,uint256)
+          handler: handleExecutionPlanStarted
+        - event: MilestoneProofSubmitted(indexed uint256,indexed uint8,bytes32,uint256)
+          handler: handleMilestoneProofSubmitted
+        - event: MilestoneReviewCast(indexed uint256,indexed uint8,indexed address,bool,uint256)
+          handler: handleMilestoneReviewCast
+        - event: MilestoneApproved(indexed uint256,indexed uint8,uint256)
+          handler: handleMilestoneApproved
+        - event: MilestoneCorrectionOpened(indexed uint256,indexed uint8,uint256)
+          handler: handleMilestoneCorrectionOpened
+        - event: MilestoneGraceOpened(indexed uint256,indexed uint8,uint256)
+          handler: handleMilestoneGraceOpened
+        - event: ExecutionPlanFailed(indexed uint256,uint256)
+          handler: handleExecutionPlanFailed
+        - event: ExecutionPlanCompleted(indexed uint256)
+          handler: handleExecutionPlanCompleted
+        - event: ExecutionRefundClaimed(indexed uint256,indexed address,uint256)
+          handler: handleExecutionRefundClaimed
+      file: ./src/milestone-mapping.ts
+
+  - kind: ethereum
+    name: CommunityWinnerSnapshot
+    network: arc-testnet
+    source: { abi: CommunityWinnerSnapshot }
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: [CommunityExecutionPlan, CommunityWinnerSupport]
+      abis:
+        - name: CommunityWinnerSnapshot
+          file: ./abis/CommunityWinnerSnapshot.json
+      eventHandlers:
+        - event: WinnerSupportRecorded(indexed uint256,indexed address,uint256)
+          handler: handleWinnerSupportRecorded
+        - event: WinnerSnapshotSealed(indexed uint256,uint256,uint256)
+          handler: handleWinnerSnapshotSealed
+      file: ./src/winner-snapshot-mapping.ts
+
+  - kind: ethereum
+    name: CommunityTreasury
+    network: arc-testnet
+    source: { abi: CommunityTreasury }
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: [Community, CommunityMember, CommunityProposal, CommunitySlateRound, CommunityWithdrawal, CommunityValidatorEpoch, CommunityValidatorRewardClaim, CommunityExecutionPlan]
       abis:
         - name: CommunityTreasury
           file: ./abis/CommunityTreasury.json
@@ -157,4 +235,6 @@ templates:
           handler: handleWithdrawalCancelled
         - event: WithdrawalExecuted(indexed uint256,indexed address,uint256)
           handler: handleWithdrawalExecuted
+        - event: ExecutionPlanReserved(indexed uint256,uint256)
+          handler: handleExecutionPlanReserved
       file: ./src/treasury-mapping.ts

@@ -393,6 +393,21 @@
               "internalType": "uint256",
               "name": "validatorProposalPointsThreshold",
               "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "executionRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint64",
+              "name": "milestoneReviewDuration",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "milestoneProofDuration",
+              "type": "uint64"
             }
           ],
           "internalType": "struct CommunityTypes.CommunityConfig",
@@ -500,6 +515,26 @@
           "internalType": "address",
           "name": "humanVerifier_",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "membershipModuleDeployer_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "proposalModuleDeployer_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "votingModuleDeployer_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "milestoneModuleDeployer_",
+          "type": "address"
         }
       ],
       "name": "initialize",
@@ -521,6 +556,58 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "membershipModuleDeployer",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "milestoneModuleDeployer",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proposalModuleDeployer",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "votingModuleDeployer",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",

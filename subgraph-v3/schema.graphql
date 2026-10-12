@@ -26,6 +26,13 @@ type CommunityTreasurySource @entity(immutable: false) {
   community: Community!
 }
 
+"A dynamically discovered V3.1 module bound to one Community."
+type CommunityModuleSource @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  kind: String!
+}
+
 type CommunityMember @entity(immutable: false) {
   id: ID!
   community: Community!
@@ -64,8 +71,64 @@ type CommunityProposal @entity(immutable: false) {
   globalReserveAmount: BigInt!
   refundLiability: BigInt!
   round: CommunitySlateRound
+  executionPlan: CommunityExecutionPlan
   createdAt: BigInt!
   updatedAt: BigInt!
+}
+
+"A V3.1 execution budget reserved for a successful proposal."
+type CommunityExecutionPlan @entity(immutable: false) {
+  id: ID!
+  community: Community!
+  planId: BigInt!
+  proposal: CommunityProposal!
+  budget: BigInt!
+  initialTranche: BigInt!
+  releasedAmount: BigInt!
+  currentMilestone: Int!
+  status: String!
+  totalSupportWeight: BigInt!
+  supporterCount: BigInt!
+  refundLiability: BigInt!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  reviews: [CommunityMilestoneReview!]! @derivedFrom(field: "plan")
+}
+
+"One review window for an execution-plan milestone."
+type CommunityMilestoneReview @entity(immutable: false) {
+  id: ID!
+  plan: CommunityExecutionPlan!
+  milestone: Int!
+  evidenceHash: Bytes
+  closesAt: BigInt
+  correctionAvailableAt: BigInt
+  graceClosesAt: BigInt
+  yesWeight: BigInt!
+  noWeight: BigInt!
+  reviewerCount: BigInt!
+  settled: Boolean!
+  approved: Boolean
+  releasedAmount: BigInt!
+  updatedAt: BigInt!
+}
+
+"An immutable winning vote captured for V3.1 milestone-review eligibility."
+type CommunityWinnerSupport @entity(immutable: false) {
+  id: ID!
+  plan: CommunityExecutionPlan!
+  supporter: Bytes!
+  weight: BigInt!
+}
+
+"A successful refund claim after a V3.1 execution plan fails."
+type CommunityExecutionRefundClaim @entity(immutable: true) {
+  id: ID!
+  plan: CommunityExecutionPlan!
+  supporter: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
 }
 
 type CommunitySlateRound @entity(immutable: false) {
