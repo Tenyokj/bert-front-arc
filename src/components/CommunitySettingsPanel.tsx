@@ -1,12 +1,13 @@
 "use client";
 
 import { formatUnits } from "viem";
-import { useReadContracts } from "wagmi";
+import { useReadContract, useReadContracts } from "wagmi";
 
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityMilestoneAbi } from "@/lib/community-contracts";
 
 /** Displays immutable CommunityHub economics and timing parameters from chain. */
 export function CommunitySettingsPanel({ hub }: { hub: `0x${string}` }) {
+  const milestoneManager = useReadContract({ address: hub, abi: communityHubAbi, functionName: "milestones" });
   const config = useReadContracts({
     contracts: [
       "entryStakeUSDC", "proposalBondUSDC", "voteMinStakeUSDC", "membershipExitCooldown",
@@ -15,12 +16,22 @@ export function CommunitySettingsPanel({ hub }: { hub: `0x${string}` }) {
       "validatorRewardEpoch", "validatorActiveThresholdBps", "validatorProposalPointsThreshold",
     ].map((functionName) => ({ address: hub, abi: communityHubAbi, functionName })) as never,
   });
+  const milestoneConfig = useReadContracts({
+    contracts: milestoneManager.data
+      ? ["executionRecipient", "reviewDuration", "proofDuration"].map((functionName) => ({
+          address: milestoneManager.data,
+          abi: communityMilestoneAbi,
+          functionName,
+        })) as never
+      : [],
+  });
 
   const values = (config.data ?? []).map((item) => item.result) as (bigint | undefined)[];
-  if (config.isLoading) return <p className="mt-5 text-sm text-slate-400">Loading immutable Community settings...</p>;
+  if (config.isLoading || milestoneManager.isLoading || milestoneConfig.isLoading) return <p className="mt-5 text-sm text-slate-400">Loading immutable Community settings...</p>;
   if (config.error || values.some((value) => value === undefined)) return <p className="mt-5 text-sm text-amber-100">Community settings could not be read from the deployed Hub.</p>;
 
   const [entryStake, bond, minimumVote, exitCooldown, validatorThreshold, adminQuorum, noFee, validatorShare, validationWindow, binaryDuration, slateDuration, rewardEpoch, activityThreshold, pointThreshold] = values as bigint[];
+  const [executionRecipient, reviewDuration, proofDuration] = (milestoneConfig.data ?? []).map((item) => item.result) as [string | undefined, bigint | undefined, bigint | undefined];
   const rows = [
     ["Entry stake", `${formatUsdc(entryStake)} USDC`],
     ["Member proposal bond", `${formatUsdc(bond)} USDC`],
@@ -37,13 +48,16 @@ export function CommunitySettingsPanel({ hub }: { hub: `0x${string}` }) {
     ["Validator reward share", formatBps(validatorShare)],
     ["Validator activity", formatBps(activityThreshold)],
     ["Validator role threshold", `${pointThreshold.toString()} proposal points`],
+    ["Administration execution wallet", executionRecipient ? `${executionRecipient.slice(0, 8)}...${executionRecipient.slice(-6)}` : "Unavailable"],
+    ["Milestone review", reviewDuration ? formatDuration(reviewDuration) : "Unavailable"],
+    ["Proof deadline", proofDuration ? formatDuration(proofDuration) : "Unavailable"],
   ];
 
   return <details className="mt-6 rounded-2xl border border-white/10 bg-slate-950/20 p-4">
     <summary className="cursor-pointer list-none text-sm font-semibold text-cyan-100 marker:hidden">
       <span className="flex items-center justify-between gap-4">Community rules and economics <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">View all settings</span></span>
     </summary>
-    <p className="mt-3 text-sm text-slate-400">These values are immutable for this deployed Community and are read directly from CommunityHub.</p>
+    <p className="mt-3 text-sm text-slate-400">These values are immutable for this deployed Community and are read directly from CommunityHub and its factory-bound milestone module.</p>
     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {rows.map(([label, value]) => <Metric key={label} label={label} value={value} />)}
     </div>

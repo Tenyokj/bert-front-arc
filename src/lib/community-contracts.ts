@@ -54,6 +54,9 @@ const communityConfig = {
     { name: "validatorRewardEpoch", type: "uint256" },
     { name: "validatorActiveThresholdBps", type: "uint256" },
     { name: "validatorProposalPointsThreshold", type: "uint256" },
+    { name: "executionRecipient", type: "address" },
+    { name: "milestoneReviewDuration", type: "uint64" },
+    { name: "milestoneProofDuration", type: "uint64" },
   ],
   name: "config_",
   type: "tuple",
@@ -190,6 +193,7 @@ export const communityHubAbi = [
   { type: "function", stateMutability: "view", name: "activeMemberProposalCount", inputs: [{ name: "member", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "unresolvedVoteLockCount", inputs: [{ name: "member", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "currentValidatorRewardEpochId", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "milestones", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", stateMutability: "view", name: "getValidatorRewardEpoch", inputs: [{ name: "epochId", type: "uint256" }], outputs: [validatorRewardEpoch] },
   { type: "function", stateMutability: "view", name: "isValidatorActiveForEpoch", inputs: [{ name: "epochId", type: "uint256" }, { name: "validator", type: "address" }], outputs: [{ type: "bool" }] },
   { type: "function", stateMutability: "view", name: "validatorValidationCount", inputs: [{ name: "epochId", type: "uint256" }, { name: "validator", type: "address" }], outputs: [{ type: "uint256" }] },
@@ -225,7 +229,54 @@ export const communityHubAbi = [
   { type: "function", stateMutability: "nonpayable", name: "castSlateRoundVote", inputs: [{ name: "roundId", type: "uint256" }, { name: "proposalId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [] },
   { type: "function", stateMutability: "nonpayable", name: "settleSlateRound", inputs: [{ name: "roundId", type: "uint256" }], outputs: [] },
   { type: "function", stateMutability: "nonpayable", name: "clearSettledRoundVoteLock", inputs: [{ name: "roundId", type: "uint256" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "submitMilestoneProof", inputs: [{ name: "planId", type: "uint256" }, { name: "evidenceHash", type: "bytes32" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "castMilestoneReview", inputs: [{ name: "planId", type: "uint256" }, { name: "approved", type: "bool" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "finalizeMilestoneReview", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "reopenAfterCorrection", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "failExpiredPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "claimFailedPlanRefund", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
   { type: "function", stateMutability: "nonpayable", name: "finalizeValidatorRewardEpoch", inputs: [{ name: "epochId", type: "uint256" }], outputs: [] },
+] as const satisfies Abi;
+
+const executionPlan = {
+  components: [
+    { name: "proposalId", type: "uint256" },
+    { name: "totalBudget", type: "uint256" },
+    { name: "eligibleSupportWeight", type: "uint256" },
+    { name: "releasedAmount", type: "uint256" },
+    { name: "refundableAmount", type: "uint256" },
+    { name: "proofDeadline", type: "uint64" },
+    { name: "currentMilestone", type: "uint8" },
+    { name: "status", type: "uint8" },
+  ],
+  name: "",
+  type: "tuple",
+} as const;
+
+const milestoneReview = {
+  components: [
+    { name: "openedAt", type: "uint64" },
+    { name: "closesAt", type: "uint64" },
+    { name: "correctionAvailableAt", type: "uint64" },
+    { name: "approvingWeight", type: "uint256" },
+    { name: "rejectingWeight", type: "uint256" },
+    { name: "approvingAddresses", type: "uint256" },
+    { name: "participatingAddresses", type: "uint256" },
+    { name: "proofAttempts", type: "uint8" },
+    { name: "evidenceHash", type: "bytes32" },
+  ],
+  name: "",
+  type: "tuple",
+} as const;
+
+export const communityMilestoneAbi = [
+  { type: "function", stateMutability: "view", name: "executionRecipient", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", stateMutability: "view", name: "reviewDuration", inputs: [], outputs: [{ type: "uint64" }] },
+  { type: "function", stateMutability: "view", name: "proofDuration", inputs: [], outputs: [{ type: "uint64" }] },
+  { type: "function", stateMutability: "view", name: "getPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [executionPlan] },
+  { type: "function", stateMutability: "view", name: "getReview", inputs: [{ name: "planId", type: "uint256" }, { name: "milestone", type: "uint8" }], outputs: [milestoneReview] },
+  { type: "function", stateMutability: "view", name: "reviewChoice", inputs: [{ name: "planId", type: "uint256" }, { name: "milestone", type: "uint8" }, { name: "reviewer", type: "address" }], outputs: [{ type: "uint8" }] },
+  { type: "function", stateMutability: "view", name: "canReleaseReviewerLock", inputs: [{ name: "planId", type: "uint256" }, { name: "supporter", type: "address" }], outputs: [{ type: "bool" }] },
 ] as const satisfies Abi;
 
 export const communityTreasuryAbi = [

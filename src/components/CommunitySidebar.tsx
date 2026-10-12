@@ -1,12 +1,13 @@
 "use client";
 
-import { FaBuildingColumns, FaCheckDouble, FaList, FaPlus, FaShieldHalved } from "react-icons/fa6";
+import { FaBuildingColumns, FaCheckDouble, FaFileShield, FaList, FaPlus, FaShieldHalved } from "react-icons/fa6";
 
-export type CommunitySection = "binary" | "slate" | "create" | "validator" | "admin";
+export type CommunitySection = "binary" | "slate" | "milestones" | "create" | "validator" | "admin";
 
 const entries = [
   { id: "binary", label: "Binary Proposals", icon: FaList },
   { id: "slate", label: "Slate Rounds", icon: FaCheckDouble },
+  { id: "milestones", label: "Execution Plans", icon: FaFileShield },
   { id: "create", label: "Create Proposal", icon: FaPlus },
   { id: "validator", label: "Validator Queue", icon: FaShieldHalved },
   { id: "admin", label: "Admin Panel", icon: FaBuildingColumns },
