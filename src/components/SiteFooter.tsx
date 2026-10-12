@@ -31,6 +31,9 @@ export default function SiteFooter() {
           <Link className="footer-link" href="/terms-of-use">
             Terms of Use
           </Link>
+          <Link className="footer-link" href="/v3">
+            V3.1 Communities
+          </Link>
         </div>
         <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
           <a href="https://github.com/Tenyokj/bert-core-arc" target="_blank" rel="noreferrer" aria-label="GitHub">
@@ -64,6 +67,9 @@ export default function SiteFooter() {
             <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/docs_contracts/ReputationSystemUpgradeable.md">
               Reputation Layer
             </a>
+            <Link className="footer-link" href="/v3">
+              V3.1 Community Layer
+            </Link>
             <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/UPGRADES.md">
               Upgrade Modules
             </a>
@@ -150,6 +156,9 @@ export default function SiteFooter() {
           <div className="mt-6 flex flex-col gap-3 text-lg text-slate-600 dark:text-slate-300">
             <Link className="footer-link" href="/protocol-stats">
               Protocol stats
+            </Link>
+            <Link className="footer-link" href="/v3/communities">
+              Community metrics
             </Link>
             <Link className="footer-link" href="/treasury-policies#reporting">
               Treasury Reporting

@@ -36,6 +36,12 @@ export default function Home() {
       description: "Open the isolated demo dApp to inspect rounds, ideas, treasury flow, and milestone logic without setup.",
       href: "/demo",
     },
+    {
+      label: "For communities",
+      title: "Launch a Community with reviewable execution",
+      description: "Set local governance rules, run Binary or Slate proposals, and release treasury budget through supporter-reviewed milestones.",
+      href: "/v3",
+    },
   ];
 
   return (
@@ -58,6 +64,9 @@ export default function Home() {
             <Link href="/app" className="transition-colors hover:text-slate-900">
               App dashboard
             </Link>
+            <Link href="/v3" className="transition-colors hover:text-slate-900">
+              V3.1 Communities
+            </Link>
             <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
               Docs
             </a>
@@ -74,6 +83,9 @@ export default function Home() {
             </Link>
             <Link href="/app" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
               App dashboard
+            </Link>
+            <Link href="/v3" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
+              V3.1 Communities
             </Link>
             <a href="https://bertdao-docs.vercel.app/" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
               Docs
@@ -123,6 +135,12 @@ export default function Home() {
                 className="rounded-full border border-slate-200 bg-white/70 px-7 py-3 text-center text-sm font-semibold text-slate-900 backdrop-blur transition hover:-translate-y-0.5"
               >
                 How it works
+              </Link>
+              <Link
+                href="/v3"
+                className="rounded-full border border-violet-200 bg-violet-50/70 px-7 py-3 text-center text-sm font-semibold text-violet-900 backdrop-blur transition hover:-translate-y-0.5"
+              >
+                V3.1 Communities
               </Link>
             </div>
 

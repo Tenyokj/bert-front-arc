@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaArrowRight, FaCircleInfo, FaRocket } from "react-icons/fa6";
-import { parseEventLogs, parseUnits, type Address } from "viem";
+import { isAddress, parseEventLogs, parseUnits, type Address } from "viem";
 import {
   useAccount,
   useDeployContract,
@@ -23,6 +23,7 @@ import { shortAddress } from "@/lib/dapp-onchain";
 type Form = Record<
   | "name"
   | "metadataURI"
+  | "executionRecipient"
   | "entryStake"
   | "proposalBond"
   | "voteMinStake"
@@ -36,7 +37,9 @@ type Form = Record<
   | "binaryVotingMinutes"
   | "roundVotingMinutes"
   | "rewardEpochMinutes"
-  | "validatorActivityBps",
+  | "validatorActivityBps"
+  | "milestoneReviewDays"
+  | "milestoneProofMinutes",
   string
 >;
 type TimingField =
@@ -44,7 +47,9 @@ type TimingField =
   | "validationMinutes"
   | "binaryVotingMinutes"
   | "roundVotingMinutes"
-  | "rewardEpochMinutes";
+  | "rewardEpochMinutes"
+  | "milestoneReviewDays"
+  | "milestoneProofMinutes";
 type TimingPreset = "production" | "demo" | "custom";
 const productionTiming: Pick<Form, TimingField> = {
   exitCooldownMinutes: "1440",
@@ -52,6 +57,8 @@ const productionTiming: Pick<Form, TimingField> = {
   binaryVotingMinutes: "2880",
   roundVotingMinutes: "2880",
   rewardEpochMinutes: "10080",
+  milestoneReviewDays: "14",
+  milestoneProofMinutes: "10080",
 };
 const demoTiming: Pick<Form, TimingField> = {
   exitCooldownMinutes: "5",
@@ -59,6 +66,9 @@ const demoTiming: Pick<Form, TimingField> = {
   binaryVotingMinutes: "5",
   roundVotingMinutes: "5",
   rewardEpochMinutes: "5",
+  // The contract deliberately enforces a meaningful one-day minimum review.
+  milestoneReviewDays: "1",
+  milestoneProofMinutes: "5",
 };
 const timingFields: TimingField[] = [
   "exitCooldownMinutes",
@@ -70,6 +80,7 @@ const timingFields: TimingField[] = [
 const defaults: Form = {
   name: "",
   metadataURI: "",
+  executionRecipient: "",
   entryStake: "10",
   proposalBond: "50",
   voteMinStake: "10",
@@ -88,6 +99,7 @@ const whole = (value: string, name: string) => {
   return BigInt(value);
 };
 const minutes = (value: string, name: string) => whole(value, name) * 60n;
+const days = (value: string, name: string) => whole(value, name) * 86_400n;
 
 /** Replaces Hardhat library placeholders with the deployed V3 Admin-actions library address. */
 function linkCommunityHubBytecode(library: Address) {
@@ -189,12 +201,22 @@ export default function CreateCommunityPage() {
       setHub(deployReceipt.data.contractAddress);
   }, [deployReceipt.data?.contractAddress, deployReceipt.isSuccess, hub]);
 
+  useEffect(() => {
+    if (!address) return;
+    setForm((current) =>
+      current.executionRecipient ? current : { ...current, executionRecipient: address },
+    );
+  }, [address]);
+
   const build = () => {
     if (!address || !contracts.usdc || !contracts.fundingPool || !contracts.popVerifier)
       throw new Error("Connect a wallet and configure USDC, FundingPool, and PoPVerifier.");
     if (!isVerifiedHuman)
       throw new Error("Complete human verification before creating a Community.");
     if (!form.name.trim()) throw new Error("Community name is required.");
+    if (!isAddress(form.executionRecipient.trim())) {
+      throw new Error("Execution recipient must be a valid wallet or multisig address.");
+    }
     const initialAdmins = admins.some(
       (item) => item.toLowerCase() === address.toLowerCase(),
     )
@@ -252,6 +274,9 @@ export default function CreateCommunityPage() {
       validatorRewardEpoch: minutes(form.rewardEpochMinutes, "Epoch"),
       validatorActiveThresholdBps: whole(form.validatorActivityBps, "Activity"),
       validatorProposalPointsThreshold,
+      executionRecipient: form.executionRecipient.trim() as Address,
+      milestoneReviewDuration: days(form.milestoneReviewDays, "Milestone review"),
+      milestoneProofDuration: minutes(form.milestoneProofMinutes, "Milestone proof"),
     };
   };
   const reserveTreasury = () => {
@@ -342,6 +367,12 @@ export default function CreateCommunityPage() {
                 set={(v) => field("metadataURI", v)}
                 placeholder="ipfs://... (optional)"
               />
+              <AddressField
+                label="Administration execution wallet"
+                value={form.executionRecipient}
+                set={(v) => field("executionRecipient", v)}
+                helper="This is not the Community Treasury. The Treasury keeps all Community funds; it releases only an approved winner's 20% / 40% / 40% execution budget to this Admin-team wallet or multisig. This address is immutable after deployment."
+              />
               <AddressChips
                 label="Additional admins"
                 addresses={admins}
@@ -398,7 +429,7 @@ export default function CreateCommunityPage() {
                 {timingPreset === "production"
                   ? "Production: 1-day validation and exit cooldown, 2-day voting, 7-day validator reward epoch."
                   : timingPreset === "demo"
-                    ? "Demo: every local timing is 5 minutes, so a judge can complete a real contract flow in one session."
+                    ? "Demo: local proposal timings are 5 minutes. Milestone review stays at its enforced one-day minimum; local E2E can advance the Hardhat clock without weakening contract rules."
                     : "Custom: timing values were edited manually. Review them carefully before reserving the Treasury."}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -480,6 +511,20 @@ export default function CreateCommunityPage() {
                   suffix="min"
                 />
                 <Field
+                  label="Milestone review"
+                  value={form.milestoneReviewDays}
+                  set={(v) => field("milestoneReviewDays", v)}
+                  suffix="days"
+                  min={1}
+                  max={14}
+                />
+                <Field
+                  label="Milestone proof deadline"
+                  value={form.milestoneProofMinutes}
+                  set={(v) => field("milestoneProofMinutes", v)}
+                  suffix="min"
+                />
+                <Field
                   label="Validator activity"
                   value={form.validatorActivityBps}
                   set={(v) => field("validatorActivityBps", v)}
@@ -558,6 +603,7 @@ function Field({
   set,
   placeholder,
   suffix,
+  min,
   max,
 }: {
   label: string;
@@ -565,6 +611,7 @@ function Field({
   set: (value: string) => void;
   placeholder?: string;
   suffix?: string;
+  min?: number;
   max?: number;
 }) {
   return (
@@ -576,6 +623,7 @@ function Field({
           onChange={(e) => set(e.target.value)}
           placeholder={placeholder}
           inputMode="numeric"
+          min={min}
           max={max}
           className="w-full rounded-xl border border-white/10 bg-slate-950/35 px-3 py-3 pr-14 text-sm font-normal normal-case tracking-normal text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/50"
         />
@@ -585,6 +633,35 @@ function Field({
           </span>
         ) : null}
       </div>
+    </label>
+  );
+}
+
+function AddressField({
+  label,
+  value,
+  set,
+  helper,
+}: {
+  label: string;
+  value: string;
+  set: (value: string) => void;
+  helper: string;
+}) {
+  const valid = !value || isAddress(value.trim());
+  return (
+    <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.13em] text-slate-400">
+      {label}
+      <input
+        value={value}
+        onChange={(event) => set(event.target.value)}
+        placeholder="0x..."
+        spellCheck={false}
+        className={`mt-2 w-full rounded-xl border bg-slate-950/35 px-3 py-3 font-mono text-sm font-normal normal-case tracking-normal text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/50 ${valid ? "border-white/10" : "border-rose-300/60"}`}
+      />
+      <span className={valid ? "mt-2 block text-[11px] font-normal normal-case tracking-normal text-slate-500" : "mt-2 block text-[11px] font-normal normal-case tracking-normal text-rose-200"}>
+        {valid ? helper : "Enter a valid 0x wallet or multisig address."}
+      </span>
     </label>
   );
 }

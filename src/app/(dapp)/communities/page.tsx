@@ -10,10 +10,10 @@ export default function CommunitiesPage() {
         <div className="absolute -right-10 -top-16 h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="relative max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">BERT V3 / Community Layer</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">BERT V3.1 / Community Layer</p>
           <h1 className="mt-4 font-[var(--font-display)] text-4xl leading-tight text-white sm:text-5xl md:text-6xl">Governance spaces with capital behind every decision.</h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-            Communities are independent on-chain rooms for members, validators, administrators, stake-backed proposals, and local USDC Treasury execution.
+            Communities are independent on-chain rooms for members, validators, administrators, stake-backed proposals, and reviewable local USDC Treasury execution.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#directory" className="rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5">Browse communities</a>
@@ -25,7 +25,7 @@ export default function CommunitiesPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-[24px] border border-white/10 bg-[#2a2d3b] p-5"><FaUsers className="text-xl text-cyan-300" /><h2 className="mt-4 text-xl font-semibold text-white">Members stake to enter</h2><p className="mt-2 text-sm leading-relaxed text-slate-300">Entry stake makes governance participation intentional and unlocks member proposal rights.</p></div>
         <div className="rounded-[24px] border border-white/10 bg-[#2a2d3b] p-5"><FaCheckDouble className="text-xl text-emerald-300" /><h2 className="mt-4 text-xl font-semibold text-white">Validators filter quality</h2><p className="mt-2 text-sm leading-relaxed text-slate-300">Member proposals need validator approval before they can become community decisions.</p></div>
-        <div className="rounded-[24px] border border-white/10 bg-[#2a2d3b] p-5"><FaBuildingColumns className="text-xl text-amber-200" /><h2 className="mt-4 text-xl font-semibold text-white">Treasury follows results</h2><p className="mt-2 text-sm leading-relaxed text-slate-300">Accepted capital becomes local execution funding under a community-admin quorum.</p></div>
+        <div className="rounded-[24px] border border-white/10 bg-[#2a2d3b] p-5"><FaBuildingColumns className="text-xl text-amber-200" /><h2 className="mt-4 text-xl font-semibold text-white">Delivery stays reviewable</h2><p className="mt-2 text-sm leading-relaxed text-slate-300">A winner starts a 20 / 40 / 40 execution plan; only winning supporters can release its reviewed tranches.</p></div>
       </div>
 
       <div id="directory" className="scroll-mt-28">

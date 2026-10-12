@@ -270,21 +270,21 @@ export default function HowItWorksPage() {
 
           <section className="rounded-3xl border border-teal-400/20 bg-[linear-gradient(135deg,rgba(13,148,136,0.10),rgba(255,255,255,0.04))] p-6 md:p-8">
             <div className="max-w-4xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-500">BERT V3 Community Layer</p>
-              <h2 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">A self-contained Community, connected to the BERT reserve.</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-500">BERT V3.1 Community Layer</p>
+              <h2 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">A self-contained Community where capital release remains reviewable.</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                V3 adds stake-backed Community governance without replacing the V2 builder-grant rail above. Each
+                V3.1 adds stake-backed Community governance without replacing the V2 builder-grant rail above. Each
                 Community receives an independent <strong>CommunityHub</strong> for roles, proposals, voting, active-time
                 clock, and governance requests, plus a paired <strong>CommunityTreasury</strong> for escrow, execution
-                capital, Validator rewards, refunds, and withdrawal approvals. Community-specific decisions remain local;
+                capital, Validator rewards, failed-plan refunds, and withdrawal approvals. A settled winner starts an execution plan: the configured administration recipient receives 20%, then only the wallets that supported that winner review proof for the final 40% / 40%. Community-specific decisions remain local;
                 configured protocol-reserve flows remain visible to the broader BERT FundingPool.
               </p>
             </div>
             <div className="mt-7 grid gap-4 md:grid-cols-3">
               {[
-                ["1. Configure", "A creator sets immutable entry stake, proposal bond, vote floor, validator thresholds, Admin quorum, fees, reward share, and every local timing window."],
+                ["1. Configure", "A creator sets immutable entry stake, proposal bond, vote floor, validator thresholds, Admin quorum, the Administration execution wallet, and every local timing window including proof and review windows. The wallet is not a second Treasury: it receives only approved execution tranches."],
                 ["2. Activate", "Factory reserves the Treasury, deploys the matching Hub, verifies the pair, and indexes a numeric Community ID with Hub, Treasury, creator, and metadata."],
-                ["3. Govern", "Participants join locally, submit the supported proposal modes, validate Member ideas, vote with USDC, and move settled capital through transparent local accounting."],
+                ["3. Govern & review", "Participants join locally, submit one of four proposal modes, validate Member ideas, vote with USDC, and winning supporters approve or reject execution proof before later capital is released."],
               ].map(([title, body]) => (
                 <div key={title} className="rounded-2xl border border-white/15 bg-slate-950/15 p-5">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
@@ -350,7 +350,7 @@ export default function HowItWorksPage() {
               <div className="mt-5 space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                 <p>Validation, binary voting, Slate voting, reward epochs, exit cooldowns, and quorum-request expiry are measured in <strong>active Community time</strong>. A pause stops the Community clock; resume continues only the time remaining.</p>
                 <p>Pause blocks governance-sensitive paths such as new proposals, votes, validation progression, and new execution withdrawals. It does not let the frontend bypass settled onchain claim rules.</p>
-                <p>Execution funds are never released by a single arbitrary click. An Admin makes a request with recipient, amount, reason, and metadata; the amount is reserved; the required number of active Admins approve; only then is execution available.</p>
+                <p>Execution funds are not released by a single arbitrary click. The Community Treasury retains custody, while a settled winner creates an immutable 20 / 40 / 40 plan for the configured Administration execution wallet. Later tranches require sealed winning-supporter quorum and approval. Separate Treasury withdrawals additionally use the configured Admin quorum.</p>
                 <p>Adding or removing Admins, Validators, pausing, resuming, archiving, and cancelling a withdrawal are also quorum-protected requests. This prevents unilateral roster capture from becoming a treasury takeover.</p>
               </div>
             </div>
@@ -361,10 +361,9 @@ export default function HowItWorksPage() {
             <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">Use the same contracts, with a clearly separate accelerated demo Community.</h2>
             <p className="mt-4 max-w-4xl text-sm leading-relaxed text-slate-700 dark:text-slate-200">
               Production-style Communities should use the intended day-scale validation, voting, exit, and reward windows.
-              For a hackathon demo or judge walkthrough, deploy a separately labelled Community whose immutable settings
-              use minute-scale windows. This is safer than adding an admin backdoor or a frontend-only timer override:
-              the same contracts, permissions, settlement logic, and treasury accounting are demonstrated, but a full
-              lifecycle can complete in minutes.
+              For a hackathon demo or local walkthrough, deploy a separately labelled Community whose proposal, validation,
+              voting and reward windows use minute-scale settings. Milestone review intentionally keeps its one-day contract
+              minimum; a local Hardhat E2E environment advances chain time instead of weakening the production rule.
             </p>
             <Link href="/v3" className="mt-5 inline-flex rounded-full border border-amber-500/35 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-200/20 dark:text-amber-100">
               Open Community Layer

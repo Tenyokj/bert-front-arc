@@ -175,37 +175,68 @@ const sections: FaqSection[] = [
   },
   {
     id: "community-layer",
-    title: "BERT V3 Community Layer",
+    title: "BERT V3.1 Community Layer",
     items: [
       {
-        question: "What is BERT V3 Community Layer?",
+        question: "What is BERT V3.1 Community Layer?",
         answer:
-          "BERT V3 is a Community Layer built on top of the main BERT protocol. Each Community has its own CommunityHub for governance rules and CommunityTreasury for local accounting, while still routing the protocol reserve into the existing BERT FundingPool. V3 does not replace the V2 grants system.",
+          "BERT V3.1 is a Community Layer built on top of the main BERT protocol. Each Community has its own modular CommunityHub, Treasury, proposal and voting modules, plus a dedicated milestone manager. It is for stake-backed Community decisions and reviewable execution; it does not replace V2.3 grant rounds.",
       },
       {
         question: "What is created when a Community is launched?",
         answer:
-          "The creation flow reserves a CommunityTreasury, deploys the matching CommunityHub with the selected immutable configuration, and activates the pair in CommunityFactory. The Factory records the creator, Hub, Treasury, metadata URI, and Community ID so every deployment can be discovered onchain.",
+          "The creation flow reserves a CommunityTreasury, deploys the matching CommunityHub and its factory-bound modules with the selected immutable configuration, and activates the pair in CommunityFactory. The Factory records the creator, Hub, Treasury, metadata URI, and Community ID so every deployment can be discovered onchain.",
       },
       {
         question: "Which settings are chosen per Community?",
         answer:
-          "A creator chooses the entry stake, member-proposal bond, minimum vote, exit cooldown, validator approval threshold, points required for validator eligibility, admin quorum, NO-side fee, validator reward share, validation window, binary and slate voting durations, validator reward epoch duration, and validator activity threshold. These are Community-specific, not global frontend defaults.",
+          "A creator chooses the entry stake, member-proposal bond, minimum vote, exit cooldown, validator approval threshold, points required for validator eligibility, admin quorum, NO-side fee, validator reward share, validation window, binary and slate voting durations, validator reward epoch duration, an Administration execution wallet, milestone review duration, proof deadline, and validator activity threshold. The execution wallet is not a second Treasury: the Community Treasury holds all funds and releases only approved winner budgets to it. These are Community-specific, not global frontend defaults.",
       },
       {
         question: "Can a Community change those rules after launch?",
         answer:
-          "No. The core economic and timing configuration is fixed when the Hub is deployed. This prevents an administrator from changing stake, quorum, voting, or reward rules after participants have entered under a different set of expectations.",
+          "No. The core economic, execution-recipient, and timing configuration is fixed when the Hub is deployed. This prevents an administrator from changing stake, quorum, voting, milestone review, or reward rules after participants have entered under a different set of expectations.",
       },
       {
         question: "What is the difference between CommunityHub and CommunityTreasury?",
         answer:
-          "CommunityHub owns membership, roles, proposal state, validation, voting, the Community clock, and governance actions. CommunityTreasury escrows membership stakes and votes, records execution and validator-reward balances, tracks refundable claims, and enforces multi-admin withdrawal approval before USDC leaves execution.",
+          "CommunityHub coordinates membership, roles, proposal state, validation, voting, the Community clock, and governance actions. V3.1 places the underlying responsibilities in dedicated modules, including a milestone manager for execution plans. CommunityTreasury escrows membership stakes and votes, records execution and validator-reward balances, tracks refundable claims, and enforces multi-admin withdrawal approval before USDC leaves execution.",
       },
       {
         question: "Does a Community have its own ID and addresses?",
         answer:
           "Yes. CommunityFactory assigns an onchain numeric Community ID and links one Hub and one Treasury address. The V3 workspace exposes both addresses with copy controls so participants can independently inspect the deployed contracts.",
+      },
+    ],
+  },
+  {
+    id: "community-milestones",
+    title: "V3.1 Execution Plans & Milestones",
+    items: [
+      {
+        question: "What happens after a V3.1 proposal wins?",
+        answer:
+          "A settled Admin or Member winner starts an execution plan using the Community's execution balance. The Community Treasury keeps custody and releases the selected winner's budget to the immutable Administration execution wallet: 20% immediately, then 40% after milestone one and 40% after milestone two, only when the required winning supporters approve submitted proof.",
+      },
+      {
+        question: "Who can review a V3.1 milestone?",
+        answer:
+          "Only wallets in the sealed support snapshot for the winning proposal may review. For a binary proposal that means YES voters; for a Slate Round it means voters for the winning proposal. The execution recipient and proposal author are excluded from reviewing their own delivery path by the onchain voting and snapshot rules.",
+      },
+      {
+        question: "What makes a milestone pass?",
+        answer:
+          "At least 40% of the winning supporter weight must participate. Among participating weight, at least two thirds must approve. The approval also needs at least the greater of three wallets or 3% of the unique winning supporters. Weight and supporter count are snapshotted at settlement, so later membership changes cannot change the threshold.",
+      },
+      {
+        question: "What if supporters do not review the proof?",
+        answer:
+          "The initial review window can open one additional grace review if it misses quorum. If the grace review also misses quorum, the plan fails. Unreleased execution budget is then pull-refundable pro rata to the winning supporters; it never silently goes to the executor.",
+      },
+      {
+        question: "What if supporters reject a proof?",
+        answer:
+          "A rejected first proof gives the execution recipient one correction path after a 48-hour Community-clock cooldown. The corrected proof is reviewed as a new attempt. A second rejection, or a missed proof deadline, fails the plan and converts the unreleased budget into winning-supporter refunds.",
       },
     ],
   },
@@ -292,7 +323,7 @@ const sections: FaqSection[] = [
       {
         question: "What happens when a binary proposal settles YES?",
         answer:
-          "For an Admin proposal, the settled voting stake enters the Community execution treasury. For an approved Member proposal, settlement follows the configured local distribution, including the Community execution balance, validator-reward accounting, and the BERT protocol reserve path. The exact split is visible in the deployed Community settings.",
+          "For an Admin proposal, the settled voting stake enters the Community execution treasury and the winner starts a V3.1 execution plan. For an approved Member proposal, settlement follows the configured local distribution, including the Community execution balance, validator-reward accounting, and the BERT protocol reserve path. The exact split is visible in the deployed Community settings.",
       },
       {
         question: "What happens when NO wins a binary proposal?",
@@ -369,12 +400,12 @@ const sections: FaqSection[] = [
       {
         question: "Why do localhost Communities use minutes?",
         answer:
-          "Local test Communities intentionally use minute-scale configuration so every lifecycle can be exercised in one development session. The timing values are still stored and enforced by the same contracts; only the per-Community configuration differs from production-style settings.",
+          "Local test Communities intentionally use minute-scale configuration for exit, validation, voting, and reward paths. The V3.1 milestone review has a deliberate one-day onchain minimum, so local E2E uses Hardhat time advancement rather than weakening that protection. The same contracts enforce every setting.",
       },
       {
         question: "How should a hackathon judge test a multi-day flow?",
         answer:
-          "Use a clearly labelled demo Community configured with accelerated minute-scale windows, not a weakened production contract. The same onchain logic, roles, treasury rules, and settlement checks run, but the demonstration Community reaches validation, voting, reward finalization, and exits quickly.",
+          "Use a clearly labelled demo Community configured with accelerated minute-scale windows, then advance local Hardhat time for the one-day milestone-review minimum. The same onchain logic, roles, treasury rules, support snapshots, and settlement checks run; only the local chain clock is advanced.",
       },
       {
         question: "Can the frontend change a live Community deadline?",
