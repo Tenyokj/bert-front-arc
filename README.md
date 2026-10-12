@@ -102,7 +102,7 @@ Do not open public issues for vulnerabilities. Read [SECURITY.md](./SECURITY.md)
 
 ## Contributing
 
-Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request. Forks and pull requests are welcome; only repository maintainers can merge or deploy changes.
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) for current frontend, QA, integration, security and community contribution needs. Forks and pull requests are welcome; only repository maintainers can merge or deploy changes.
 
 ## Related Repositories
 
