@@ -9,11 +9,14 @@ import {
   trustWallet,
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-import { defineChain } from "viem";
+import { defineChain, fallback, http } from "viem";
 
 const defaultChainKey = (process.env.NEXT_PUBLIC_DEFAULT_CHAIN || "arc").toLowerCase();
 const hardhatRpcUrl = process.env.NEXT_PUBLIC_HARDHAT_RPC_URL || "http://127.0.0.1:8545";
-const arcRpcUrl = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
+// Public Arc RPCs can rate-limit or intermittently reject browser requests. Keep
+// two independent transports so read-only dApp data does not depend on one host.
+const arcRpcUrl = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://arc-testnet.drpc.org";
+const arcFallbackRpcUrl = "https://rpc.blockdaemon.testnet.arc.io";
 const arcExplorerUrl = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app";
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 const effectiveWalletConnectProjectId =
@@ -100,5 +103,12 @@ export const web3Config = getDefaultConfig({
   projectId: effectiveWalletConnectProjectId,
   chains: [...supportedChains],
   connectors,
+  transports: {
+    [hardhatLocalhost.id]: http(hardhatRpcUrl),
+    [arcTestnet.id]: fallback([
+      http(arcRpcUrl, { retryCount: 1, retryDelay: 250 }),
+      http(arcFallbackRpcUrl, { retryCount: 1, retryDelay: 250 }),
+    ]),
+  },
   ssr: true,
 });
