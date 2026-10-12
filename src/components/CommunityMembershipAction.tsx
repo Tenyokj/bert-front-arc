@@ -5,9 +5,10 @@ import { formatUnits } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { usdcAbi } from "@/lib/contracts";
-import { communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityMembershipModuleAbi, communityTreasuryAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 import { useCommunityClock } from "@/lib/use-community-clock";
+import { useCommunityModules } from "@/lib/use-community-modules";
 
 type MemberInfo = {
   active: boolean;
@@ -28,14 +29,15 @@ export function CommunityMembershipAction({
   hasGovernanceRole: boolean;
 }) {
   const { address, chainId } = useAccount();
+  const moduleRead = useCommunityModules(hub, chainId);
+  const membershipModule = moduleRead.modules.membership;
   const memberRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "getMember", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address), refetchInterval: 1_000 } });
   const usdcRead = useReadContract({ address: treasury, abi: communityTreasuryAbi, functionName: "usdc", chainId });
-  const stakeRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "entryStakeUSDC", chainId });
-  const cooldownRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "membershipExitCooldown", chainId });
+  const stakeRead = useReadContract({ address: membershipModule, abi: communityMembershipModuleAbi, functionName: "entryStakeUSDC", chainId, query: { enabled: Boolean(membershipModule) } });
+  const cooldownRead = useReadContract({ address: membershipModule, abi: communityMembershipModuleAbi, functionName: "membershipExitCooldown", chainId, query: { enabled: Boolean(membershipModule) } });
   const pointsThresholdRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "validatorProposalPointsThreshold", chainId });
   const { communityTime, paused } = useCommunityClock(hub, chainId);
-  const locksRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "unresolvedVoteLockCount", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address), refetchInterval: 1_000 } });
-  const proposalsRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "activeMemberProposalCount", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address), refetchInterval: 1_000 } });
+  const obligationsRead = useReadContract({ address: membershipModule, abi: communityMembershipModuleAbi, functionName: "unresolvedObligationCount", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address && membershipModule), refetchInterval: 1_000 } });
   const allowanceRead = useReadContract({
     address: usdcRead.data,
     abi: usdcAbi,
@@ -103,9 +105,8 @@ export function CommunityMembershipAction({
     const cooldownProgress = exitRequested && cooldown && communityTime !== undefined
       ? Math.min(100, Number(((communityTime - member.exitRequestedAt) * 100n) / cooldown))
       : 0;
-    const voteLocks = (locksRead.data as bigint | undefined) ?? 0n;
-    const activeProposals = (proposalsRead.data as bigint | undefined) ?? 0n;
-    const exitBlocked = voteLocks > 0n || activeProposals > 0n;
+    const obligations = (obligationsRead.data as bigint | undefined) ?? 0n;
+    const exitBlocked = obligations > 0n;
     const readyToReturn = exitRequested && cooldownReady && !exitBlocked && !paused;
 
     return <section className="overflow-hidden rounded-[28px] border border-emerald-300/25 bg-[linear-gradient(135deg,rgba(6,78,59,0.33),rgba(42,45,59,0.96)_55%,rgba(20,83,45,0.2))] p-5 sm:p-6">
@@ -130,7 +131,7 @@ export function CommunityMembershipAction({
 
         <div className="rounded-2xl border border-white/10 bg-slate-950/20 p-4">
           <p className="text-sm font-semibold text-white">Step 3 of 3 · Clear governance locks</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2"><LockState label="Uncleared vote locks" value={voteLocks} description={voteLocks === 0n ? "No vote locks remain." : "Settle the relevant vote or round, then use Clear settled vote lock."} /><LockState label="Active member proposals" value={activeProposals} description={activeProposals === 0n ? "No member proposals block exit." : "Finish validation and settlement of your active proposal."} /></div>
+          <div className="mt-3"><LockState label="Unresolved governance obligations" value={obligations} description={obligations === 0n ? "No vote, proposal, or milestone obligation blocks exit." : "Settle or clear the relevant proposal, vote, or milestone obligation before finalizing exit."} /></div>
         </div>
 
         <div className={readyToReturn ? "rounded-2xl border border-emerald-300/35 bg-emerald-400/10 p-4" : "rounded-2xl border border-white/10 bg-slate-950/20 p-4"}>

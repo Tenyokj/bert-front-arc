@@ -6,7 +6,8 @@ import { usePublicClient } from "wagmi";
 
 import { ClientPagination } from "@/components/ClientPagination";
 import { formatCommunityUsdc, formatProposalOrigin } from "@/lib/community";
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityVotingModuleAbi } from "@/lib/community-contracts";
+import { getCommunityModules } from "@/lib/community-v3";
 import { formatDateTimeFromUnix } from "@/lib/dapp-onchain";
 
 const PAGE_SIZE = 8;
@@ -35,7 +36,8 @@ export function SlateRoundWorkspace({ communityId, hub }: { communityId: number;
     async function load() {
       if (!client) return;
       const read = (value: Record<string, unknown>) => (client as { readContract: (request: Record<string, unknown>) => Promise<unknown> }).readContract(value);
-      const count = await read({ address: hub, abi: communityHubAbi, functionName: "roundCount" }) as bigint;
+      const modules = await getCommunityModules(client, hub);
+      const count = await read({ address: modules.voting, abi: communityVotingModuleAbi, functionName: "roundCount" }) as bigint;
       const ids = Array.from({ length: Math.min(Number(count), 120) }, (_, index) => BigInt(Number(count) - index));
       const rows = await Promise.all(ids.map(async (id) => {
         const [raw, proposalIds] = await Promise.all([

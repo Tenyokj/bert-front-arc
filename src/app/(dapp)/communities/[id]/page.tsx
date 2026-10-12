@@ -12,8 +12,12 @@ import {
   communityContracts,
   communityFactoryAbi,
   communityHubAbi,
+  communityMembershipModuleAbi,
+  communityProposalModuleAbi,
   communityTreasuryAbi,
+  communityVotingModuleAbi,
 } from "@/lib/community-contracts";
+import { getCommunityModules } from "@/lib/community-v3";
 import {
   formatCommunityStatus,
   formatCommunityUsdc,
@@ -151,16 +155,17 @@ export default function CommunityDetailsPage() {
           return;
         }
 
+        const modules = await getCommunityModules(client, nextDeployment.hub as `0x${string}`);
         const [hubValues, treasuryValues] = await Promise.all([
           Promise.all([
             read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "communityStatus" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "entryStakeUSDC" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "proposalBondUSDC" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "voteMinStakeUSDC" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "validatorApprovalThreshold" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "proposalCount" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "roundCount" }),
-            read({ address: nextDeployment.hub, abi: communityHubAbi, functionName: "currentValidatorRewardEpochId" }),
+            read({ address: modules.membership, abi: communityMembershipModuleAbi, functionName: "entryStakeUSDC" }),
+            read({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "proposalBondUSDC" }),
+            read({ address: modules.voting, abi: communityVotingModuleAbi, functionName: "voteMinStakeUSDC" }),
+            read({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validatorApprovalThreshold" }),
+            read({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "proposalCount" }),
+            read({ address: modules.voting, abi: communityVotingModuleAbi, functionName: "roundCount" }),
+            read({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "currentValidatorRewardEpochId" }),
           ]),
           Promise.all([
             read({ address: nextDeployment.treasury, abi: communityTreasuryAbi, functionName: "usdc" }),

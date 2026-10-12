@@ -5,20 +5,22 @@ import { formatUnits } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { usdcAbi } from "@/lib/contracts";
-import { communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityProposalModuleAbi, communityTreasuryAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
+import { useCommunityModules } from "@/lib/use-community-modules";
 
 type ProposalKind = "adminBinary" | "memberBinary" | "adminSlate" | "memberSlate";
 
 /** Creates only the proposal flows that CommunityHub exposes on-chain. */
 export function CreateCommunityProposal({ hub, treasury, isAdmin, isMember }: { hub: `0x${string}`; treasury: `0x${string}`; isAdmin: boolean; isMember: boolean }) {
   const { address } = useAccount();
+  const { modules } = useCommunityModules(hub);
   const [kind, setKind] = useState<ProposalKind>(isAdmin ? "adminBinary" : "memberBinary");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [metadata, setMetadata] = useState("");
   const { data: usdc } = useReadContract({ address: treasury, abi: communityTreasuryAbi, functionName: "usdc" });
-  const { data: proposalBond } = useReadContract({ address: hub, abi: communityHubAbi, functionName: "proposalBondUSDC" });
+  const { data: proposalBond } = useReadContract({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "proposalBondUSDC", query: { enabled: Boolean(modules.proposal) } });
   const { data: allowance, refetch: refetchAllowance } = useReadContract({ address: usdc, abi: usdcAbi, functionName: "allowance", args: address && usdc ? [address, treasury] : undefined, query: { enabled: Boolean(address && usdc) } });
   const approval = useWriteContract();
   const approvalReceipt = useWaitForTransactionReceipt({ hash: approval.data });

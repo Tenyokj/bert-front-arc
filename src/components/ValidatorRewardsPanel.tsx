@@ -4,9 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { formatUnits } from "viem";
 import { useAccount, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityProposalModuleAbi, communityTreasuryAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 import { useCommunityClock } from "@/lib/use-community-clock";
+import { useCommunityModules } from "@/lib/use-community-modules";
 
 type Epoch = {
   startTime: bigint;
@@ -44,10 +45,11 @@ function formatRemaining(seconds: bigint) {
 /** Shows live, pause-aware validator epoch state and claim actions. */
 export function ValidatorRewardsPanel({ hub, treasury, isValidator }: { hub: `0x${string}`; treasury: `0x${string}`; isValidator: boolean }) {
   const { address, chainId } = useAccount();
+  const { modules } = useCommunityModules(hub, chainId);
   const [selectedEpochId, setSelectedEpochId] = useState<bigint>();
   const epochIdRead = useReadContracts({
     chainId,
-    contracts: [{ address: hub, abi: communityHubAbi, functionName: "currentValidatorRewardEpochId" }],
+    contracts: modules.proposal ? [{ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "currentValidatorRewardEpochId" }] : [],
     query: { refetchInterval: 1_000 },
   });
   const currentEpochId = epochIdRead.data?.[0]?.result as bigint | undefined;
@@ -68,11 +70,11 @@ export function ValidatorRewardsPanel({ hub, treasury, isValidator }: { hub: `0x
   const epochId = selectedEpochId ?? currentEpochId;
   const reads = useReadContracts({
     chainId,
-    contracts: epochId && address ? [
+    contracts: epochId && address && modules.proposal ? [
       { address: hub, abi: communityHubAbi, functionName: "getValidatorRewardEpoch", args: [epochId] },
-      { address: hub, abi: communityHubAbi, functionName: "validationWindow" },
-      { address: hub, abi: communityHubAbi, functionName: "validatorActiveThresholdBps" },
-      { address: hub, abi: communityHubAbi, functionName: "validatorValidationCount", args: [epochId, address] },
+      { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validationWindow" },
+      { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validatorActiveThresholdBps" },
+      { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validatorValidationCount", args: [epochId, address] },
       { address: hub, abi: communityHubAbi, functionName: "isValidatorActiveForEpoch", args: [epochId, address] },
       { address: treasury, abi: communityTreasuryAbi, functionName: "rewardAmountByEpoch", args: [epochId] },
       { address: treasury, abi: communityTreasuryAbi, functionName: "rewardPerValidatorByEpoch", args: [epochId] },

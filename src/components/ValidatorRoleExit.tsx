@@ -3,12 +3,14 @@
 import { useEffect } from "react";
 import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityProposalModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
+import { useCommunityModules } from "@/lib/use-community-modules";
 
 /** Allows a validator to resign only when the Hub's validation set is unlocked. */
 export function ValidatorRoleExit({ hub, isValidator }: { hub: `0x${string}`; isValidator: boolean }) {
-  const pendingRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "pendingValidationProposalCount", query: { refetchInterval: 2_000 } });
+  const { modules } = useCommunityModules(hub);
+  const pendingRead = useReadContract({ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "pendingValidationProposalCount", query: { enabled: Boolean(modules.proposal), refetchInterval: 2_000 } });
   const write = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: write.data });
   const pending = pendingRead.data as bigint | undefined;

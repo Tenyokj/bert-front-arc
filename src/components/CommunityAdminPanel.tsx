@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress, parseUnits } from "viem";
 import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityMembershipModuleAbi, communityTreasuryAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
+import { getCommunityModules } from "@/lib/community-v3";
 import { ValidatorNominationPanel } from "@/components/ValidatorNominationPanel";
 import { ClientPagination } from "@/components/ClientPagination";
 import { CommunityArchivePanel } from "@/components/CommunityArchivePanel";
@@ -90,11 +91,12 @@ export function CommunityAdminPanel({
 
       setLoadError(null);
       const read = (request: Record<string, unknown>) => client.readContract(request as never) as Promise<unknown>;
+      const modules = await getCommunityModules(client, hub);
       const [balance, available, threshold, count, requestCount] = await Promise.all([
         read({ address: treasury, abi: communityTreasuryAbi, functionName: "executionBalance" }),
         read({ address: treasury, abi: communityTreasuryAbi, functionName: "availableExecutionBalance" }),
         read({ address: hub, abi: communityHubAbi, functionName: "adminApprovalThreshold" }),
-        read({ address: hub, abi: communityHubAbi, functionName: "adminCount" }),
+        read({ address: modules.membership, abi: communityMembershipModuleAbi, functionName: "adminCount" }),
         read({ address: treasury, abi: communityTreasuryAbi, functionName: "withdrawalRequestCount" }),
       ]);
       const requestIds = Array.from(
