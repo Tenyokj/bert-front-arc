@@ -1,9 +1,24 @@
-import { CommunityHub as CommunityHubTemplate, CommunityTreasury as CommunityTreasuryTemplate } from "../generated/templates";
+import {
+  CommunityHub as CommunityHubTemplate,
+  CommunityMembershipModule as CommunityMembershipModuleTemplate,
+  CommunityMilestoneManager as CommunityMilestoneManagerTemplate,
+  CommunityProposalModule as CommunityProposalModuleTemplate,
+  CommunityTreasury as CommunityTreasuryTemplate,
+  CommunityVotingModule as CommunityVotingModuleTemplate,
+  CommunityWinnerSnapshot as CommunityWinnerSnapshotTemplate,
+} from "../generated/templates";
 import {
   CommunityCreated,
   CommunityTreasuryCreated,
 } from "../generated/CommunityFactory/CommunityFactory";
-import { Community, CommunityHubSource, CommunityTreasurySource } from "../generated/schema";
+import { CommunityHub as CommunityHubContract } from "../generated/CommunityFactory/CommunityHub";
+import {
+  Community,
+  CommunityHubSource,
+  CommunityModuleSource,
+  CommunityTreasurySource,
+} from "../generated/schema";
+import { Address } from "@graphprotocol/graph-ts";
 import { communityEntityId } from "./helpers";
 
 export function handleCommunityTreasuryCreated(event: CommunityTreasuryCreated): void {
@@ -57,4 +72,37 @@ export function handleCommunityCreated(event: CommunityCreated): void {
     source.save();
     CommunityHubTemplate.create(event.params.hub);
   }
+
+  // Modules are deployed by the Hub constructor and have distinct addresses.
+  // Their events therefore require separate dynamic data sources.
+  registerModule(event.params.hub, community.id, "membership", 0);
+  registerModule(event.params.hub, community.id, "proposal", 1);
+  registerModule(event.params.hub, community.id, "voting", 2);
+  registerModule(event.params.hub, community.id, "milestone", 3);
+  registerModule(event.params.hub, community.id, "winnerSnapshot", 4);
+}
+
+function registerModule(hubAddress: Address, communityId: string, kind: string, moduleType: i32): void {
+  const hub = CommunityHubContract.bind(hubAddress);
+  let moduleAddress: Address;
+
+  if (moduleType == 0) moduleAddress = hub.membershipModule();
+  else if (moduleType == 1) moduleAddress = hub.proposalModule();
+  else if (moduleType == 2) moduleAddress = hub.votingModule();
+  else if (moduleType == 3) moduleAddress = hub.milestoneManager();
+  else moduleAddress = hub.winnerSnapshot();
+
+  const sourceId = moduleAddress.toHexString();
+  if (CommunityModuleSource.load(sourceId) != null) return;
+
+  const source = new CommunityModuleSource(sourceId);
+  source.community = communityId;
+  source.kind = kind;
+  source.save();
+
+  if (moduleType == 0) CommunityMembershipModuleTemplate.create(moduleAddress);
+  else if (moduleType == 1) CommunityProposalModuleTemplate.create(moduleAddress);
+  else if (moduleType == 2) CommunityVotingModuleTemplate.create(moduleAddress);
+  else if (moduleType == 3) CommunityMilestoneManagerTemplate.create(moduleAddress);
+  else CommunityWinnerSnapshotTemplate.create(moduleAddress);
 }

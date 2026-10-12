@@ -3,9 +3,10 @@ import {
   ProposalBondDeposited, ProposalBondReturned, ProposalBondSlashed, RefundClaimed,
   SlateRoundSettled, ValidatorRewardClaimed, ValidatorRewardEpochFinalized,
   WithdrawalApproved, WithdrawalCancelled, WithdrawalExecuted, WithdrawalRequestCreated,
+  ExecutionPlanReserved,
 } from "../generated/templates/CommunityTreasury/CommunityTreasury";
 import { CommunityValidatorRewardClaim } from "../generated/schema";
-import { communityForTreasury, ensureEpoch, ensureMember, ensureProposal, ensureRound, ensureWithdrawal } from "./helpers";
+import { communityForTreasury, ensureEpoch, ensureExecutionPlan, ensureMember, ensureProposal, ensureRound, ensureWithdrawal } from "./helpers";
 
 export function handleMembershipStakeDeposited(event: MembershipStakeDeposited): void { const c = communityForTreasury(event.address); if (c == null) return; const m = ensureMember(c, event.params.member, event.block.timestamp); m.membershipStake = event.params.amount; m.save(); }
 export function handleMembershipStakeReleased(event: MembershipStakeReleased): void { const c = communityForTreasury(event.address); if (c == null) return; const m = ensureMember(c, event.params.member, event.block.timestamp); m.membershipStake = event.params.amount; m.save(); }
@@ -22,3 +23,4 @@ export function handleWithdrawalRequestCreated(event: WithdrawalRequestCreated):
 export function handleWithdrawalApproved(event: WithdrawalApproved): void { const c = communityForTreasury(event.address); if (c == null) return; const w = ensureWithdrawal(c, event.params.requestId, event.block.timestamp); w.approvals += 1; w.save(); }
 export function handleWithdrawalCancelled(event: WithdrawalCancelled): void { const c = communityForTreasury(event.address); if (c == null) return; const w = ensureWithdrawal(c, event.params.requestId, event.block.timestamp); w.cancelled = true; w.save(); }
 export function handleWithdrawalExecuted(event: WithdrawalExecuted): void { const c = communityForTreasury(event.address); if (c == null) return; const w = ensureWithdrawal(c, event.params.requestId, event.block.timestamp); w.recipient = event.params.to; w.amount = event.params.amount; w.executed = true; w.save(); }
+export function handleExecutionPlanReserved(event: ExecutionPlanReserved): void { const c = communityForTreasury(event.address); if (c == null) return; const plan = ensureExecutionPlan(c, event.params.planId, event.params.planId, event.block.timestamp); plan.budget = event.params.amount; plan.save(); }

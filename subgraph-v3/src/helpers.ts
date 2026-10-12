@@ -2,7 +2,10 @@ import { Address, BigInt } from "@graphprotocol/graph-ts";
 import {
   Community,
   CommunityHubSource,
+  CommunityModuleSource,
   CommunityMember,
+  CommunityExecutionPlan,
+  CommunityMilestoneReview,
   CommunityProposal,
   CommunitySlateRound,
   CommunityTreasurySource,
@@ -36,6 +39,18 @@ export function withdrawalEntityId(community: Community, requestId: BigInt): str
   return community.id + "-withdrawal-" + requestId.toString();
 }
 
+export function executionPlanEntityId(community: Community, planId: BigInt): string {
+  return community.id + "-execution-plan-" + planId.toString();
+}
+
+export function milestoneReviewEntityId(community: Community, planId: BigInt, milestone: i32): string {
+  return executionPlanEntityId(community, planId) + "-milestone-" + milestone.toString();
+}
+
+export function winnerSupportEntityId(community: Community, planId: BigInt, supporter: Address): string {
+  return executionPlanEntityId(community, planId) + "-supporter-" + supporter.toHexString();
+}
+
 export function communityForHub(address: Address): Community | null {
   const source = CommunityHubSource.load(address.toHexString());
   return source == null ? null : Community.load(source.community);
@@ -43,6 +58,11 @@ export function communityForHub(address: Address): Community | null {
 
 export function communityForTreasury(address: Address): Community | null {
   const source = CommunityTreasurySource.load(address.toHexString());
+  return source == null ? null : Community.load(source.community);
+}
+
+export function communityForModule(address: Address): Community | null {
+  const source = CommunityModuleSource.load(address.toHexString());
   return source == null ? null : Community.load(source.community);
 }
 
@@ -148,4 +168,55 @@ export function ensureWithdrawal(community: Community, requestId: BigInt, timest
   }
   withdrawal.updatedAt = timestamp;
   return withdrawal;
+}
+
+export function ensureExecutionPlan(
+  community: Community,
+  planId: BigInt,
+  proposalId: BigInt,
+  timestamp: BigInt,
+): CommunityExecutionPlan {
+  const id = executionPlanEntityId(community, planId);
+  let plan = CommunityExecutionPlan.load(id);
+  if (plan == null) {
+    const proposal = ensureProposal(community, proposalId, timestamp);
+    proposal.save();
+    plan = new CommunityExecutionPlan(id);
+    plan.community = community.id;
+    plan.planId = planId;
+    plan.proposal = proposal.id;
+    plan.budget = ZERO;
+    plan.initialTranche = ZERO;
+    plan.releasedAmount = ZERO;
+    plan.currentMilestone = 0;
+    plan.status = "SnapshotPending";
+    plan.totalSupportWeight = ZERO;
+    plan.supporterCount = ZERO;
+    plan.refundLiability = ZERO;
+    plan.createdAt = timestamp;
+  }
+  plan.updatedAt = timestamp;
+  return plan;
+}
+
+export function ensureMilestoneReview(
+  community: Community,
+  plan: CommunityExecutionPlan,
+  milestone: i32,
+  timestamp: BigInt,
+): CommunityMilestoneReview {
+  const id = milestoneReviewEntityId(community, plan.planId, milestone);
+  let review = CommunityMilestoneReview.load(id);
+  if (review == null) {
+    review = new CommunityMilestoneReview(id);
+    review.plan = plan.id;
+    review.milestone = milestone;
+    review.yesWeight = ZERO;
+    review.noWeight = ZERO;
+    review.reviewerCount = ZERO;
+    review.settled = false;
+    review.releasedAmount = ZERO;
+  }
+  review.updatedAt = timestamp;
+  return review;
 }
