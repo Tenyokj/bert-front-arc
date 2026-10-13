@@ -67,6 +67,9 @@ export default function Home() {
             <Link href="/v3" className="transition-colors hover:text-slate-900">
               V3.1 Communities
             </Link>
+            <a href="https://bertdao-console.vercel.app/" className="transition-colors hover:text-slate-900" target="_blank" rel="noreferrer">
+              Console Beta
+            </a>
             <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
               Docs
             </a>
@@ -87,6 +90,9 @@ export default function Home() {
             <Link href="/v3" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
               V3.1 Communities
             </Link>
+            <a href="https://bertdao-console.vercel.app/" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900" target="_blank" rel="noreferrer">
+              Console Beta
+            </a>
             <a href="https://bertdao-docs.vercel.app/" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
               Docs
             </a>

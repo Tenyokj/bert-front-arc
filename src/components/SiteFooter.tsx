@@ -34,6 +34,9 @@ export default function SiteFooter() {
           <Link className="footer-link" href="/v3">
             V3.1 Communities
           </Link>
+          <a className="footer-link" href="https://bertdao-console.vercel.app/" target="_blank" rel="noreferrer">
+            BERT Console Beta
+          </a>
         </div>
         <div className="flex items-center gap-5 text-slate-600 dark:text-slate-300">
           <a href="https://github.com/Tenyokj/bert-core-arc" target="_blank" rel="noreferrer" aria-label="GitHub">
@@ -160,6 +163,9 @@ export default function SiteFooter() {
             <Link className="footer-link" href="/v3/communities">
               Community metrics
             </Link>
+            <a className="footer-link" href="https://bertdao-console.vercel.app/" target="_blank" rel="noreferrer">
+              BERT Console Beta
+            </a>
             <Link className="footer-link" href="/treasury-policies#reporting">
               Treasury Reporting
             </Link>
