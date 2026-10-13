@@ -1,3 +1,6 @@
+
+![LOGO](/public/bert-front-banner.png)
+
 # BERT Frontend
 
 The public web application for the BERT Protocol on Arc Testnet.
