@@ -52,12 +52,15 @@ export function NewsCarousel() {
 
       <div ref={trackRef} className="news-track mt-10 flex snap-x snap-mandatory overflow-x-auto">
         {newsItems.map((item) => (
-          <article key={item.id} className="w-screen shrink-0 snap-start overflow-hidden">
+          <article
+            key={item.id}
+            className={`w-screen shrink-0 snap-start overflow-hidden ${item.maxWidth ? `flex items-center ${item.backgroundClassName ?? ""}` : ""}`}
+          >
             {item.href ? (
-              <Link href={item.href} className="block">
+              <Link href={item.href} className="block w-full">
                 <div
-                  className={`relative aspect-[16/6] w-full overflow-hidden ${item.backgroundClassName ?? "bg-transparent"}`}
-                  style={{ aspectRatio: item.aspectRatio ?? "16 / 6" }}
+                  className={`relative mx-auto aspect-[16/6] w-full overflow-hidden ${item.backgroundClassName ?? "bg-transparent"}`}
+                  style={{ aspectRatio: item.aspectRatio ?? "16 / 6", maxWidth: item.maxWidth }}
                 >
                   <Image
                     src={item.image}
@@ -65,15 +68,15 @@ export function NewsCarousel() {
                     fill
                     className={item.objectFit === "contain" ? "object-contain" : "object-cover"}
                     style={{ objectPosition: item.objectPosition ?? "center center" }}
-                    sizes="100vw"
+                    sizes={item.maxWidth ? `(min-width: ${item.maxWidth}px) ${item.maxWidth}px, 100vw` : "100vw"}
                     priority={item.id === newsItems[0]?.id}
                   />
                 </div>
               </Link>
             ) : (
               <div
-                className={`relative aspect-[16/6] w-full overflow-hidden ${item.backgroundClassName ?? "bg-transparent"}`}
-                style={{ aspectRatio: item.aspectRatio ?? "16 / 6" }}
+                className={`relative mx-auto aspect-[16/6] w-full overflow-hidden ${item.backgroundClassName ?? "bg-transparent"}`}
+                style={{ aspectRatio: item.aspectRatio ?? "16 / 6", maxWidth: item.maxWidth }}
               >
                 <Image
                   src={item.image}
@@ -81,7 +84,7 @@ export function NewsCarousel() {
                   fill
                   className={item.objectFit === "contain" ? "object-contain" : "object-cover"}
                   style={{ objectPosition: item.objectPosition ?? "center center" }}
-                  sizes="100vw"
+                  sizes={item.maxWidth ? `(min-width: ${item.maxWidth}px) ${item.maxWidth}px, 100vw` : "100vw"}
                   priority={item.id === newsItems[0]?.id}
                 />
               </div>
