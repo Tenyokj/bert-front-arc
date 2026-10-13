@@ -7,9 +7,21 @@ export type NewsItem = {
   objectFit?: "cover" | "contain";
   objectPosition?: string;
   backgroundClassName?: string;
+  maxWidth?: number;
 };
 
 export const newsItems: NewsItem[] = [
+  {
+    id: "bert-console-beta",
+    image: "/news-bert-console.png",
+    alt: "BERT Console V0.1.0 Beta launch banner for Arc Testnet",
+    href: "https://bertdao-console.vercel.app/",
+    aspectRatio: "2172 / 724",
+    objectFit: "contain",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#030900]",
+    maxWidth: 1600,
+  },
   {
     id: "v3-1-modular-community-layer",
     image: "/news-v-3-1.jpg",
