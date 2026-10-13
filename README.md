@@ -9,6 +9,8 @@ It presents two on-chain protocol layers:
 
 The deployed testnet app is available at [bertdao.vercel.app](https://bertdao.vercel.app). This repository contains only public client-side configuration and ABIs. Never put private keys, World ID signing keys, deployment keys, or Redis tokens in `NEXT_PUBLIC_*` variables.
 
+For read-only V2.3/V3.1 monitoring and public GraphQL exploration, use [BERT Console V0.1.0 Beta](https://bertdao-console.vercel.app) ([source](https://github.com/Tenyokj/bert-console-arc)). It is a separate testnet product, not a wallet or transaction interface.
+
 ## Repository Map
 
 | Path | Purpose |
