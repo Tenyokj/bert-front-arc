@@ -14,7 +14,7 @@ the people involved, where money was held, and how delivery was checked.
 
 The first use case is deliberately narrow: **a community decides which proposal
 to support, then reviews whether the agreed work was delivered before later
-testnet tranches are released**. BERT V3.1 supports four governance lanes, but
+testnet tranches are released**. BERT V3.2 supports four governance lanes, but
 we should demonstrate one lane first, not ask a new user to learn the entire
 protocol.
 

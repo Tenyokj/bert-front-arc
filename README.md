@@ -8,13 +8,13 @@ The public web application for the BERT Protocol on Arc Testnet.
 It presents two on-chain protocol layers:
 
 - **BERT V2.3**: ideas, conditional pledges, rounds and winning-backer-reviewed 20/40/40 grants. Legacy rounds retain their stored 30/40/30 reviewer policy.
-- **BERT V3.1 Community Layer**: independent modular Community Hubs with membership, validation, Binary/Slate voting, supporter-reviewed 20/40/40 execution plans, validator rewards and quorum-protected treasury actions.
+- **BERT V3.2 Community Layer**: independent modular Community Hubs with membership, validation, Binary/Slate voting, supporter-reviewed 20/40/40 execution plans, validator rewards and quorum-protected treasury actions.
 
-**Current source targets Community Layer V3.2 (unreleased).** V2 remains V2.3. Original live V3.1 Communities and endpoint records remain historical, not upgraded by this frontend. See [release scope](public/docs/V3.2-RELEASE.md).
+**Community Layer V3.2 is deployed on Arc Testnet (24 October 2026).** V2 remains V2.3. New Communities use the V3.2 Factory and graph v3.2.0. Original V3.1 Communities remain accessible with their immutable earlier policy. See [release scope](public/docs/V3.2-RELEASE.md).
 
 The deployed testnet app is available at [bertdao.vercel.app](https://bertdao.vercel.app). This repository contains only public client-side configuration and ABIs. Never put private keys, World ID signing keys, deployment keys, or Redis tokens in `NEXT_PUBLIC_*` variables.
 
-For read-only V2.3/V3.1 monitoring and public GraphQL exploration, use [BERT Console V0.1.0 Beta](https://bertdao-console.vercel.app) ([source](https://github.com/Tenyokj/bert-console-arc)). It is a separate testnet product, not a wallet or transaction interface.
+For read-only V2.3/V3.2 monitoring (including retained V3.1 Communities) and public GraphQL exploration, use [BERT Console V0.1.0 Beta](https://bertdao-console.vercel.app) ([source](https://github.com/Tenyokj/bert-console-arc)). It is a separate testnet product, not a wallet or transaction interface.
 
 ## Repository Map
 
@@ -84,7 +84,7 @@ The browser reads public contract state directly through viem/wagmi. The Graph i
 - V2 uses the existing V2 subgraph for protocol activity.
 - V3 uses its own subgraph for Community discovery, role/activity views and event history.
 - Community identity binds chain, Factory and local ID. Links include the Factory address; numeric Arc bookmarks remain pinned to the original modular V3.1 Factory. Unknown Factory URLs are rejected, not trusted as transaction targets.
-- The source-only Manager 2.0.0 follow-up needs new matching deployers/Factory. Creation with the known original Factory and new Hub artifact is blocked. Publish the coordinated frontend only after matching infrastructure/env exists; old Communities remain readable with their old policy.
+- Manager 2.0.0 is deployed through the new matching V3.2 deployers/Factory. Creation with the known original Factory and new Hub artifact remains blocked; old Communities remain readable with their old policy. See [deployment evidence and current env](public/docs/V3.2-ARC-TESTNET-RELEASE.md).
 - Run `npm run test:community-routing` for routing/manifest regressions. See [the release runbook](public/docs/V3.2-QUORUM-ROLLOUT.md); generated graph output is not evidence of publication.
 - Permission checks, balances, settlement availability and transaction actions are always derived from live on-chain state.
 

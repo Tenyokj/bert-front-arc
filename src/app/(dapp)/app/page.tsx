@@ -113,8 +113,8 @@ export default function DappDashboardPage() {
       <div className="relative overflow-hidden rounded-[28px] border border-cyan-300/18 bg-[linear-gradient(120deg,rgba(8,47,73,0.52),rgba(22,78,99,0.22),rgba(42,45,59,0.96))] p-6 sm:p-8">
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">New module / BERT V3.1</p><h2 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl">Build a governance world around your community.</h2><p className="mt-3 text-sm leading-relaxed text-slate-300">V3.1 adds stake-gated membership, local validators, four governance lanes, and supporter-reviewed 20 / 40 / 40 execution without replacing the V2.3 grant protocol.</p></div>
-          <Link href="/v3" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"><FaUsers /> Explore V3.1 Community Layer <FaArrowRight className="text-xs" /></Link>
+          <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">Community Layer / BERT V3.2</p><h2 className="mt-3 font-[var(--font-display)] text-3xl text-white sm:text-4xl">Build a governance world around your community.</h2><p className="mt-3 text-sm leading-relaxed text-slate-300">V3.2 combines stake-gated membership, local validators and four governance lanes with supporter-reviewed 20 / 40 / 40 execution. Every payment also needs fresh Admin quorum; V2.3 grant rounds remain separate.</p></div>
+          <Link href="/v3" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5"><FaUsers /> Explore V3.2 Community Layer <FaArrowRight className="text-xs" /></Link>
         </div>
       </div>
 

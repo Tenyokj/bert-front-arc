@@ -270,13 +270,13 @@ export default function HowItWorksPage() {
 
           <section className="rounded-3xl border border-teal-400/20 bg-[linear-gradient(135deg,rgba(13,148,136,0.10),rgba(255,255,255,0.04))] p-6 md:p-8">
             <div className="max-w-4xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-500">Community Layer: V3.1 live / V3.2 pending</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-500">Community Layer: V3.2 live on Arc Testnet</p>
               <h2 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">A self-contained Community where capital release remains reviewable.</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                V3.1 adds stake-backed Community governance without replacing the V2 builder-grant rail above. Each
+                V3.2 provides stake-backed Community governance without replacing the V2 builder-grant rail above. Each
                 Community receives an independent <strong>CommunityHub</strong> for roles, proposals, voting, active-time
                 clock, and governance requests, plus a paired <strong>CommunityTreasury</strong> for escrow, execution
-                capital, Validator rewards, failed-plan refunds, and withdrawal approvals. In the original deployed V3.1 model, a settled winner releases 20% immediately and winning supporters review proof for the final 40% / 40%. The unreleased V3.2 source implementation adds fresh Admin quorum before every transfer, including the first 20%; it is not yet deployed. Community-specific decisions remain local;
+                capital, Validator rewards, failed-plan refunds, and withdrawal approvals. In current V3.2 Communities, settlement reserves the budget without paying it. Each 20% / 40% / 40% transfer needs fresh Admin quorum, and both 40% stages first require eligible winning-supporter proof review. Original V3.1 Communities retain their automatic-transfer policy. Community-specific decisions remain local;
                 configured protocol-reserve flows remain visible to the broader BERT FundingPool.
               </p>
             </div>
@@ -350,7 +350,7 @@ export default function HowItWorksPage() {
               <div className="mt-5 space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                 <p>Validation, binary voting, Slate voting, reward epochs, exit cooldowns, and quorum-request expiry are measured in <strong>active Community time</strong>. A pause stops the Community clock; resume continues only the time remaining.</p>
                 <p>Pause blocks governance-sensitive paths such as new proposals, votes, validation progression, and new execution withdrawals. It does not let the frontend bypass settled onchain claim rules.</p>
-                <p>Execution funds are not released by a single arbitrary click. The Community Treasury retains custody, while a settled winner creates an immutable 20 / 40 / 40 plan for the configured Administration execution wallet. In original deployed Communities, later tranches require winning-supporter review. The source-only follow-up excludes the execution recipient from reviews and requires fresh Admin approval plus actual payment within seven active Community days for every tranche. Timeout makes the unpaid execution budget refundable to supporters, not free Treasury balance. Validator rewards remain separate.</p>
+                <p>Execution funds are not released by a single arbitrary click. The Community Treasury retains custody, while a settled winner creates an immutable 20 / 40 / 40 plan for the configured Administration execution wallet. In original deployed Communities, later tranches require winning-supporter review. New V3.2 Communities exclude the execution recipient from reviews and require fresh Admin approval plus actual payment within seven active Community days for every tranche. Timeout makes the unpaid execution budget refundable to supporters, not free Treasury balance. Validator rewards remain separate.</p>
                 <p>Adding or removing Admins, Validators, pausing, resuming, archiving, and cancelling a withdrawal are also quorum-protected requests. This prevents unilateral roster capture from becoming a treasury takeover.</p>
               </div>
             </div>

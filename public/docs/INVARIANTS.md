@@ -1,6 +1,6 @@
 # Invariants
 
-Unreleased V3.2 / Manager 2.0.0: a passed proof cannot increase `releasedAmount`; only
+Deployed V3.2 / Manager 2.0.0 (new Communities only): a passed proof cannot increase `releasedAmount`; only
 valid fixed-tranche payment does. Each stage needs fresh current-role approvals
 before its seven-active-day deadline. Initial payment is not automatic. Ordinary
 withdrawals cannot access plan reserves. Payment expiry refunds all actually unpaid
@@ -63,7 +63,7 @@ This document records the core protocol invariants BERT is expected to preserve 
 4. stage ordering must be preserved
 5. a claim, submission, review, or grant-expiry deadline cannot be bypassed after its configured window closes
 6. a V2 round's milestone mode is fixed at start; legacy reviewer writes cannot authorize V2.3 releases
-7. V2.3 releases require 40% quorum, exact two-thirds weighted approval and three eligible approvers; V3.1 instead uses 6,667 bps approval and max(3, ceil(3% of eligible supporters)) addresses
+7. V2.3 releases require 40% quorum, exact two-thirds weighted approval and three eligible approvers; V3.2 instead uses (as did V3.1) 6,667 bps approval and max(3, ceil(3% of eligible supporters)) addresses
 
 ## Upgrade Invariants
 

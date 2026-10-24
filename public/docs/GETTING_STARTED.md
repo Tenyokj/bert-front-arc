@@ -1,6 +1,6 @@
 **Getting Started**
 
-Current code: BERT V2.3 and V3.1 on Arc Testnet. Read
+Current code: BERT V2.3 and V3.2 on Arc Testnet. Read
 [CURRENT-RELEASE.md](CURRENT-RELEASE.md) before interpreting legacy payout constants.
 
 **Requirements**
@@ -37,7 +37,7 @@ npx hardhat node
 ```bash
 npx hardhat run scripts/deploy/deploy-proxies.ts --network localhost
 ```
-For a complete local V3.1 environment, wallet minting, Demo attestations and
+For a complete local V3.2 environment, wallet minting, Demo attestations and
 clock advancement, follow [LOCAL-V3.1-E2E.md](LOCAL-V3.1-E2E.md). There is no
 current `deploy-faucet.ts` script in this repository.
 
@@ -52,5 +52,5 @@ npx hardhat run scripts/deploy/deploy-proxies.ts --network arcTestnet
 
 This deploys a fresh core, not an upgrade of live proxies. For the existing
 release use the [versioned deployment record](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/deployments/arc-testnet-v3.json)
-and [V3.1 release runbook](V3.1-ARC-TESTNET-RELEASE.md). Configure V2.3 backer
+and [current V3.2 release record](V3.2-ARC-TESTNET-RELEASE.md). Configure V2.3 backer
 milestones explicitly using the documented deployment scripts.

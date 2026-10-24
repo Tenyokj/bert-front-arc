@@ -1,20 +1,20 @@
 # Local Community Layer E2E: V3.2 Sources
 
-**Unreleased source change:** Manager 2.0.0 requires explicit Admin approvals and
+**V3.2 policy (deployed on Arc Testnet; this runbook uses local isolated state):** Manager 2.0.0 requires explicit Admin approvals and
 fixed-tranche execution after settlement and each passed milestone review. Use
 [the tranche-quorum guide](V3.2-TRANCHE-QUORUM.md) alongside this runbook; older
 automatic-transfer steps describe the original live Manager. Exercise expiry at
 all three stages and 100/80/40 unpaid-budget refunds. The next proof clock begins
 only after actual payment. No existing deployment was changed by these edits.
 
-This runbook exercises the deployed V3.1 contracts through the real frontend on a disposable Hardhat node. It is intentionally separate from Arc Testnet and never uses a real private key, real USDC, or a production proof-of-personhood attestation.
+This runbook deploys and exercises the V3.2 contract sources through the real frontend on a disposable Hardhat node. It is intentionally separate from Arc Testnet and never uses a real private key, real USDC, or a production proof-of-personhood attestation.
 
 ## Safety Boundary
 
 - Use only the public development accounts printed by `npx hardhat node`.
 - Never fund those accounts outside a local node.
 - Every helper below refuses a chain other than `31337`.
-- Do not change the V3.1 one-day minimum milestone review in Solidity. Advance the local chain clock instead.
+- Do not change the V3.2 one-day minimum milestone review in Solidity. Advance the local chain clock instead.
 
 ## Wallet Roles
 
@@ -31,7 +31,7 @@ Use the first eight accounts from the Hardhat node output:
 | `#6` | Winning supporter and milestone reviewer 2 |
 | `#7` | Winning supporter and milestone reviewer 3 |
 
-Three independent winning supporters are deliberate: V3.1 requires at least the greater of three approving wallets or 3% of the winner snapshot.
+Three independent winning supporters are deliberate: V3.2 requires at least the greater of three approving wallets or 3% of the winner snapshot.
 
 ## 1. Start and Deploy Locally
 
@@ -57,7 +57,7 @@ npx hardhat run scripts/deploy/deploy-proxies.ts --network localhost
 
 Record the printed addresses for `USDC asset`, `FundingPoolUpgradeable`, `VotingSystemUpgradeable`, `IdeaRegistryUpgradeable`, `ReputationSystemUpgradeable`, `VoterProgressionUpgradeable`, `RolesRegistryUpgradeable`, `PoPVerifierUpgradeable`, and `GrantManagerUpgradeable`.
 
-Deploy the isolated V3.1 infrastructure with the local PoP proxy address:
+Deploy the isolated V3.2 infrastructure with the local PoP proxy address:
 
 ```bash
 LOCAL_RPC_URL=http://127.0.0.1:8545 \
@@ -118,7 +118,7 @@ NEXT_PUBLIC_V3_ADMIN_ACTIONS_LIBRARY_ADDRESS=<V3_2_ADMIN_ACTIONS_LIBRARY_ADDRESS
 NEXT_PUBLIC_V3_EVENT_FROM_BLOCK=0
 ```
 
-Leave `NEXT_PUBLIC_SUBGRAPH_URL` and `NEXT_PUBLIC_V3_SUBGRAPH_URL` unset locally. The V3.1 directory falls back to direct RPC reads, so a local Graph node is not required.
+Leave `NEXT_PUBLIC_SUBGRAPH_URL` and `NEXT_PUBLIC_V3_SUBGRAPH_URL` unset locally. The V3.2 directory falls back to direct RPC reads, so a local Graph node is not required.
 
 Start the frontend:
 
@@ -162,7 +162,7 @@ LOCAL_ADVANCE_SECONDS=301 \
 npx hardhat run scripts/local/advance-time.ts --network localhost
 ```
 
-For a V3.1 milestone review window:
+For a V3.2 milestone review window:
 
 ```bash
 LOCAL_RPC_URL=http://127.0.0.1:8545 \
@@ -181,17 +181,17 @@ Refresh the relevant dApp page after advancing time. Community deadlines use pau
 3. Account `#0` opens binary voting.
 4. Accounts `#5`, `#6`, `#7` each vote `YES` with 10 USDC.
 5. Advance 301 seconds; settle the proposal from its detail page.
-6. Confirm an execution plan exists: the Treasury retained custody until releasing 20% to the Administration execution wallet (`#0`); the other 80% is reserved.
+6. Confirm the plan is AwaitingTranche, Treasury reserves the entire execution budget and no USDC is paid at settlement. Both Admins approve stage 0; execute with the valid sorted quorum witness. Confirm only then that 20% is paid to execution wallet (`#0`), with 80% reserved.
 7. Account `#0` submits a nonzero 32-byte evidence hash for milestone one.
 8. Accounts `#5`, `#6`, `#7` approve the proof in **Execution Plans**.
-9. Advance 86401 seconds; finalize review. Confirm the first 40% releases.
-10. Repeat steps 7-9 for milestone two. Confirm status `Completed`, the final 40% release, and that supporters can clear their settled vote locks.
+9. Advance 86401 seconds; finalize review. Confirm stage 1 authorization opens but no payment occurs. Obtain fresh approvals from both Admins and execute stage 1; confirm the first 40% payment.
+10. Repeat steps 7-9 for milestone two, including new stage 2 approvals. Approved proof alone must not show Completed; the final actual payment completes the plan and permits clearing settled vote locks.
 
 ### B. Admin Binary: expired proof and pull refunds
 
 1. Account `#0` creates an **Admin Binary** proposal and opens voting.
 2. Accounts `#5`, `#6`, `#7` vote `YES`; advance 301 seconds and settle.
-3. Do not submit a proof. Advance 301 seconds past the proof deadline.
+3. Obtain stage 0 Admin quorum and execute the initial 20% payment. Only then advance 301 seconds past the proof deadline without submitting proof.
 4. Any account calls **Fail expired plan** in Execution Plans.
 5. Each of `#5`, `#6`, `#7` claims their own failed-plan refund.
 6. Confirm only the unreleased 80% is refunded pro rata; the initial 20% remains with the immutable Administration execution wallet. Each supporter can then clear their vote lock.
@@ -210,15 +210,18 @@ Refresh the relevant dApp page after advancing time. Community deadlines use pau
 2. Account `#2` approves both in Validator Queue.
 3. Account `#0` creates a Member Slate Round containing both validated proposals.
 4. Accounts `#5`, `#6`, `#7` select one candidate; advance 301 seconds and settle.
-5. Confirm the winner begins the same V3.1 execution-plan lifecycle as a binary winner.
+5. Confirm the winner begins the same V3.2 execution-plan lifecycle as a binary winner.
 
 ### E. Negative and control checks
 
 1. Try to review from a wallet that did not support the winner: transaction must revert.
-2. Confirm author voting is rejected. With patched Manager 1.0.2, a distinct Member execution wallet may fund the winner but both approve/reject review calls must revert. Exclude its weight/count only from review thresholds; preserve its financial refunds and exit-lock settlement. Original deployed Managers retain the gap; use a non-participating execution wallet for those pilots. See V3.1-SELF-REVIEW-FIX.md for the source/deployment boundary.
+2. Confirm author voting is rejected. With V3.2 Manager 2.0.0, a distinct Member execution wallet may fund the winner but both approve/reject review calls must revert. Exclude its weight/count only from review thresholds; preserve its financial refunds and exit-lock settlement. Original V3.1 Managers retain the gap; use a non-participating execution wallet for those pilots. See V3.1-SELF-REVIEW-FIX.md for the source/deployment boundary.
 3. Submit one rejected proof, advance a day, finalize, wait 48 hours, reopen correction, and submit a corrected proof. Confirm a second rejection fails the plan.
 4. Pause through the two-Admin action queue, advance local wall time, and verify Community-clock deadlines remain unchanged. Resume through the same quorum path.
 5. Attempt member exit while a vote or plan lock exists. It must remain blocked until the vote is settled and the plan completes or the wallet claims its failed-plan refund.
+
+6. Leave initial authorization unpaid; advance seven active days and expire. Confirm 100% execution-budget refunds. Repeat after 20% and 60% paid, checking 80% and remaining 40% refunds. Validator rewards must stay separate.
+7. Remove/reappoint an approving Admin and verify the stale nonce cannot authorize payment. Duplicate/unsorted/insufficient witnesses must fail.
 
 ## E2E Exit Criteria
 

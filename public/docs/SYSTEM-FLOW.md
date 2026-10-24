@@ -3,7 +3,7 @@
 This document describes the operational flow of BERT in a narrative sequence from proposal creation to final milestone completion.
 
 Scope: V2.3 backer-governed rounds. Legacy reviewer rounds retain their stored
-30/40/30 rules; see [CURRENT-RELEASE.md](CURRENT-RELEASE.md). V3.1 has a separate
+30/40/30 rules; see [CURRENT-RELEASE.md](CURRENT-RELEASE.md). V3.2 has a separate
 [Community execution lifecycle](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/V3/README.md).
 
 ## Contents

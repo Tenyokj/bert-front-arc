@@ -1,18 +1,19 @@
 # Current Release and Payout Modes
 
 This is the current integration summary for **BERT V2.3**, **Community Layer
-V3.1**, and **Console V0.1.0 Beta** on **Arc Testnet, chain ID 5042002**.
+V3.2**, and **Console V0.1.0 Beta** on **Arc Testnet, chain ID 5042002**.
 Protocol-layer versions are independent of each contract's `@custom:version`.
 The [deployment manifest](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/deployments/arc-testnet-v3.json) identifies addresses;
 the [documentation audit](DOCUMENTATION-AUDIT-2026-10-24.md) records verification.
 
-**Next release: Community Layer V3.2, not deployed. V2 remains V2.3.**
+**Current release: Community Layer V3.2, deployed on Arc Testnet on 24 October 2026. V2 remains V2.3.**
+See [receipt-backed release evidence](V3.2-ARC-TESTNET-RELEASE.md).
 See [version scopes](V3.2-RELEASE.md).
 
-**Local implementation versus live deployment:** the new Manager `2.0.0` source
+**New versus existing Communities:** the V3.2 Manager `2.0.0`
 adds explicit Admin quorum for every 20/40/40 transfer, seven-active-day payment
 expiry and refunds of the whole unpaid execution budget. It retains the self-review
-fix. This is not deployed; original live Managers still use automatic transfers.
+fix. The matching V3.2 infrastructure is deployed; original V3.1 Managers still use automatic transfers.
 See [the tranche-quorum specification](V3.2-TRANCHE-QUORUM.md) for exact new rules.
 The [rollout runbook](V3.2-QUORUM-ROLLOUT.md) explains the new matching Factory,
 factory-qualified URLs, retained historical graph sources and release order.
@@ -62,13 +63,15 @@ Winning progression is claimed individually with `claimWinningParticipation`.
 The old 30-voters-per-idea cap and settlement reward loop are not current V2.3
 rules. Round size remains bounded to 5..50 ideas.
 
-## V3.1 is a separate Community release
+## Current V3.2 and retained V3.1 Communities
 
-V3.1 has its own Factory and per-Community Hub, Treasury and runtime modules.
-V3.0 Communities retain their historical contracts. An additive FundingPool
-Factory allowlist supports both generations' reserve routes.
+V3.2 uses Factory `0xf793786BCecfbfE35a22E36180032b32BD5208Ba`, deployed at
+block `68888068`. V3.1 and V3.0 Communities retain their historical contracts.
+FundingPool approves all three Factories; the V3 graph v3.2.0 indexes both modular
+generations. `v3` in the deployment manifest is current; `v3Previous` preserves
+V3.1 and `v3Legacy` preserves V3.0.
 
-Winning Admin/Member Binary/Slate proposals use 20/40/40 execution plans paid to
+Original V3.1 Admin/Member Binary/Slate proposals use 20/40/40 execution plans paid to
 the immutable Administration execution recipient. Treasury keeps custody of
 unreleased capital. Review is restricted to the sealed eligible winning-supporter
 snapshot. Authors cannot vote for their own proposal and therefore cannot enter
@@ -77,7 +80,7 @@ universal enforced invariant**: an execution wallet that is not an Admin/Validat
 can join as a Member, support another author's proposal and review its own
 execution. This known policy gap is reproduced in the documentation audit.
 
-**Local source follow-up, not deployed:** the self-review fix first prepared as
+**Deployed in new V3.2 Communities:** the self-review fix first prepared as
 Manager `1.0.2` is retained in the latest quorum-enabled `2.0.0`. It explicitly rejects
 execution-recipient reviews and excludes its weight/count from the review quorum
 and approver floor. Its financial support remains refundable using a separate
@@ -89,11 +92,11 @@ V3.1 requires 40% weight participation, **6,667 bps (66.67%)** weighted approval
 and `max(3, ceil(3% of eligible snapshot supporter addresses))` approving wallets.
 Do not replace the exact V3.1 percentage with V2.3's exact two-thirds formula.
 Review duration is immutable Community configuration, not one universal duration.
-Until the patch is deployed and verified for a Community, use an Administration
-execution recipient that does not participate as a Member/supporter. This is an
+For existing V3.1 Communities, use an Administration execution recipient that
+does not participate as a Member/supporter. New V3.2 Communities enforce exclusion. This is an
 operational mitigation, not a guarantee for every existing or future Community.
 
-## Live read snapshot: 2026-10-24
+## Historical pre-rollout read snapshot: 2026-10-24
 
 Read-only checks at block **68843131**, using `https://arc-testnet.drpc.org`:
 
@@ -112,6 +115,16 @@ Read-only checks at block **68843131**, using `https://arc-testnet.drpc.org`:
 The first new V2 round will snapshot backer mode if this setting remains enabled.
 Query `isBackerMilestoneRound(id)` only for an existing round: the getter reverts
 for the next unused ID. This snapshot does not prove a completed grant or E2E.
+
+## Post-rollout verification: 2026-10-24
+
+- Factory receipt succeeded at block **68888068**; allowlist receipt succeeded at
+  **68888345**. All six initialized Factory dependencies matched the release output.
+- FundingPool approval reads for V3.0, V3.1 and V3.2 all returned `true`.
+- Graph `_meta` reported deployment `QmPRRt8FN9ibN4LhSmBBoxEc5WBj55ThE2LjGyRyTNL2oh`,
+  `hasIndexingErrors: false`, indexed block **68891161**.
+- The operator reports the matching Vercel environment and frontend deployed.
+  Documentation-only cleanup still needs its own commit and publication.
 
 ## Verification and readiness
 

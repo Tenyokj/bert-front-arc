@@ -162,10 +162,10 @@ export default function TreasuryPoliciesPage() {
             <section className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Community Treasury Is a Separate Rail</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                V3.1 keeps proposal execution reserves, supporter refunds, validator rewards and free execution balance separate. Original deployed Managers release the initial 20% at settlement and later 40% tranches after supporter review.
-                The source-only Manager 2.0.0 follow-up requires fresh Admin quorum for every payment, excludes the execution recipient from proof review, and refunds the entire unpaid execution budget after payment expiry. It has not been deployed and does not change old Communities.
+                The Community Treasury keeps proposal execution reserves, supporter refunds, validator rewards and free execution balance separate. Original deployed Managers release the initial 20% at settlement and later 40% tranches after supporter review.
+                V3.2 Manager 2.0.0 is deployed for new Communities: it requires fresh Admin quorum for every payment, excludes the execution recipient from proof review, and refunds the entire unpaid execution budget after payment expiry. Existing V3.1 Communities retain their original policy.
               </p>
-              <Link href="/docs/V3.1-TRANCHE-QUORUM.md" className="text-sm font-semibold text-teal-600 underline">Read the pending payment-policy specification</Link>
+              <Link href="/docs/V3.2-TRANCHE-QUORUM.md" className="text-sm font-semibold text-teal-600 underline">Read the current payment-policy specification</Link>
             </section>
 
             <section id="reserves" className="space-y-4">

@@ -8,9 +8,9 @@ an arbitrary execution wallet can. The pre-patch end-to-end characterization rep
 such a wallet supporting and approving its own execution plan; new regression tests
 now require rejection on the patched code. Use a non-participating
 Administration execution wallet for pilots; do not claim universal executor
-exclusion for those original instances. A local source patch now separates review
-eligibility from financial refund rights; see [the patch record](V3.1-SELF-REVIEW-FIX.md).
-Deployment and handling of existing immutable Communities remain outstanding.
+exclusion for those original instances. V3.2 Manager 2.0.0, deployed through the new Factory, separates review
+eligibility from financial refund rights. See [current deployment](V3.2-ARC-TESTNET-RELEASE.md).
+Handling existing immutable V3.1 Communities remains a separate operational task.
 
 This document records current protocol limitations and trust assumptions that should be stated explicitly.
 
@@ -23,11 +23,14 @@ This document records current protocol limitations and trust assumptions that sh
 5. upgrade safety depends heavily on operator discipline
 6. economic tuning still depends on environment-specific judgment
 7. Arc Testnet Demo verification is not unique personhood or Sybil resistance
-8. V2.3 backer reviews and V3.1 supporter reviews require an active eligible cohort; reaching a quorum is not guaranteed by deployment
-9. V3.1 uses 6,667-bps approval and at least max(3, ceil(3% of eligible supporters)) approving addresses; a smaller eligible cohort cannot pass review
+8. V2.3 backer reviews and V3.2 supporter reviews (and historical V3.1 reviews) require an active eligible cohort; reaching a quorum is not guaranteed by deployment
+9. V3.2 uses 6,667-bps approval and at least max(3, ceil(3% of eligible supporters)) approving addresses; a smaller eligible cohort cannot pass review
 10. internal tests and Slither triage are not an independent audit or complete manual dApp E2E
 
 Current version and legacy boundaries: [CURRENT-RELEASE.md](CURRENT-RELEASE.md).
+
+11. V3.2 Admin quorum adds a payment veto/liveness dependency; pause freezes the seven-active-day expiry clock
+12. Execution-recipient exclusion applies to that exact address, not every related wallet or multisig owner
 
 ## Why This Document Exists
 

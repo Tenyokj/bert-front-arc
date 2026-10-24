@@ -5,7 +5,7 @@ and does not claim that V3.1 is safe for mainnet use.
 
 ## 2026-10-24 follow-up: execution-recipient conflict of interest
 
-**Open policy/security finding; not fixed by documentation.** V3.1 disallows
+**Historical V3.1 finding; fixed for newly created V3.2 Communities, still present in original immutable V3.1 instances.** V3.1 disallows
 proposal-author votes and Admin/Validator membership, but does not independently
 exclude the immutable execution recipient from joining as a regular Member.
 A distinct non-Admin execution wallet can support another author's proposal,
@@ -16,21 +16,22 @@ execution. It cannot bypass quorum or the minimum approving-wallet count alone.
 recipient as a reviewer and separates review weight/count from financial refund
 rights. The original characterization case has been replaced by rejection tests
 across all four lanes, plus refund/threshold edge cases. See
-[V3.1-SELF-REVIEW-FIX.md](V3.1-SELF-REVIEW-FIX.md). This source patch has not been
-deployed; the finding remains open for existing immutable Communities. Additional
-Admin quorum on execution tranches is not part of this change.
+[V3.1-SELF-REVIEW-FIX.md](V3.1-SELF-REVIEW-FIX.md). The draft was superseded by Manager 2.0.0, deployed in the new V3.2 bundle on
+24 October 2026. The finding remains open for original immutable V3.1 Communities.
+The V3.2 release also includes the separately agreed execution-tranche Admin quorum.
 
 The original real Hub/Factory/Treasury characterization reproduced this accepted
-behavior before the patch. Until a separately reviewed deployment, use a
+behavior before the patch. For original V3.1 Communities, use a
 non-participating Administration execution wallet
 for pilots. Existing immutable Communities are not silently patched by changing
 docs, frontend or deploying a new Factory. Assess affected Communities before
 claiming an executor self-review prohibition or advancing toward mainnet.
 
-## 2026-10-24 V3.2 source follow-up: execution-tranche Admin quorum
+## 2026-10-24 V3.2 deployment: execution-tranche Admin quorum
 
 The separately approved [tranche-quorum change](V3.2-TRANCHE-QUORUM.md) is now
-implemented locally in Manager 2.0.0. Initial settlement and passed proof reviews
+deployed in the new V3.2 infrastructure with Manager 2.0.0. See the
+[deployment evidence](V3.2-ARC-TESTNET-RELEASE.md). Initial settlement and passed proof reviews
 only open fixed payment authorizations; every transfer requires current Admin
 quorum within seven active Community days. Expiry refunds all unpaid plan capital
 without touching validator rewards. Existing immutable Communities remain unpatched.

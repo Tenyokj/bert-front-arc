@@ -1,8 +1,8 @@
 # BERT Community Layer Subgraph: V3.1 / V3.2
 
-This is the separate Graph subgraph for the BERT V3.1 Community Layer. It does not alter or replace the existing V2 subgraph.
+This is the separate Graph subgraph for the BERT V3.2 Community Layer with retained V3.1 history. It does not alter or replace the existing V2 subgraph.
 
-Each retained modular `CommunityFactory` is a static data source. Factory creation events register dynamic data sources for every activated `CommunityHub`, `CommunityTreasury`, and V3.1 module. The module addresses are read from the freshly deployed Hub, so newly created Communities are indexed without a manifest update.
+Each retained modular `CommunityFactory` is a static data source. Factory creation events register dynamic data sources for every activated `CommunityHub`, `CommunityTreasury`, and modular V3 runtime contract. The module addresses are read from the freshly deployed Hub, so newly created Communities are indexed without a manifest update.
 
 ## Indexed data
 
@@ -13,14 +13,14 @@ Each retained modular `CommunityFactory` is a static data source. Factory creati
 - V3.1 winning-supporter snapshots, execution plans, milestone evidence, weighted review, releases and refunds.
 - Validator reward epochs and claims.
 - Treasury withdrawal requests and quorum approvals.
-- Source-only Manager 2.0.0 tranche readiness, Admin approvals, actual payments and expiry; historical approvals must be revalidated against current onchain roles.
+- Deployed V3.2 Manager 2.0.0 tranche readiness, Admin approvals, actual payments and expiry; historical approvals must be revalidated against current onchain roles.
 - Quorum-protected Admin action requests.
 
 Proposal text and full immutable configuration are still read from `CommunityHub` by the frontend. The current contracts do not emit proposal metadata or all config fields in events, so the subgraph deliberately does not invent them.
 
 ## Deploy to Arc Testnet
 
-For the pending V3.2 release, after the new Factory proxy is deployed, record its proxy address and deployment block. Do not use the legacy V3.0 Factory address. The original modular V3.1 Factory (`0xe16Cd61a21feA97393e6eEE3A7F7A26828021dD0`, block `66809847`) is retained automatically. A new Factory adds a data source; it does not replace old Communities.
+V3.2 is deployed: use Factory `0xf793786BCecfbfE35a22E36180032b32BD5208Ba` from block `68888068`. Do not use the legacy V3.0 Factory address. The original modular V3.1 Factory (`0xe16Cd61a21feA97393e6eEE3A7F7A26828021dD0`, block `66809847`) is retained automatically. A new Factory adds a data source; it does not replace old Communities.
 
 ```bash
 cd subgraph-v3
@@ -48,3 +48,13 @@ Wait for the deployment to report `SYNCED`, then set the returned query endpoint
 Codegen/build success is not publication or synchronization. This repository does not claim that the new Factory or tranche schema has already been deployed. Run `npm run test:community-routing` from the frontend root before release.
 
 The Studio slug stays `bert-v-3-1-arc-testnet`; it is a project identifier, not the release number. Publish a new version of that project, not a replacement of original Factory history. V3.2 has not been deployed by these source changes.
+
+## Current Arc deployment (24 October 2026)
+
+Version **v3.2.0** is deployed and synced at
+https://api.studio.thegraph.com/query/1742046/bert-v-3-1-arc-testnet/v3.2.0.
+The Studio slug retains its historical name. It indexes V3.1 Factory
+`0xe16Cd61a21feA97393e6eEE3A7F7A26828021dD0` from **66809847** and
+V3.2 Factory `0xf793786BCecfbfE35a22E36180032b32BD5208Ba` from **68888068**.
+Graph deployment: `QmPRRt8FN9ibN4LhSmBBoxEc5WBj55ThE2LjGyRyTNL2oh`.
+Old Community records retain their original policy, not the new Manager behavior.

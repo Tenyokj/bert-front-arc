@@ -1,16 +1,17 @@
 # Changelog
 
-## Unreleased - Community Layer V3.2
+## 2026-10-24 / Community Layer V3.2 - Arc Testnet
 
 Implemented the approved seven-active-day authorization window for 20/40/40.
 Current-role nonce checks reject removed/reappointed Admin approvals; payments
 are permissionlessly relayable only to the immutable recipient at the fixed amount.
 Expiry refunds the entire unpaid execution budget, preserving validator rewards.
 Added AwaitingTranche status, explicit payment events, UI and subgraph support.
-Manager 2.0.0; Hub 2.1.0; Membership/related deployers 1.1.0. Not deployed.
+Manager 2.0.0; Hub 2.1.0; Membership/related deployers 1.1.0. Deployed as new
+infrastructure, with existing Communities unchanged. [Receipts and addresses](V3.2-ARC-TESTNET-RELEASE.md).
 See V3.2-TRANCHE-QUORUM.md; the earlier self-review-only patch below is historical.
 
-## Unreleased - execution-recipient self-review patch
+## Historical source-only draft - execution-recipient self-review patch
 
 Manager 1.0.2 explicitly rejects the execution recipient as a milestone reviewer.
 Its financial support remains refundable; review quorum and proportional approver
