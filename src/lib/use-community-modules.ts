@@ -12,7 +12,7 @@ export type CommunityModuleAddresses = {
   milestone?: Address;
 };
 
-/** Resolves the immutable V3.1 modules owned by one thin CommunityHub facade. */
+/** Resolves the immutable modular V3 modules owned by one thin CommunityHub facade. */
 export function useCommunityModules(hub: Address, chainId?: number) {
   const read = useReadContracts({
     contracts: [

@@ -3,7 +3,9 @@
 **Follow-up after this audit:** a local executable self-review fix was subsequently
 authorized and implemented. See [V3.1-SELF-REVIEW-FIX.md](V3.1-SELF-REVIEW-FIX.md).
 The original findings and 40-test audit snapshot below describe the earlier
-documentation-only phase. No patched contract has been deployed.
+documentation-only phase. The fix and tranche quorum were subsequently deployed
+as V3.2 on 24 October; see [current evidence](V3.2-ARC-TESTNET-RELEASE.md).
+Original V3.1 Communities retain the documented finding.
 
 ## Scope and authority
 

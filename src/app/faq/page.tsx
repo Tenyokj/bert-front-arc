@@ -175,12 +175,12 @@ const sections: FaqSection[] = [
   },
   {
     id: "community-layer",
-    title: "BERT V3.1 Community Layer",
+    title: "BERT V3.2 Community Layer",
     items: [
       {
-        question: "What is BERT V3.1 Community Layer?",
+        question: "What is BERT V3.2 Community Layer?",
         answer:
-          "BERT V3.1 is a Community Layer built on top of the main BERT protocol. Each Community has its own modular CommunityHub, Treasury, proposal and voting modules, plus a dedicated milestone manager. It is for stake-backed Community decisions and reviewable execution; it does not replace V2.3 grant rounds.",
+          "BERT V3.2 is a Community Layer built on top of the main BERT protocol. Each Community has its own modular CommunityHub, Treasury, proposal and voting modules, plus a dedicated milestone manager. It is for stake-backed Community decisions and reviewable execution; it does not replace V2.3 grant rounds.",
       },
       {
         question: "What is created when a Community is launched?",
@@ -200,7 +200,7 @@ const sections: FaqSection[] = [
       {
         question: "What is the difference between CommunityHub and CommunityTreasury?",
         answer:
-          "CommunityHub coordinates membership, roles, proposal state, validation, voting, the Community clock, and governance actions. V3.1 places the underlying responsibilities in dedicated modules, including a milestone manager for execution plans. CommunityTreasury escrows membership stakes and votes, records execution and validator-reward balances, tracks refundable claims, and enforces multi-admin withdrawal approval before USDC leaves execution.",
+          "CommunityHub coordinates membership, roles, proposal state, validation, voting, the Community clock, and governance actions. The modular V3 architecture places the underlying responsibilities in dedicated modules, including a milestone manager for execution plans. CommunityTreasury escrows membership stakes and votes, records execution and validator-reward balances, tracks refundable claims, and enforces multi-admin withdrawal approval before USDC leaves execution.",
       },
       {
         question: "Does a Community have its own ID and addresses?",
@@ -211,15 +211,15 @@ const sections: FaqSection[] = [
   },
   {
     id: "community-milestones",
-    title: "V3.1 / V3.2 Execution Plans & Milestones",
+    title: "V3.2 Execution Plans & Legacy Compatibility",
     items: [
       {
-        question: "What happens after a V3.1 proposal wins?",
+        question: "What happens after a V3.2 proposal wins?",
         answer:
-          "A settled winner reserves its execution budget in CommunityTreasury. In unreleased V3.2 (Manager 2.0.0), all three 20/40/40 transfers require separate current Admin approvals; the two 40% stages first need winning-supporter proof approval. Each transfer has a seven-day active-time deadline. If it is not paid, the unpaid execution budget becomes refundable after permissionless expiry. Original live V3.1 Managers retain automatic transfers; a source update does not change an existing Community.",
+          "A settled winner reserves its execution budget in CommunityTreasury. In deployed V3.2 Communities (Manager 2.0.0), all three 20/40/40 transfers require separate current Admin approvals; the two 40% stages first need winning-supporter proof approval. Each transfer has a seven-day active-time deadline. If it is not paid, the unpaid execution budget becomes refundable after permissionless expiry. Original live V3.1 Managers retain automatic transfers; a source update does not change an existing Community.",
       },
       {
-        question: "Who can review a V3.1 milestone?",
+        question: "Who can review a V3.2 milestone?",
         answer:
           "Only winning supporters can review: YES supporters for a Binary winner, or voters for the winning Slate proposal. Authors cannot vote for their own proposal. The V3.2 Manager 2.0.0 also rejects the execution recipient and excludes its weight/count from review thresholds while retaining its financial refund rights. The patch is not automatically applied to existing immutable Communities: original V3.1 managers retain the self-review gap. Check the plan's Manager and deployment status; use a non-participating Administration execution wallet for legacy pilots.",
       },
@@ -323,7 +323,7 @@ const sections: FaqSection[] = [
       {
         question: "What happens when a binary proposal settles YES?",
         answer:
-          "For an Admin proposal, the settled voting stake enters the Community execution treasury and the winner starts a V3.1 execution plan. For an approved Member proposal, settlement follows the configured local distribution, including the Community execution balance, validator-reward accounting, and the BERT protocol reserve path. The exact split is visible in the deployed Community settings.",
+          "For an Admin proposal, the settled voting stake enters the Community execution treasury and the winner starts a Community execution plan. For an approved Member proposal, settlement follows the configured local distribution, including the Community execution balance, validator-reward accounting, and the BERT protocol reserve path. The exact split is visible in the deployed Community settings.",
       },
       {
         question: "What happens when NO wins a binary proposal?",
@@ -400,7 +400,7 @@ const sections: FaqSection[] = [
       {
         question: "Why do localhost Communities use minutes?",
         answer:
-          "Local test Communities intentionally use minute-scale configuration for exit, validation, voting, and reward paths. The V3.1 milestone review has a deliberate one-day onchain minimum, so local E2E uses Hardhat time advancement rather than weakening that protection. The same contracts enforce every setting.",
+          "Local test Communities intentionally use minute-scale configuration for exit, validation, voting, and reward paths. The Community milestone review has a deliberate one-day onchain minimum, so local E2E uses Hardhat time advancement rather than weakening that protection. The same contracts enforce every setting.",
       },
       {
         question: "How should a hackathon judge test a multi-day flow?",

@@ -58,7 +58,7 @@ export function normalizeCommunityRefundPreview(value: unknown): CommunityRefund
 
 const asRead = (client: PublicClient, request: Record<string, unknown>) => client.readContract(request as never) as Promise<unknown>;
 
-/** Resolves the immutable V3.1 modules that own a thin Hub's runtime state. */
+/** Resolves the immutable modular V3 modules that own a thin Hub's runtime state. */
 export async function getCommunityModules(client: PublicClient, hub: Address): Promise<CommunityModules> {
   const [membership, proposal, voting, milestone] = await Promise.all([
     asRead(client, { address: hub, abi: communityHubAbi, functionName: "membershipModule" }),
@@ -69,7 +69,7 @@ export async function getCommunityModules(client: PublicClient, hub: Address): P
   return { membership: membership as Address, proposal: proposal as Address, voting: voting as Address, milestone: milestone as Address };
 }
 
-/** Reads proposal count from its V3.1 storage-owning module, not the thin Hub facade. */
+/** Reads proposal count from its V3 storage-owning module, not the thin Hub facade. */
 export async function getCommunityProposalCount(client: PublicClient, modules: CommunityModules): Promise<bigint> {
   return asRead(client, { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "proposalCount" }) as Promise<bigint>;
 }

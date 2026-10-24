@@ -246,7 +246,7 @@ export const communityHubAbi = [
   { type: "function", stateMutability: "nonpayable", name: "finalizeValidatorRewardEpoch", inputs: [{ name: "epochId", type: "uint256" }], outputs: [] },
 ] as const satisfies Abi;
 
-/** Read-only surface of the V3.1 membership module deployed by each CommunityHub. */
+/** Read-only surface of the modular V3 membership module deployed by each CommunityHub. */
 export const communityMembershipModuleAbi = [
   { type: "function", stateMutability: "view", name: "entryStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "membershipExitCooldown", inputs: [], outputs: [{ type: "uint256" }] },
@@ -256,7 +256,7 @@ export const communityMembershipModuleAbi = [
   { type: "function", stateMutability: "view", name: "unresolvedObligationCount", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const satisfies Abi;
 
-/** Read-only surface of the V3.1 proposal and validator-review module. */
+/** Read-only surface of the modular V3 proposal and validator-review module. */
 export const communityProposalModuleAbi = [
   { type: "function", stateMutability: "view", name: "proposalBondUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "validatorApprovalThreshold", inputs: [], outputs: [{ type: "uint256" }] },
@@ -270,7 +270,7 @@ export const communityProposalModuleAbi = [
   { type: "function", stateMutability: "view", name: "validatorValidationCount", inputs: [{ name: "epochId", type: "uint256" }, { name: "validator", type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const satisfies Abi;
 
-/** Read-only surface of the V3.1 binary and Slate voting module. */
+/** Read-only surface of the modular V3 binary and Slate voting module. */
 export const communityVotingModuleAbi = [
   { type: "function", stateMutability: "view", name: "voteMinStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "binaryVotingDuration", inputs: [], outputs: [{ type: "uint256" }] },

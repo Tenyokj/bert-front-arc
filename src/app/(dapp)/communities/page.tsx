@@ -10,7 +10,7 @@ export default function CommunitiesPage() {
         <div className="absolute -right-10 -top-16 h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="relative max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">BERT V3.1 / Community Layer</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">BERT V3.2 / Community Layer</p>
           <h1 className="mt-4 font-[var(--font-display)] text-4xl leading-tight text-white sm:text-5xl md:text-6xl">Governance spaces with capital behind every decision.</h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
             Communities are independent on-chain rooms for members, validators, administrators, stake-backed proposals, and reviewable local USDC Treasury execution.

@@ -1,12 +1,12 @@
 # BERT Contributor Testing Guide
 
-For the unreleased Manager 2.0.0, also test the complete
+For the V3.2 Manager 2.0.0, also test the complete
 [Admin-tranche quorum flow](V3.2-TRANCHE-QUORUM.md): no automatic initial payout,
 fresh approvals per stage, current-role nonce validity, permissionless fixed
 payment, seven-active-day expiry, 100/80/40 unpaid-budget refunds, pause and
 proof deadlines measured from actual payment. Original live Managers differ.
 
-**Source release:** current local commands exercise unreleased V3.2, not original V3.1. Use [V3.2 release scope](V3.2-RELEASE.md). Historical live checks remain separately labelled.
+**Current release:** V3.2 is deployed on Arc Testnet; local commands exercise that policy, not original V3.1. Use [V3.2 release scope](V3.2-RELEASE.md). Historical live checks remain separately labelled.
 
 **Status:** public Arc Testnet testing guide for deployed BERT V2.3 and V3.1.
 This is not an audit report, a production readiness claim, or permission to
@@ -22,7 +22,7 @@ contracts, actor, transaction, expected invariant, and observed result.
 | Area | Current target | Primary outcome |
 | --- | --- | --- |
 | V2.3 | USDC stake-backed grant selection | Conditional pledges, pull refunds, and backer-reviewed delivery |
-| V3.1 | Modular Community Layer | Four governance lanes and supporter-reviewed execution plans |
+| V3.2 | Modular Community Layer | Four governance lanes and supporter-reviewed execution plans |
 | Frontend | Next.js dApp | Correct state, permissions, transaction preparation, and recovery |
 | Indexing | V2/V3 subgraphs | Event-derived history and discovery, never write authorization |
 | Operations | Scripts and release configuration | Correct addresses, roles, proxy ownership, and pause behavior |
@@ -59,12 +59,12 @@ findings must be reproduced and triaged against the actual capability graph.
 ## 3. Local E2E Lab
 
 The canonical setup is [LOCAL-V3.1-E2E.md](LOCAL-V3.1-E2E.md). It deploys
-disposable V2 and V3.1 contracts to Hardhat chain ID 31337, mints MockUSDC,
+disposable V2 and V3.2 contracts to Hardhat chain ID 31337, mints MockUSDC,
 and writes local-only PoP attestations. No backend or local subgraph is needed.
 
 Use these eight public development accounts from one `npx hardhat node` run:
 
-| Account | E2E role | Required V3.1 checks |
+| Account | E2E role | Required V3.2 checks |
 | --- | --- | --- |
 | #0 | Creator, initial Admin, Administration execution wallet | Factory creation, Admin flow, proof submission |
 | #1 | Second Admin | Quorum, pause, archive, withdrawal cancellation |
@@ -83,14 +83,14 @@ all local state and changes every deployed address.
 
 1. Start one local node: `npx hardhat node`.
 2. Deploy V2 proxies with `scripts/deploy/deploy-proxies.ts`.
-3. Deploy V3.1 with `scripts/deploy/deploy-v3-2.ts` using the local PoP proxy.
+3. Deploy V3.2 with `scripts/deploy/deploy-v3-2.ts` using the local PoP proxy.
 4. Run `scripts/deploy/configure-v3-2-funding-pool.ts` once to authorize the
-   V3.1 Factory in FundingPool.
+   V3.2 Factory in FundingPool.
 5. Mint MockUSDC with `scripts/local/mint-v3-test-usdc.ts`.
 6. Record local PoP attestations with `scripts/local/verify-v3-test-wallets.ts`.
 7. Point frontend `.env.local` at the fresh addresses and run `npm run dev`.
 
-The one-day V3.1 milestone-review minimum is deliberate. Do not weaken it for a
+The one-day V3.2 milestone-review minimum is deliberate. Do not weaken it for a
 demo. Advance only the local chain clock with `scripts/local/advance-time.ts`.
 
 ## 4. V2.3 Functional Matrix
@@ -119,7 +119,7 @@ For every terminal V2.3 route answer:
 4. Can a failed idea or losing pledge create unaccounted balance?
 5. Is author bond distinct from voter capital at every step?
 
-## 5. V3.1 Functional Matrix
+## 5. V3.2 Functional Matrix
 
 Create a Community with two-Admin quorum, one Validator, a dedicated
 Administration execution wallet, and short local voting windows. The Community
@@ -138,26 +138,27 @@ tranches and has no generic right to withdraw Treasury funds.
 | V3-08 | Validator reward epoch | Only active eligible Validators claim once after finalization |
 | V3-09 | Admin action queue | Second Admin approval required for protected roster/pause/archive/cancellation |
 | V3-10 | Treasury withdrawal | Reservation, quorum, execution, and cancellation agree |
-| V3-11 | Successful plan | Winner gets 20/40/40 only once per tranche |
-| V3-12 | Review electorate | Patched Manager rejects recipient approve/reject in ordinary/corrected/grace review; excludes its weight/count from thresholds but includes it in financial refunds. Test all four lanes. Original deployed Managers remain vulnerable until separately handled |
+| V3-11 | Successful plan | Executor gets 20/40/40 only once; each payment needs fresh Admin quorum |
+| V3-12 | Review electorate | Patched Manager rejects recipient approve/reject in ordinary/corrected/grace review; excludes its weight/count from thresholds but includes it in financial refunds. Test all four lanes. Original V3.1 Managers retain the gap; new V3.2 Managers enforce exclusion |
 | V3-13 | Review threshold | 40% eligible support-weight participation, 6,667 bps (66.67%) approval, max(3, ceil(3% of eligible supporters)) approvers |
 | V3-14 | Rejection and correction | One correction after cooldown; second rejection fails plan |
 | V3-15 | No quorum/proof expiry | No automatic payout; unreleased reserve becomes supporter refunds |
 | V3-16 | Pause-aware deadlines | Community clock freezes voting, proof, review, and action windows |
-| V3-17 | Legacy boundary | V3.0 cannot impersonate V3.1 Factory, Hub, Treasury, or module |
+| V3-17 | Legacy boundary | V3.0 cannot impersonate V3.2 Factory, Hub, Treasury, or module |
 
-### Required V3.1 balance assertions
+### Required V3.2 balance assertions
 
 ~~~text
 successful plan:
   Treasury reserves B
-  execution wallet receives 20% of B at settlement
-  first approved milestone releases 40% of B
-  second approved milestone releases remaining 40% of B
+  settlement opens stage 0; releasedAmount stays zero
+  fresh Admin quorum and execute pay 20% of B
+  first approved proof opens stage 1; new Admin quorum and execute pay 40%
+  second approved proof opens stage 2; new Admin quorum and execute pay remainder
   Completed plan has no remaining reserve
 
 failed plan:
-  execution wallet keeps only already approved tranches
+  execution wallet keeps only actually paid tranches
   unreleased reserve is claimable only by winning supporters
   each eligible supporter claims at most once
   unrelated Members, NO voters, Admins, and Validators cannot claim
@@ -204,7 +205,7 @@ For subgraph testing:
 
 ~~~text
 Title:
-Area: V2.3 / V3.1 / frontend / backend / subgraph / operations
+Area: V2.3 / V3.2 / frontend / backend / subgraph / operations
 Environment: local Hardhat or Arc Testnet, chain ID, commit SHA, addresses
 Actor: wallet role and address
 Preconditions: configuration, roles, balances, and relevant prior state

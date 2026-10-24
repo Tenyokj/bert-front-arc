@@ -67,7 +67,7 @@ Core modules trust each other through configured addresses and role assignments.
 `FundingPoolUpgradeable` maintains an explicit allowlist of Community Factories
 for protocol-reserve intake. The protocol Admin is trusted to add only reviewed
 Factory deployments and to revoke only after considering outstanding Community
-flows. V3.0 and V3.1 Factories may be approved concurrently; replacing the
+flows. V3.0, V3.1 and V3.2 Factories may be approved concurrently; replacing the
 legacy Factory pointer is not an authorization migration strategy.
 
 ### Reviewer and Curator Trust
@@ -84,7 +84,7 @@ Curators and reviewers are not arbitrary users; they are earned-role or admin-gr
 5. milestone proof approval and rejection flow
 6. reserve allocation, fee finalization, and distribution logic
 7. admin-owned configuration parameters
-8. V3.1 Factory/Treasury/module activation and capability binding
+8. Current V3 Factory/Treasury/module activation and capability binding
 9. non-standard ERC-20 behavior at every transfer boundary
 
 ## Access Control Risks
@@ -164,7 +164,7 @@ Only an active Treasury recognised by an approved Community Factory may call
 `receiveCommunityReserve`. The Factory list is bounded to keep the authorization
 lookup predictable. Testers must attempt reserve routing from an arbitrary
 Treasury, an inactive Treasury, and a Treasury belonging to a revoked Factory.
-They must also confirm that approving V3.1 leaves V3.0 routing functional.
+They must confirm that approving V3.2 leaves V3.0 and V3.1 routing functional.
 
 ## Voting and Round Risks
 
@@ -251,12 +251,16 @@ An upgrade that changes storage safely can still break the protocol if it change
 - voter progression address
 
 ### Community Factory Migration Risk
-The V3.1 deployment requires an append-only FundingPool upgrade and a one-time
+The historical V3.1 deployment required an append-only FundingPool upgrade and a one-time
 initializer that seeds the historical Factory into the allowlist. The migration
-must run while the V2 operational modules are paused. Before authorizing V3.1,
+was run while the V2 operational modules were paused. Before authorizing V3.1,
 operators must snapshot `totalPoolBalance`, `protocolReserve`, legacy Factory
 approval, and the configured USDC address; each value must match after the
 migration.
+
+V3.2 uses the already-migrated additive allowlist: it does not require another
+FundingPool upgrade, reinitializer or incidental V2 pause. Preserve old approvals
+and verify the new Factory dependency wiring. See [release evidence](V3.2-ARC-TESTNET-RELEASE.md).
 
 ### Proxy Administration Risk
 Wrong proxy or wrong admin usage can:

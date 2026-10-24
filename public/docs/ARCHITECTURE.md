@@ -2,10 +2,10 @@
 
 BERT is a modular, upgradeable, stablecoin-native grant allocation protocol built around proposal intake, round-based capital signaling, controlled treasury accounting, and milestone-based payout release.
 
-Current public layers are V2.3 and V3.1 on Arc Testnet. This document's global
+Current public layers are V2.3 and V3.2 on Arc Testnet. This document's global
 funding flow describes V2.3; legacy reviewer rounds retain their snapshotted
 30/40/30 behavior. See [current release and payout modes](CURRENT-RELEASE.md)
-and the [V3.1 module architecture](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/V3/README.md).
+and the [V3.2 module architecture](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/contracts/BERT/V3/README.md).
 
 The protocol is not just a “grant voting app”. It is a multi-layer system with:
 - a proposal registry layer

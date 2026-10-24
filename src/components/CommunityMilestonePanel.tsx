@@ -37,7 +37,7 @@ type Review = {
 const planStatus = ["No execution plan", "Awaiting proof", "Reviewing proof", "Correction cooldown", "Grace review", "Completed", "Failed", "Awaiting Admin tranche authorization"] as const;
 
 /**
- * Renders the on-chain V3.1 execution-plan lifecycle for every proposal that
+ * Renders the on-chain Community execution-plan lifecycle for every proposal that
  * settled into a winner. Eligibility remains enforced by CommunityHub and the
  * milestone module; this component only exposes the correct contract actions.
  */

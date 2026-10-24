@@ -4,7 +4,7 @@ This document explains how BERT V2 accounts for capital, how the funding pool is
 
 Current V2.3 uses 20/40/40 net grants with progressive fee vesting. Legacy rounds
 retain their snapshotted reviewer policy; [CURRENT-RELEASE.md](CURRENT-RELEASE.md)
-explains the distinction. V3.1 Community Treasuries remain separate custodians.
+explains the distinction. V3.2 Community Treasuries remain separate custodians.
 
 ## Contents
 1. Treasury Philosophy
