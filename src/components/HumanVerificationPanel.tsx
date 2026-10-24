@@ -16,6 +16,7 @@ import {
   votingSystemAbi,
 } from "@/lib/contracts";
 import { formatDateTimeFromUnix, formatTokenAmount } from "@/lib/dapp-onchain";
+import { confirmWalletAction } from "@/lib/wallet-action";
 
 type VerificationPayload = {
   verifierAddress: Address;
@@ -75,6 +76,9 @@ export function HumanVerificationPanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const pendingPayloadRef = useRef<VerificationPayload | null>(null);
   const widgetFailureRef = useRef<string | null>(null);
+  const submitLock = useRef(false);
+  const identityRef = useRef("");
+  identityRef.current = `${chainId}:${address?.toLowerCase()}`;
 
   const canUseWorldId = Boolean(worldAppId && popBackendUrl);
   const effectiveChainId = chainId ?? 0;
@@ -112,6 +116,7 @@ export function HumanVerificationPanel() {
     }
 
     const silent = options?.silent ?? false;
+    const identity = identityRef.current;
     if (!silent) {
       setIsLoading(true);
     } else {
@@ -138,6 +143,7 @@ export function HumanVerificationPanel() {
         }),
       ])) as [boolean, bigint];
 
+      if (identityRef.current !== identity) return;
       setVerifierAddress(votingVerifier);
       setHumanOnlyVoting(nextHumanOnly);
       setMaxVoteAmount(nextMaxVoteAmount);
@@ -155,15 +161,24 @@ export function HumanVerificationPanel() {
           args: [address],
         })) as readonly [boolean, bigint, bigint];
 
+        if (identityRef.current !== identity) return;
         setVerified(verification[0]);
         setVerifiedUntil(verification[1]);
         setLatestNonce(verification[2]);
+        if (verification[0]) {
+          window.localStorage.removeItem(getPendingPayloadKey(address, effectiveChainId));
+          pendingPayloadRef.current = null;
+          setPendingPayload(null);
+          setErrorMessage(null);
+          setStatusMessage("On-chain verification confirmed. This wallet can use gated actions.");
+        }
       } else {
         setVerified(false);
         setVerifiedUntil(0n);
         setLatestNonce(0n);
       }
     } catch (error) {
+      if (identityRef.current !== identity) return;
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to load human verification state."
       );
@@ -171,7 +186,7 @@ export function HumanVerificationPanel() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [address, client]);
+  }, [address, client, effectiveChainId]);
 
   useEffect(() => {
     void refreshVerificationState();
@@ -246,39 +261,58 @@ export function HumanVerificationPanel() {
       throw new Error("Wallet client is not ready.");
     }
 
+    if (submitLock.current) return;
+    submitLock.current = true;
+    const identity = identityRef.current;
+    const key = getPendingPayloadKey(address, effectiveChainId);
     setIsSubmitting(true);
     setErrorMessage(null);
     setStatusMessage("Submitting PoP verification transaction...");
 
     try {
-      const txHash = await walletClient.writeContract({
-        account: address,
-        address: payload.verifierAddress,
-        abi: popVerifierAbi,
-        functionName: "submitVerification",
-        args: [
-          BigInt(payload.verifiedUntil),
-          BigInt(payload.nonce),
-          payload.provider,
-          payload.credentialHash,
-          payload.signature,
-        ],
+      if (await walletClient.getChainId() !== effectiveChainId || client.chain?.id !== effectiveChainId) {
+        throw new Error("Wallet and read client must use the same network. Reconnect the wallet.");
+      }
+      await confirmWalletAction({
+        isApplied: async () => client.readContract({
+          address: payload.verifierAddress,
+          abi: popVerifierAbi,
+          functionName: "isVerifiedHuman",
+          args: [address],
+        }),
+        send: () => walletClient.writeContract({
+          account: address,
+          chain: walletClient.chain,
+          address: payload.verifierAddress,
+          abi: popVerifierAbi,
+          functionName: "submitVerification",
+          args: [
+            BigInt(payload.verifiedUntil),
+            BigInt(payload.nonce),
+            payload.provider,
+            payload.credentialHash,
+            payload.signature,
+          ],
+        }),
+        wait: (hash) => client.waitForTransactionReceipt({ hash, timeout: 60_000 }),
       });
 
-      await client.waitForTransactionReceipt({ hash: txHash });
-
-      window.localStorage.removeItem(getPendingPayloadKey(address, effectiveChainId));
+      window.localStorage.removeItem(key);
+      if (identityRef.current !== identity) return;
+      pendingPayloadRef.current = null;
       setPendingPayload(null);
       setStatusMessage("Your wallet is now verified for voting.");
       await refreshVerificationState({ silent: true });
     } catch (error) {
+      if (identityRef.current !== identity) return;
+      setStatusMessage(null);
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Verification transaction failed. You can retry with the saved payload."
+          : "Could not confirm verification. Refresh on-chain status before sending again."
       );
-      throw error;
     } finally {
+      submitLock.current = false;
       setIsSubmitting(false);
     }
   }
@@ -365,7 +399,7 @@ export function HumanVerificationPanel() {
   const verificationSummary = verified
     ? `Verified until ${formatDateTimeFromUnix(verifiedUntil)}`
     : pendingPayload
-      ? "World ID passed, waiting for on-chain activation"
+      ? "Credential prepared, waiting for on-chain activation"
       : "Not verified yet";
 
   return (
@@ -440,7 +474,7 @@ export function HumanVerificationPanel() {
             </button>
           ) : null}
 
-          {pendingPayload ? (
+          {pendingPayload && !verified ? (
             <button
               type="button"
               onClick={() => void submitPendingPayload(pendingPayload)}

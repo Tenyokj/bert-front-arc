@@ -1,8 +1,12 @@
+import { isUncertainWalletError, uncertainWalletMessage } from "./wallet-action";
+
 /** Converts Community Layer custom errors into concise, actionable wallet messages. */
 export function communityErrorMessage(error: unknown): string {
   const technical = error instanceof Error ? error.message : String(error ?? "");
+  if (isUncertainWalletError(error) || technical === uncertainWalletMessage) return uncertainWalletMessage;
 
   const messages: Array<[string, string]> = [
+    ["HumanVerificationRequired", "Complete human verification in Profile before joining this Community."],
     ["tranche quorum not met", "This fixed tranche needs the configured number of current Admin approvals before payment."],
     ["invalid tranche approver", "An approval is missing, duplicated, unsorted or no longer belongs to a current Admin role. Refresh the approvals."],
     ["tranche already approved", "This Admin has already approved the current payment tranche."],
