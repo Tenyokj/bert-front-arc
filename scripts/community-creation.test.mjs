@@ -49,7 +49,7 @@ test("creation rejects legacy Factory, wrong network, untrusted Factory and miss
 test("UI pins all receipts and writes, validates the original creator, and filters Factory logs", () => {
   const page = readFileSync(new URL("../src/app/(dapp)/v3/create/page.tsx", import.meta.url), "utf8");
   assert.equal((page.match(/chainId: creationContext\?\.chainId/g) || []).length, 3);
-  assert.equal((page.match(/assertCommunityCreator\(creationContext, address, chainId\)/g) || []).length, 2);
+  assert.equal((page.match(/assertCommunityCreator\(creationContext, address, chainId\)/g) || []).length, 3);
   assert.match(page, /logs: reserveReceipt\.data\.logs\.filter/);
   assert.match(page, /account: context\.creator/);
   assert.match(page, /args: \[config, reservation\.treasury, creationContext\.creator\]/);
