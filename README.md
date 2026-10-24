@@ -84,6 +84,7 @@ The browser reads public contract state directly through viem/wagmi. The Graph i
 - V2 uses the existing V2 subgraph for protocol activity.
 - V3 uses its own subgraph for Community discovery, role/activity views and event history.
 - Community identity binds chain, Factory and local ID. Links include the Factory address; numeric Arc bookmarks remain pinned to the original modular V3.1 Factory. Unknown Factory URLs are rejected, not trusted as transaction targets.
+- If Treasury reservation reports RPC `already known`, do not send another reservation. Check wallet activity and use **Recover Treasury (read-only)** with the confirmed Factory-local Community ID. Recovery checks the connected creator, chain, unactivated Treasury and exact immutable configuration hash; after refreshing, restore the original form values before recovering. It does not infer success from the RPC error or create a new Treasury.
 - Manager 2.0.0 is deployed through the new matching V3.2 deployers/Factory. Creation with the known original Factory and new Hub artifact remains blocked; old Communities remain readable with their old policy. See [deployment evidence and current env](public/docs/V3.2-ARC-TESTNET-RELEASE.md).
 - Run `npm run test:community-routing` for routing/manifest regressions. See [the release runbook](public/docs/V3.2-QUORUM-ROLLOUT.md); generated graph output is not evidence of publication.
 - Permission checks, balances, settlement availability and transaction actions are always derived from live on-chain state.
