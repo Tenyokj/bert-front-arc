@@ -26,6 +26,8 @@ pnpm-debug.log*
 
 # misc
 *.tsbuildinfo
+.e2e-results/
+.next-e2e/
 
 #other
 bert-contracts/

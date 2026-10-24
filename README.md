@@ -122,6 +122,10 @@ The application is deployed on Vercel. Configure environment variables in the Ve
 
 ## Security and Responsible Disclosure
 
+For disposable local browser testing, see [Browser E2E](BROWSER-E2E.md).
+`npm run test:e2e` starts isolated contracts and a local dApp; it does not use Arc
+Testnet, a production wallet, or external verification credentials.
+
 Do not open public issues for vulnerabilities. Read [SECURITY.md](./SECURITY.md) and submit reports through the central [BERT Core private advisory channel](https://github.com/Tenyokj/bert-core-arc/security/advisories/new). The public [Bug Bounty page](https://bertdao.vercel.app/bug-bounty) explains the testnet scope and non-cash validator-seat reward policy.
 
 ## Contributing

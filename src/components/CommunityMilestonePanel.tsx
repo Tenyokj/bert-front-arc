@@ -94,7 +94,9 @@ function MilestonePlanCard({ hub, manager, plan }: { hub: `0x${string}`; manager
   const actionBusy = write.isPending || receipt.isLoading;
 
   useEffect(() => {
-    if (receipt.isSuccess) window.setTimeout(() => window.location.reload(), 350);
+    if (!receipt.isSuccess) return;
+    const timer = window.setTimeout(() => window.location.reload(), 350);
+    return () => window.clearTimeout(timer);
   }, [receipt.isSuccess]);
 
   const submit = () => write.writeContract({ address: hub, chainId, abi: communityHubAbi, functionName: "submitMilestoneProof", args: [plan.proposalId, evidenceHash as `0x${string}`] });
