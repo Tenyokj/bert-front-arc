@@ -111,6 +111,13 @@ test("resume decodes all original config fields from confirmed transaction, inde
   assert.deepEqual(result, { id: 1n, factory: context.factory, treasury, config: decodedConfig });
 });
 
+test("explicit status-resume mode may load activated config for subsequent canonical Hub checks", async () => {
+  const c = transactionClient({ deployment: { hub: treasury } });
+  await assert.rejects(api.resumeCommunityReservation(c, context, hash), /already activated/);
+  const result = await api.resumeCommunityReservation(c, context, hash, { allowActivated: true });
+  assert.equal(result.id, 1n);
+});
+
 test("resume rejects pending/reverted transactions, wrong wallet/Factory, inconsistent receipts and missing events", async () => {
   for (const overrides of [
     { chainId: 31337 }, { transaction: { from: treasury } }, { transaction: { to: treasury } },

@@ -2,11 +2,12 @@
 
 import { communityRouteKey } from "@/lib/community-reference";
 import { isAlreadyKnownTransaction, resumeCommunityReservation, type ReservedCommunityConfig } from "@/lib/community-reservation";
+import { assertNoPendingSetupTransaction, findSubmittedReservation, isUncertainBroadcast, readCommunitySetup, setupFailureMessage } from "@/lib/community-setup-state";
 
 import { communityCreationContext, assertCommunityCreator, matchesCommunityCreator, type CommunityCreationContext } from "@/lib/community-creation";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaArrowRight, FaCircleInfo, FaRocket } from "react-icons/fa6";
 import { formatUnits, isAddress, parseEventLogs, parseUnits, type Address, type Hash } from "viem";
 import {
@@ -169,6 +170,12 @@ export default function CreateCommunityPage() {
   const [resumeHash, setResumeHash] = useState("");
   const [recovering, setRecovering] = useState(false);
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
+  const [checkingSetup, setCheckingSetup] = useState(false);
+  const [uncertainStep, setUncertainStep] = useState<"reserve" | "hub" | "activate" | null>(null);
+  const [reservationFloor, setReservationFloor] = useState<bigint | null>(null);
+  const [chainActivated, setChainActivated] = useState(false);
+  const [existingHubAddress, setExistingHubAddress] = useState("");
+  const actionLock = useRef(false);
   const [reservation, setReservation] = useState<{
     id: bigint;
     factory: Address;
@@ -187,8 +194,13 @@ export default function CreateCommunityPage() {
     hash: activate.data,
     chainId: creationContext?.chainId,
   });
+  const activated = chainActivated || (activationReceipt.isSuccess && activationReceipt.data?.status === "success");
+  const receiptFailure = reserveReceipt.data?.status === "reverted" ? "The Treasury reservation transaction was mined but reverted. Check its receipt before retrying."
+    : deployReceipt.data?.status === "reverted" ? "The Hub deployment transaction was mined but reverted; no Hub was created by that transaction."
+    : activationReceipt.data?.status === "reverted" ? "The activation transaction was mined but reverted. Refresh Factory state before retrying." : null;
   const busy =
     recovering ||
+    checkingSetup ||
     reserve.isPending ||
     reserveReceipt.isLoading ||
     deploy.isPending ||
@@ -210,6 +222,7 @@ export default function CreateCommunityPage() {
   useEffect(() => {
     if (!reserveReceipt.isSuccess || !reserveReceipt.data || reservation || !creationContext)
       return;
+    if (reserveReceipt.data.status !== "success") return;
     try {
       const event = parseEventLogs({
         abi: communityFactoryAbi,
@@ -232,9 +245,9 @@ export default function CreateCommunityPage() {
     }
   }, [creationContext, reservation, reserveReceipt.data, reserveReceipt.isSuccess]);
   useEffect(() => {
-    if (deployReceipt.isSuccess && deployReceipt.data?.contractAddress && !hub)
+    if (deployReceipt.isSuccess && deployReceipt.data?.status === "success" && deployReceipt.data.contractAddress && !hub)
       setHub(deployReceipt.data.contractAddress);
-  }, [deployReceipt.data?.contractAddress, deployReceipt.isSuccess, hub]);
+  }, [deployReceipt.data?.contractAddress, deployReceipt.data?.status, deployReceipt.isSuccess, hub]);
 
   useEffect(() => {
     if (!address) return;
@@ -314,18 +327,39 @@ export default function CreateCommunityPage() {
       milestoneProofDuration: minutes(form.milestoneProofMinutes, "Milestone proof"),
     };
   };
-  const reserveTreasury = () => {
-    if (busy || reservation || alreadyKnown) return;
+  const syncSetup = async (context: CommunityCreationContext, record: NonNullable<typeof reservation>, snapshot: Record<string, unknown>, candidate: Address | null = hub) => {
+    if (!recoveryClient) throw new Error("Connect the creator wallet on the original network.");
+    const state = await readCommunitySetup(recoveryClient, context, record, snapshot, candidate);
+    if (state.hub) {
+      setHub(state.hub);
+      setChainActivated(state.active);
+      setUncertainStep(null);
+      setError(null);
+      deploy.reset();
+      if (state.active) activate.reset();
+      setRecoveryNotice(state.active ? "Factory confirms this Community is already activated. No transaction was sent." : `Existing matching Hub ${shortAddress(state.hub)} verified. Deploy Hub was skipped; continue with Activate.`);
+    }
+    return state;
+  };
+  const reserveTreasury = async () => {
+    if (actionLock.current || busy || reservation || alreadyKnown || uncertainStep) return;
+    actionLock.current = true;
+    setCheckingSetup(true);
     try {
       const context = communityCreationContext({
         creator: address, chainId, factory: communityContracts.factory,
         adminActionsLibrary: communityContracts.adminActionsLibrary,
       });
       const next = build();
+      if (!recoveryClient) throw new Error("RPC is unavailable.");
+      await assertNoPendingSetupTransaction(recoveryClient, context);
+      const minimumId = await recoveryClient.readContract({ address: context.factory, abi: communityFactoryAbi, functionName: "communityCount" }) + 1n;
+      setReservationFloor(minimumId);
       setCreationContext(context);
       setConfig(next);
       setError(null);
-      reserve.writeContract({
+      try {
+      await reserve.writeContractAsync({
         address: context.factory,
         chainId: context.chainId,
         account: context.creator,
@@ -333,14 +367,30 @@ export default function CreateCommunityPage() {
         functionName: "createCommunity",
         args: [next],
       });
+      } catch (reason) {
+        if (isUncertainBroadcast(reason)) {
+          setUncertainStep("reserve");
+          const found = await findSubmittedReservation(recoveryClient, context, next, minimumId);
+          if (found) {
+            setReservation(found);
+            setUncertainStep(null);
+            reserve.reset();
+            setRecoveryNotice(`Treasury #${found.id} is confirmed on-chain. The RPC response was misleading; no second reservation was sent.`);
+            return;
+          }
+        }
+        throw reason;
+      }
     } catch (reason) {
-      setError(
-        reason instanceof Error ? reason.message : "Invalid configuration.",
-      );
+      setError(setupFailureMessage(reason));
+    } finally {
+      actionLock.current = false;
+      setCheckingSetup(false);
     }
   };
   const recoverTreasury = async () => {
-    if (busy || reservation) return;
+    if (actionLock.current || busy || reservation) return;
+    actionLock.current = true;
     setRecovering(true);
     setError(null);
     try {
@@ -350,7 +400,7 @@ export default function CreateCommunityPage() {
       });
       assertCommunityCreator(context, address, chainId);
       if (!recoveryClient) throw new Error("Connect the creator wallet on the reservation network.");
-      const result = await resumeCommunityReservation(recoveryClient, context, resumeHash.trim() as Hash);
+      const result = await resumeCommunityReservation(recoveryClient, context, resumeHash.trim() as Hash, { allowActivated: true });
       setCreationContext(context);
       setConfig(result.config);
       setForm(reservedForm(result.config));
@@ -360,18 +410,27 @@ export default function CreateCommunityPage() {
       setReservation({ id: result.id, factory: result.factory, treasury: result.treasury });
       reserve.reset();
       setRecoveryNotice(`Community #${result.id}: original settings loaded and Treasury confirmed. No transaction was sent. Continue with Deploy Hub.`);
+      setUncertainStep(null);
+      await syncSetup(context, result, result.config);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not recover the reservation.");
     } finally {
       setRecovering(false);
+      actionLock.current = false;
     }
   };
-  const deployHub = () => {
+  const deployHub = async () => {
+    if (actionLock.current || busy || uncertainStep || hub || activated) return;
+    actionLock.current = true;
+    setCheckingSetup(true);
     try {
       assertCommunityCreator(creationContext, address, chainId);
       if (!reservation || !config) throw new Error("Reserve a Treasury first.");
       setError(null);
-      deploy.deployContract({
+      if (!recoveryClient) throw new Error("RPC is unavailable.");
+      if ((await syncSetup(creationContext, reservation, config)).hub) return;
+      await assertNoPendingSetupTransaction(recoveryClient, creationContext);
+      await deploy.deployContractAsync({
         account: creationContext.creator,
         chainId: creationContext.chainId,
         abi: communityHubArtifact.abi,
@@ -379,25 +438,68 @@ export default function CreateCommunityPage() {
         args: [config, reservation.treasury, creationContext.creator],
       } as never);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not deploy reserved Hub.");
+      if (isUncertainBroadcast(reason) && creationContext && reservation && config) {
+        setUncertainStep("hub");
+        try { if ((await syncSetup(creationContext, reservation, config)).hub) return; } catch { /* Keep writes blocked if reconciliation is unavailable. */ }
+      }
+      setError(setupFailureMessage(reason));
+    } finally {
+      actionLock.current = false;
+      setCheckingSetup(false);
     }
   };
-  const activateHub = () => {
+  const activateHub = async () => {
+    if (actionLock.current || busy || uncertainStep || activated) return;
+    actionLock.current = true;
+    setCheckingSetup(true);
     try {
       assertCommunityCreator(creationContext, address, chainId);
       if (!reservation || !hub) throw new Error("Deploy the reserved Hub first.");
       setError(null);
-      activate.writeContract({
+      if (!config || !recoveryClient) throw new Error("Restore the original setup first.");
+      const state = await syncSetup(creationContext, reservation, config, hub);
+      if (state.active) return;
+      if (!state.hub) throw new Error("Hub deployment is not confirmed yet.");
+      await assertNoPendingSetupTransaction(recoveryClient, creationContext);
+      await activate.writeContractAsync({
         account: creationContext.creator,
         chainId: creationContext.chainId,
         address: creationContext.factory,
         abi: communityFactoryAbi,
         functionName: "activateCommunity",
-        args: [reservation.id, hub],
+        args: [reservation.id, state.hub],
       });
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not activate reserved Hub.");
+      if (isUncertainBroadcast(reason) && creationContext && reservation && config) {
+        setUncertainStep("activate");
+        try { if ((await syncSetup(creationContext, reservation, config)).active) return; } catch { /* Retry reads, never broadcast automatically. */ }
+        setUncertainStep("activate");
+      }
+      setError(setupFailureMessage(reason));
+    } finally {
+      actionLock.current = false;
+      setCheckingSetup(false);
     }
+  };
+  const refreshSetup = async () => {
+    if (actionLock.current || busy) return;
+    actionLock.current = true;
+    setCheckingSetup(true);
+    try {
+      assertCommunityCreator(creationContext, address, chainId);
+      if (!config || !recoveryClient) throw new Error("Load the reservation transaction first.");
+      let record = reservation;
+      if (!record && reservationFloor !== null) {
+        record = await findSubmittedReservation(recoveryClient, creationContext, config, reservationFloor);
+        if (record) { setReservation(record); reserve.reset(); setUncertainStep(null); }
+      }
+      if (!record) throw new Error("No confirmed reservation found yet. Wait for wallet activity to settle; do not resend.");
+      if (existingHubAddress.trim() && !isAddress(existingHubAddress.trim())) throw new Error("Enter a valid existing Hub address.");
+      const state = await syncSetup(creationContext, record, config, existingHubAddress.trim() ? existingHubAddress.trim() as Address : hub);
+      if (!state.hub) throw new Error("No matching Hub found in the last eight account nonces. Wait for confirmation, or provide the deployed Hub address from wallet activity; do not deploy another copy.");
+      if (uncertainStep === "activate" && !state.active) setUncertainStep("activate");
+    } catch (reason) { setError(setupFailureMessage(reason)); }
+    finally { actionLock.current = false; setCheckingSetup(false); }
   };
   if (!communityContracts.factory || !communityContracts.adminActionsLibrary)
     return (
@@ -624,7 +726,7 @@ export default function CreateCommunityPage() {
                     : "Creates isolated Treasury."
                 }
                 run={reserveTreasury}
-                disabled={busy || Boolean(reservation) || alreadyKnown || !isVerifiedHuman}
+                disabled={busy || Boolean(reservation) || alreadyKnown || Boolean(uncertainStep) || !isVerifiedHuman}
               />
               <Action
                 label="2. Deploy Hub"
@@ -634,19 +736,23 @@ export default function CreateCommunityPage() {
                     : "Deploy exact reserved configuration."
                 }
                 run={deployHub}
-                disabled={busy || !creatorMatches || !reservation || Boolean(hub)}
+                disabled={busy || Boolean(uncertainStep) || !creatorMatches || !reservation || Boolean(hub)}
               />
               <Action
                 label="3. Activate"
                 detail={
-                  activationReceipt.isSuccess
+                  activated
                     ? "Community is live."
                     : "Factory verifies Hub and Treasury."
                 }
                 run={activateHub}
-                disabled={busy || !creatorMatches || !hub || activationReceipt.isSuccess}
+                disabled={busy || Boolean(uncertainStep) || !creatorMatches || !hub || activated}
               />
             </div>
+            {creationContext && config && !activated ? <div className="mt-4 space-y-3">
+              <button type="button" disabled={busy || !creatorMatches} onClick={refreshSetup} className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{checkingSetup ? "Checking chain state..." : "Refresh on-chain setup status (read-only)"}</button>
+              <details className="text-sm text-slate-300"><summary className="cursor-pointer">Hub deployed earlier? Use its address</summary><input aria-label="Existing Hub address" value={existingHubAddress} onChange={(event) => setExistingHubAddress(event.target.value)} placeholder="0x..." className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 font-mono" /><p className="mt-2 text-xs text-slate-400">Then refresh status. Creator, Treasury and original configuration must all match.</p></details>
+            </div> : null}
             {!reservation && isConnected ? <details open={alreadyKnown || undefined} className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
               <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Continue an unfinished Community setup</summary>
               <p className="mt-2 text-sm leading-relaxed text-slate-300">Paste the confirmed Reserve Treasury transaction hash from wallet activity. We will load its original settings and verify the Treasury. No need to fill the form again, connect another wallet or send another reservation.</p>
@@ -657,7 +763,7 @@ export default function CreateCommunityPage() {
             </details> : null}
             {alreadyKnown ? <p role="status" className="mt-4 text-sm text-amber-100">The RPC reports that this transaction is already known. It may already be confirmed; this is not proof of a contract revert. Check wallet activity and recover its reservation instead of sending another transaction.</p> : null}
             {recoveryNotice ? <p role="status" className="mt-4 text-sm text-cyan-100">{recoveryNotice}</p> : null}
-            {activationReceipt.isSuccess && reservation ? (
+            {activated && reservation ? (
               <Link
                 href={`/v3/communities/${communityRouteKey(reservation.factory, reservation.id)}`}
                 className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2.5 text-sm font-bold text-slate-950"
@@ -673,12 +779,14 @@ export default function CreateCommunityPage() {
                 Complete <Link href="/profile" className="font-semibold underline">human verification</Link> before reserving a Community.
               </p>
             )}
-      {error || (!alreadyKnown && reserve.error) || deploy.error || activate.error ? (
+      {error || receiptFailure || (!alreadyKnown && reserve.error) || deploy.error || activate.error || reserveReceipt.error || deployReceipt.error || activationReceipt.error ? (
         <p className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
           {error ??
-            (!alreadyKnown ? reserve.error?.message : undefined) ??
-            deploy.error?.message ??
-            activate.error?.message}
+            receiptFailure ??
+            (!alreadyKnown && reserve.error ? setupFailureMessage(reserve.error) : undefined) ??
+            (deploy.error ? setupFailureMessage(deploy.error) : undefined) ??
+            (activate.error ? setupFailureMessage(activate.error) : undefined) ??
+            setupFailureMessage(reserveReceipt.error ?? deployReceipt.error ?? activationReceipt.error)}
         </p>
       ) : null}
     </section>
