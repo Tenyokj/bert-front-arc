@@ -249,6 +249,7 @@ export const communityHubAbi = [
 
 /** Read-only surface of the modular V3 membership module deployed by each CommunityHub. */
 export const communityMembershipModuleAbi = [
+  { type: "function", stateMutability: "view", name: "humanVerifier", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", stateMutability: "view", name: "entryStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "membershipExitCooldown", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "validatorProposalPointsThreshold", inputs: [], outputs: [{ type: "uint256" }] },
