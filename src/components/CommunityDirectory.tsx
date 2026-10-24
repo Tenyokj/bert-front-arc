@@ -6,11 +6,15 @@ import { FaArrowRight, FaLayerGroup, FaShieldHalved } from "react-icons/fa6";
 import { usePublicClient } from "wagmi";
 
 import { AddressIdentity } from "@/components/AddressIdentity";
-import { communityContracts, communityFactoryAbi, communityHubAbi } from "@/lib/community-contracts";
+import { communityFactoryAbi, communityHubAbi } from "@/lib/community-contracts";
 import { formatDateTimeFromUnix } from "@/lib/dapp-onchain";
 import { fetchIndexedCommunities } from "@/lib/community-v3-subgraph";
 
+import { communityRouteKey, getCommunityFactories } from "@/lib/community-reference";
+import type { Address } from "viem";
+
 type CommunityRow = {
+  factory: Address;
   id: number;
   name: string;
   metadataURI: string;
@@ -35,14 +39,14 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
     if (!normalizedQuery) return true;
     if (isExactIdSearch) return community.id.toString() === requestedId;
     const queryVariants = normalizedQuery.startsWith("#") ? [normalizedQuery, normalizedQuery.slice(1)] : [normalizedQuery];
-    return queryVariants.some((candidate) => [community.id.toString(), community.name, community.metadataURI, community.creator, community.hub, community.treasury].some((value) => value.toLowerCase().includes(candidate)));
+    return queryVariants.some((candidate) => [community.id.toString(), community.name, community.metadataURI, community.creator, community.factory, community.hub, community.treasury].some((value) => value.toLowerCase().includes(candidate)));
   }), [communities, isExactIdSearch, normalizedQuery, requestedId]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadCommunities() {
-      if (!client || !communityContracts.factory) {
+      if (!client || getCommunityFactories(client.chain?.id).length === 0) {
         if (!cancelled) {
           setLoading(false);
           setCommunities([]);
@@ -52,76 +56,46 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
 
       setLoading(true);
       setError(null);
+      setCommunities([]);
+      setTotalCount(undefined);
       try {
         const readContract = (config: Record<string, unknown>) =>
           (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
-        const count = (await readContract({
-          address: communityContracts.factory,
-          abi: communityFactoryAbi,
-          functionName: "communityCount",
-        })) as bigint;
-        const visibleCount = Math.min(Number(count), limit);
-        const latestIds = Array.from({ length: visibleCount }, (_, index) => BigInt(visibleCount - index));
-        // An exact ID must be discoverable even after it falls outside the newest-page window.
-        const ids = isExactIdSearch && BigInt(requestedId) <= count
-          ? [...new Set([...latestIds, BigInt(requestedId)])]
-          : latestIds;
-        const indexed = await fetchIndexedCommunities(
-          Math.max(limit, isExactIdSearch ? 1 : 0),
-          isExactIdSearch ? BigInt(requestedId) : undefined
-        );
-        const indexedRows = indexed?.map((community) => ({
-          id: Number(community.communityId),
-          name: community.name || `Community #${community.communityId.toString()}`,
-          metadataURI: community.metadataURI,
-          creator: community.creator,
-          hub: community.hub || "0x0000000000000000000000000000000000000000",
-          treasury: community.treasury,
-          createdAt: community.createdAt,
-        } satisfies CommunityRow));
-        const shouldUseRpcFallback = !indexedRows || (count > 0n && indexedRows.length === 0);
-        let rows: CommunityRow[];
-        if (shouldUseRpcFallback) {
-          rows = await Promise.all(ids.map(async (id) => {
-            const deployment = (await readContract({
-              address: communityContracts.factory,
-              abi: communityFactoryAbi,
-              functionName: "getCommunity",
-              args: [id],
-            })) as { creator: string; hub: string; treasury: string; createdAt: bigint };
-            return {
-              id: Number(id),
-              name: `Community #${id.toString()}`,
-              metadataURI: "",
-              creator: deployment.creator,
-              hub: deployment.hub,
-              treasury: deployment.treasury,
-              createdAt: deployment.createdAt,
-            } satisfies CommunityRow;
-          }));
-        } else {
-          rows = indexedRows;
-        }
-
-        const hydratedRows = await Promise.all(rows.map(async (row) => {
-          if (row.hub === "0x0000000000000000000000000000000000000000") return row;
-          try {
-            const status = await readContract({
-              address: row.hub,
-              abi: communityHubAbi,
-              functionName: "communityStatus",
-            }) as bigint;
-            return { ...row, status: Number(status) } satisfies CommunityRow;
-          } catch {
-            // Keep an activated Community discoverable if a transient RPC read fails.
+        const results = await Promise.allSettled(getCommunityFactories(client.chain?.id).map(async (factory) => {
+          const count = await readContract({ address: factory, abi: communityFactoryAbi, functionName: "communityCount" }) as bigint;
+          const latestIds = Array.from({ length: Math.min(Number(count), limit) }, (_, index) => count - BigInt(index));
+          const ids = isExactIdSearch
+            ? BigInt(requestedId) <= count ? [BigInt(requestedId)] : []
+            : latestIds;
+          const indexed = await fetchIndexedCommunities(limit, isExactIdSearch ? BigInt(requestedId) : undefined, factory).catch(() => null);
+          const names = new Map(indexed?.map((item) => [item.communityId.toString(), item]) ?? []);
+          // Factory reads are authoritative even while the indexer is behind or unavailable.
+          const rows = await Promise.all(ids.map(async (id) => {
+            const deployment = await readContract({
+              address: factory, abi: communityFactoryAbi, functionName: "getCommunity", args: [id],
+            }) as { creator: string; hub: string; treasury: string; createdAt: bigint };
+            const metadata = names.get(id.toString());
+            const row: CommunityRow = {
+              factory, id: Number(id), name: metadata?.name || `Community #${id}`,
+              metadataURI: metadata?.metadataURI || "", ...deployment,
+            };
+            if (row.hub !== "0x0000000000000000000000000000000000000000") {
+              try {
+                row.status = Number(await readContract({ address: row.hub, abi: communityHubAbi, functionName: "communityStatus" }));
+              } catch { /* A transient status read must not hide a registered Community. */ }
+            }
             return row;
-          }
+          }));
+          return { count, rows, indexed: indexed !== null };
         }));
-
+        const loaded = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+        if (!loaded.length) throw new Error("Could not read any configured CommunityFactory.");
+        const rows = loaded.flatMap((item) => item.rows).sort((a, b) => a.createdAt > b.createdAt ? -1 : a.createdAt < b.createdAt ? 1 : a.factory.localeCompare(b.factory));
         if (!cancelled) {
-          setTotalCount(count);
-          setCommunities(hydratedRows);
-          setUsesSubgraph(!shouldUseRpcFallback);
+          setTotalCount(loaded.reduce((sum, item) => sum + item.count, 0n));
+          setCommunities(isExactIdSearch ? rows : rows.slice(0, limit));
+          setUsesSubgraph(loaded.every((item) => item.indexed));
+          setError(results.some((result) => result.status === "rejected") ? "Some Factories could not be read. Showing partial results; retry before relying on totals." : null);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -138,7 +112,7 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
     };
   }, [client, isExactIdSearch, limit, requestedId]);
 
-  if (!communityContracts.factory) {
+  if (getCommunityFactories(client?.chain?.id).length === 0) {
     return (
       <div className="rounded-[28px] border border-amber-300/20 bg-[linear-gradient(135deg,rgba(120,53,15,0.24),rgba(30,41,59,0.55))] p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-200/80">V3 configuration required</p>
@@ -154,7 +128,7 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
     return <p className="rounded-2xl border border-white/10 bg-[#313443] px-4 py-4 text-sm text-slate-300">Loading CommunityFactory...</p>;
   }
 
-  if (error) {
+  if (error && communities.length === 0) {
     return <p className="rounded-2xl border border-rose-300/30 bg-rose-400/10 px-4 py-4 text-sm text-rose-100">{error}</p>;
   }
 
@@ -172,9 +146,10 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
 
   return (
     <div className="space-y-4">
+      {error ? <p role="alert" className="text-sm text-amber-200">{error}</p> : null}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <p className="text-sm text-slate-400">{totalCount?.toString()} community deployments indexed on-chain</p>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-200">{usesSubgraph ? "Indexed by V3 subgraph" : "Direct RPC fallback"}</p>
+        <p className="text-sm text-slate-400">{totalCount?.toString()} registered Communities across configured Factories</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-200">{usesSubgraph ? "RPC verified · indexed metadata" : "RPC verified · metadata may be unavailable"}</p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
         {filteredCommunities.map((community) => {
@@ -189,13 +164,13 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
                 : "border-amber-300/25 bg-amber-400/10 text-amber-100";
           return (
             <Link
-              key={community.id}
-              href={activated ? `${basePath}/${community.id}` : basePath}
+              key={communityRouteKey(community.factory, community.id)}
+              href={activated ? `${basePath}/${communityRouteKey(community.factory, community.id)}` : basePath}
               className="group rounded-[26px] border border-white/10 bg-[linear-gradient(145deg,rgba(53,57,72,0.96),rgba(32,35,47,0.98))] p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/40"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Community #{community.id}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Community #{community.id} · {community.factory.slice(0, 8)}…</p>
                   <h3 className="mt-3 text-2xl font-semibold text-white">{community.name}</h3>
                 </div>
                 <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusClassName}`}>

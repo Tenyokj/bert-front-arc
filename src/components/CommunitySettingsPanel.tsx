@@ -30,17 +30,17 @@ export function CommunitySettingsPanel({ hub }: { hub: `0x${string}` }) {
   });
   const milestoneConfig = useReadContracts({
     contracts: milestone
-      ? ["executionRecipient", "reviewDuration", "proofDuration"].map((functionName) => ({
+      ? (["executionRecipient", "reviewDuration", "proofDuration"] as const).map((functionName) => ({
           address: milestone,
           abi: communityMilestoneAbi,
           functionName,
-        })) as never
+        }))
       : [],
   });
 
   const values = (config.data ?? []).map((item) => item.result) as (bigint | undefined)[];
   if (config.isLoading || moduleRead.isLoading || milestoneConfig.isLoading) return <p className="mt-5 text-sm text-slate-400">Loading immutable Community settings...</p>;
-  if (config.error || moduleRead.error || values.some((value) => value === undefined)) return <p className="mt-5 text-sm text-amber-100">Community settings could not be read from the deployed modules.</p>;
+  if (config.error || moduleRead.error || values.length !== 13 || values.some((value) => value === undefined)) return <p className="mt-5 text-sm text-amber-100">Community settings could not be read from the deployed modules.</p>;
 
   const [entryStake, bond, minimumVote, exitCooldown, validatorThreshold, noFee, validatorShare, validationWindow, binaryDuration, slateDuration, rewardEpoch, activityThreshold, pointThreshold] = values as bigint[];
   const [executionRecipient, reviewDuration, proofDuration] = (milestoneConfig.data ?? []).map((item) => item.result) as [string | undefined, bigint | undefined, bigint | undefined];

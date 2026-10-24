@@ -35,7 +35,7 @@ export function useCommunityClock(hub: `0x${string}`, chainId?: number) {
     query: { refetchInterval: 2_000 },
   });
   const [now, setNow] = useState(() => Date.now());
-  const anchorRef = useRef<ClockAnchor>();
+  const anchorRef = useRef<ClockAnchor | undefined>(undefined);
   const onChainTime = timeRead.data as bigint | undefined;
   const paused = Number(statusRead.data ?? 0) === 1;
 

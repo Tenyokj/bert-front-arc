@@ -3,6 +3,7 @@ import type { Address } from "viem";
 export type IndexedCommunity = {
   id: string;
   communityId: bigint;
+  factory: Address;
   creator: Address;
   hub?: Address;
   treasury: Address;
@@ -27,7 +28,8 @@ const v3SubgraphUrl = process.env.NEXT_PUBLIC_V3_SUBGRAPH_URL;
 /** Returns indexed V3 Communities when a public Graph endpoint is configured. */
 export async function fetchIndexedCommunities(
   first: number,
-  communityId?: bigint
+  communityId?: bigint,
+  factory?: Address
 ): Promise<IndexedCommunity[] | null> {
   if (!v3SubgraphUrl) return null;
 
@@ -38,13 +40,16 @@ export async function fetchIndexedCommunities(
       query: `
         query Communities($first: Int!, $where: Community_filter) {
           communities(first: $first, orderBy: createdAt, orderDirection: desc, where: $where) {
-            id communityId creator hub treasury name metadataURI active createdAt
+            id communityId factory creator hub treasury name metadataURI active createdAt
           }
         }
       `,
       variables: {
         first,
-        where: communityId === undefined ? {} : { communityId: communityId.toString() },
+        where: {
+          ...(communityId === undefined ? {} : { communityId: communityId.toString() }),
+          ...(factory ? { factory: factory.toLowerCase() } : {}),
+        },
       },
     }),
   });
@@ -56,6 +61,7 @@ export async function fetchIndexedCommunities(
   return (payload.data?.communities || []).map((community) => ({
     id: String(community.id),
     communityId: BigInt(String(community.communityId)),
+    factory: String(community.factory) as Address,
     creator: String(community.creator) as Address,
     hub: community.hub ? (String(community.hub) as Address) : undefined,
     treasury: String(community.treasury) as Address,

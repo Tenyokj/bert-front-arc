@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  deviceLegacy,
   IDKitRequestWidget,
   proofOfHuman,
   type IDKitResult,
@@ -496,11 +495,7 @@ export function HumanVerificationPanel() {
           rp_context={rpContext}
           allow_legacy_proofs={true}
           environment={worldEnvironment}
-          preset={
-            worldEnvironment === "staging"
-              ? deviceLegacy({ signal: address?.toLowerCase() })
-              : proofOfHuman({ signal: address?.toLowerCase() })
-          }
+          preset={proofOfHuman({ signal: address?.toLowerCase() })}
           onSuccess={async () => {
             const payload = pendingPayloadRef.current;
             if (!payload) {

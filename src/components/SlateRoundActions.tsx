@@ -79,7 +79,7 @@ export function SlateRoundActions({
   const activeMember = Boolean(member?.active);
   const exitRequested = member?.exitRequestedAt !== undefined && member.exitRequestedAt !== 0n;
   const selectedVote = selectedVoteRead.data as { proposalId: bigint; stake: bigint } | readonly [bigint, bigint] | undefined;
-  const selectedProposalId = selectedVote ? (Array.isArray(selectedVote) ? selectedVote[0] : selectedVote.proposalId) : 0n;
+  const selectedProposalId = selectedVote ? ("proposalId" in selectedVote ? selectedVote.proposalId : selectedVote[0]) : 0n;
   const alreadyVoted = selectedProposalId !== 0n;
   const canApprove = Boolean(usdcRead.data && amountInRange && balanceEnough && !selfSelected);
   const canVote = approved && activeMember && !exitRequested && !selfSelected && !alreadyVoted;

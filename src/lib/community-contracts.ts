@@ -17,7 +17,7 @@ function toBlockNumber(value: string | undefined): bigint | undefined {
 
 // Blockdaemon's Arc endpoint is not an archive node. All V3 Hubs are created
 // after this Factory deployment, so queries never need to start at genesis.
-const arcV3FactoryDeploymentBlock = 61_277_385n;
+const arcV3FactoryDeploymentBlock = 66_809_847n;
 export const communityEventFromBlock = toBlockNumber(process.env.NEXT_PUBLIC_V3_EVENT_FROM_BLOCK)
   ?? ((process.env.NEXT_PUBLIC_DEFAULT_CHAIN || "arc").toLowerCase() === "hardhat" ? 0n : arcV3FactoryDeploymentBlock);
 
@@ -155,6 +155,10 @@ export const communityFactoryAbi = [
 ] as const satisfies Abi;
 
 export const communityHubAbi = [
+  { type: "function", stateMutability: "view", name: "adminRoleNonce", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "nonpayable", name: "approveExecutionTranche", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "executeExecutionTranche", inputs: [{ name: "planId", type: "uint256" }, { name: "approvingAdmins", type: "address[]" }], outputs: [] },
+  { type: "function", stateMutability: "nonpayable", name: "expireExecutionTranche", inputs: [{ name: "planId", type: "uint256" }], outputs: [] },
   { type: "event", anonymous: false, name: "SlateRoundVoteCast", inputs: [{ indexed: true, name: "roundId", type: "uint256" }, { indexed: true, name: "proposalId", type: "uint256" }, { indexed: true, name: "voter", type: "address" }, { indexed: false, name: "amount", type: "uint256" }] },
   { type: "event", anonymous: false, name: "ValidatorEligibilityReached", inputs: [{ indexed: true, name: "member", type: "address" }, { indexed: false, name: "totalPoints", type: "uint256" }] },
   { type: "event", anonymous: false, name: "AdminAdded", inputs: [{ indexed: true, name: "admin", type: "address" }] },
@@ -312,6 +316,12 @@ const milestoneReview = {
 } as const;
 
 export const communityMilestoneAbi = [
+  { type: "function", stateMutability: "view", name: "pendingTrancheByPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [{ type: "uint8" }] },
+  { type: "function", stateMutability: "view", name: "getExecutionTranche", inputs: [{ name: "planId", type: "uint256" }, { name: "tranche", type: "uint8" }], outputs: [{ name: "terms", type: "tuple", components: [{ name: "amount", type: "uint256" }, { name: "readyAt", type: "uint64" }, { name: "expiresAt", type: "uint64" }, { name: "approvalThreshold", type: "uint256" }, { name: "paid", type: "bool" }] }] },
+  { type: "function", stateMutability: "view", name: "getExecutionTrancheApprovers", inputs: [{ name: "planId", type: "uint256" }, { name: "tranche", type: "uint8" }], outputs: [{ type: "address[]" }] },
+  { type: "function", stateMutability: "view", name: "hasExecutionTrancheApproval", inputs: [{ name: "planId", type: "uint256" }, { name: "tranche", type: "uint8" }, { name: "admin", type: "address" }], outputs: [{ type: "bool" }] },
+  { type: "function", stateMutability: "view", name: "totalSupportWeightByPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "eligibleReviewerCountByPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "executionRecipient", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", stateMutability: "view", name: "reviewDuration", inputs: [], outputs: [{ type: "uint64" }] },
   { type: "function", stateMutability: "view", name: "proofDuration", inputs: [], outputs: [{ type: "uint64" }] },

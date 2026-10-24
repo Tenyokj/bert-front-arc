@@ -14,6 +14,8 @@ import {
   searchSubgraph,
 } from "@/lib/subgraph";
 
+import { searchIdeaResult, searchRoundResult } from "@/lib/contract-results";
+
 type SearchIdea = { id: number; title: string; totalVotes: bigint };
 type SearchRound = { id: number; totalVotes: bigint };
 
@@ -90,30 +92,10 @@ function SearchPageContent() {
             }).catch(() => null),
           ]);
 
-          const nextIdeas =
-            ideaResult &&
-            Array.isArray(ideaResult) &&
-            BigInt((ideaResult as readonly unknown[])[0] as bigint) > 0n
-              ? [
-                  {
-                    id: Number((ideaResult as readonly [bigint, string, string, string, string, bigint, bigint, bigint])[0]),
-                    title: (ideaResult as readonly [bigint, string, string, string, string, bigint, bigint, bigint])[2],
-                    totalVotes: (ideaResult as readonly [bigint, string, string, string, string, bigint, bigint, bigint])[6],
-                  },
-                ]
-              : [];
-
-          const nextRounds =
-            roundResult &&
-            Array.isArray(roundResult) &&
-            BigInt((roundResult as readonly unknown[])[0] as bigint) > 0n
-              ? [
-                  {
-                    id: Number((roundResult as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])[0]),
-                    totalVotes: (roundResult as readonly [bigint, bigint[], bigint, bigint, boolean, boolean, bigint, bigint, bigint])[6],
-                  },
-                ]
-              : [];
+          const idea = searchIdeaResult(ideaResult);
+          const round = searchRoundResult(roundResult);
+          const nextIdeas = idea ? [idea] : [];
+          const nextRounds = round ? [round] : [];
 
           if (!cancelled) {
             setIdeas(nextIdeas);

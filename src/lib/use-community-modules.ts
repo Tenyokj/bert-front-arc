@@ -15,12 +15,11 @@ export type CommunityModuleAddresses = {
 /** Resolves the immutable V3.1 modules owned by one thin CommunityHub facade. */
 export function useCommunityModules(hub: Address, chainId?: number) {
   const read = useReadContracts({
-    chainId,
     contracts: [
-      { address: hub, abi: communityHubAbi, functionName: "membershipModule" },
-      { address: hub, abi: communityHubAbi, functionName: "proposalModule" },
-      { address: hub, abi: communityHubAbi, functionName: "votingModule" },
-      { address: hub, abi: communityHubAbi, functionName: "milestoneManager" },
+      { address: hub, chainId, abi: communityHubAbi, functionName: "membershipModule" },
+      { address: hub, chainId, abi: communityHubAbi, functionName: "proposalModule" },
+      { address: hub, chainId, abi: communityHubAbi, functionName: "votingModule" },
+      { address: hub, chainId, abi: communityHubAbi, functionName: "milestoneManager" },
     ],
   });
   const values = (read.data ?? []).map((item) => item.result) as (Address | undefined)[];

@@ -94,8 +94,8 @@ function prettyRoundError(message?: string) {
   }
   if (message.includes("RoundNotEnded")) return "Round can only be ended after the voting window closes.";
   if (message.includes("RoundAlreadyEnded")) return "This round has already been ended.";
-  if (message.includes("AlreadyDistributed")) return "Initial 30% has already been claimed for this winning idea.";
-  if (message.includes("NotAuthor")) return "Only the winning idea author can claim the initial 30%.";
+  if (message.includes("AlreadyDistributed")) return "The initial grant tranche has already been claimed for this winning idea.";
+  if (message.includes("NotAuthor")) return "Only the winning idea author can claim the initial grant tranche.";
   if (message.includes("NoWinner")) return "There is no winning idea yet for this round.";
   if (message.includes("WinningParticipationUnavailable")) return "This wallet does not have an eligible winning pledge for participation credit.";
   if (message.includes("WinningParticipationAlreadyClaimed")) return "Participation credit was already claimed by this wallet.";

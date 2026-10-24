@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "test": "node --test scripts/*.test.mjs",
+    "test:community-routing": "node --test scripts/community-reference.test.mjs",
+    "sync:core-docs": "node scripts/sync-core-docs.mjs",
     "sync:v2-artifacts": "node scripts/sync-v2-artifacts.mjs",
     "sync:v3-artifact": "node scripts/sync-v3-community-artifact.mjs"
   },

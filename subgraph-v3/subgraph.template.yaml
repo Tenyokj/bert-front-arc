@@ -148,13 +148,21 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
-      entities: [CommunityExecutionPlan, CommunityMilestoneReview, CommunityExecutionRefundClaim]
+      entities: [CommunityExecutionPlan, CommunityMilestoneReview, CommunityExecutionRefundClaim, CommunityExecutionTranche, CommunityExecutionTrancheApproval]
       abis:
         - name: CommunityMilestoneManager
           file: ./abis/CommunityMilestoneManager.json
       eventHandlers:
         - event: ExecutionPlanStarted(indexed uint256,indexed uint256,uint256,uint256)
           handler: handleExecutionPlanStarted
+        - event: ExecutionTrancheReady(indexed uint256,indexed uint8,uint256,uint64,uint64,uint256)
+          handler: handleExecutionTrancheReady
+        - event: ExecutionTrancheApproved(indexed uint256,indexed uint8,indexed address,uint256)
+          handler: handleExecutionTrancheApproved
+        - event: ExecutionTranchePaid(indexed uint256,indexed uint8,indexed address,uint256)
+          handler: handleExecutionTranchePaid
+        - event: ExecutionTrancheExpired(indexed uint256,indexed uint8)
+          handler: handleExecutionTrancheExpired
         - event: MilestoneProofSubmitted(indexed uint256,indexed uint8,bytes32,uint256)
           handler: handleMilestoneProofSubmitted
         - event: MilestoneReviewCast(indexed uint256,indexed uint8,indexed address,bool,uint256)

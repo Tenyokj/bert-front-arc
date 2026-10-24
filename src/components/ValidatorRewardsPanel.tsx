@@ -48,8 +48,7 @@ export function ValidatorRewardsPanel({ hub, treasury, isValidator }: { hub: `0x
   const { modules } = useCommunityModules(hub, chainId);
   const [selectedEpochId, setSelectedEpochId] = useState<bigint>();
   const epochIdRead = useReadContracts({
-    chainId,
-    contracts: modules.proposal ? [{ address: modules.proposal, abi: communityProposalModuleAbi, functionName: "currentValidatorRewardEpochId" }] : [],
+    contracts: modules.proposal ? [{ address: modules.proposal, chainId, abi: communityProposalModuleAbi, functionName: "currentValidatorRewardEpochId" }] : [],
     query: { refetchInterval: 1_000 },
   });
   const currentEpochId = epochIdRead.data?.[0]?.result as bigint | undefined;
@@ -69,16 +68,15 @@ export function ValidatorRewardsPanel({ hub, treasury, isValidator }: { hub: `0x
 
   const epochId = selectedEpochId ?? currentEpochId;
   const reads = useReadContracts({
-    chainId,
     contracts: epochId && address && modules.proposal ? [
-      { address: hub, abi: communityHubAbi, functionName: "getValidatorRewardEpoch", args: [epochId] },
-      { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validationWindow" },
-      { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validatorActiveThresholdBps" },
-      { address: modules.proposal, abi: communityProposalModuleAbi, functionName: "validatorValidationCount", args: [epochId, address] },
-      { address: hub, abi: communityHubAbi, functionName: "isValidatorActiveForEpoch", args: [epochId, address] },
-      { address: treasury, abi: communityTreasuryAbi, functionName: "rewardAmountByEpoch", args: [epochId] },
-      { address: treasury, abi: communityTreasuryAbi, functionName: "rewardPerValidatorByEpoch", args: [epochId] },
-      { address: treasury, abi: communityTreasuryAbi, functionName: "validatorRewardClaimed", args: [epochId, address] },
+      { address: hub, chainId, abi: communityHubAbi, functionName: "getValidatorRewardEpoch", args: [epochId] },
+      { address: modules.proposal, chainId, abi: communityProposalModuleAbi, functionName: "validationWindow" },
+      { address: modules.proposal, chainId, abi: communityProposalModuleAbi, functionName: "validatorActiveThresholdBps" },
+      { address: modules.proposal, chainId, abi: communityProposalModuleAbi, functionName: "validatorValidationCount", args: [epochId, address] },
+      { address: hub, chainId, abi: communityHubAbi, functionName: "isValidatorActiveForEpoch", args: [epochId, address] },
+      { address: treasury, chainId, abi: communityTreasuryAbi, functionName: "rewardAmountByEpoch", args: [epochId] },
+      { address: treasury, chainId, abi: communityTreasuryAbi, functionName: "rewardPerValidatorByEpoch", args: [epochId] },
+      { address: treasury, chainId, abi: communityTreasuryAbi, functionName: "validatorRewardClaimed", args: [epochId, address] },
     ] as const : [],
     query: { enabled: Boolean(epochId && address), refetchInterval: 1_000 },
   });
@@ -141,8 +139,8 @@ export function ValidatorRewardsPanel({ hub, treasury, isValidator }: { hub: `0x
     {currentEpochId > 10n ? <p className="mt-2 text-xs text-slate-500">Showing the 10 newest epochs. Older on-chain epochs remain preserved for auditability.</p> : null}
     {claimed ? <p className="mt-4 rounded-xl border border-emerald-300/20 bg-emerald-400/10 p-3 text-sm text-emerald-100">Your reward for this epoch has already been claimed.</p> : null}
     <div className="mt-4 flex flex-wrap gap-2">
-      {readyToFinalize ? <button disabled={write.isPending || receipt.isLoading} onClick={() => write.writeContract({ address: hub, abi: communityHubAbi, functionName: "finalizeValidatorRewardEpoch", args: [epochId] })} className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-bold text-cyan-100 disabled:opacity-40">Finalize reward epoch</button> : null}
-      {canClaim ? <button disabled={write.isPending || receipt.isLoading} onClick={() => write.writeContract({ address: treasury, abi: communityTreasuryAbi, functionName: "claimValidatorReward", args: [epochId] })} className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-40">Claim {formatUnits(reward ?? 0n, 6)} USDC</button> : null}
+      {readyToFinalize ? <button disabled={write.isPending || receipt.isLoading} onClick={() => write.writeContract({ address: hub, chainId, abi: communityHubAbi, functionName: "finalizeValidatorRewardEpoch", args: [epochId] })} className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-bold text-cyan-100 disabled:opacity-40">Finalize reward epoch</button> : null}
+      {canClaim ? <button disabled={write.isPending || receipt.isLoading} onClick={() => write.writeContract({ address: treasury, chainId, abi: communityTreasuryAbi, functionName: "claimValidatorReward", args: [epochId] })} className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-40">Claim {formatUnits(reward ?? 0n, 6)} USDC</button> : null}
     </div>
     {write.error ? <p className="mt-3 text-sm text-rose-200">{communityErrorMessage(write.error)}</p> : null}
     {receipt.isSuccess ? <p className="mt-3 text-sm text-emerald-100">Transaction confirmed. Refreshing the on-chain reward state...</p> : null}

@@ -86,7 +86,7 @@ export async function getCommunityDeployment(client: PublicClient, factory: Addr
   const deployment = await asRead(client, { address: factory, abi: communityFactoryAbi, functionName: "getCommunity", args: [communityId] }) as CommunityDeployment;
   // The subgraph indexes Factory events. Do not request logs from genesis from
   // a public Arc RPC, which may prune historical logs.
-  const indexed = await fetchIndexedCommunities(1, communityId).catch(() => null);
+  const indexed = await fetchIndexedCommunities(1, communityId, factory).catch(() => null);
   const item = indexed?.[0];
   return { ...deployment, name: item?.name, metadataURI: item?.metadataURI };
 }

@@ -211,22 +211,22 @@ const sections: FaqSection[] = [
   },
   {
     id: "community-milestones",
-    title: "V3.1 Execution Plans & Milestones",
+    title: "V3.1 / V3.2 Execution Plans & Milestones",
     items: [
       {
         question: "What happens after a V3.1 proposal wins?",
         answer:
-          "A settled Admin or Member winner starts an execution plan using the Community's execution balance. The Community Treasury keeps custody and releases the selected winner's budget to the immutable Administration execution wallet: 20% immediately, then 40% after milestone one and 40% after milestone two, only when the required winning supporters approve submitted proof.",
+          "A settled winner reserves its execution budget in CommunityTreasury. In unreleased V3.2 (Manager 2.0.0), all three 20/40/40 transfers require separate current Admin approvals; the two 40% stages first need winning-supporter proof approval. Each transfer has a seven-day active-time deadline. If it is not paid, the unpaid execution budget becomes refundable after permissionless expiry. Original live V3.1 Managers retain automatic transfers; a source update does not change an existing Community.",
       },
       {
         question: "Who can review a V3.1 milestone?",
         answer:
-          "Only wallets in the sealed support snapshot for the winning proposal may review. For a binary proposal that means YES voters; for a Slate Round it means voters for the winning proposal. The execution recipient and proposal author are excluded from reviewing their own delivery path by the onchain voting and snapshot rules.",
+          "Only winning supporters can review: YES supporters for a Binary winner, or voters for the winning Slate proposal. Authors cannot vote for their own proposal. The V3.2 Manager 2.0.0 also rejects the execution recipient and excludes its weight/count from review thresholds while retaining its financial refund rights. The patch is not automatically applied to existing immutable Communities: original V3.1 managers retain the self-review gap. Check the plan's Manager and deployment status; use a non-participating Administration execution wallet for legacy pilots.",
       },
       {
         question: "What makes a milestone pass?",
         answer:
-          "At least 40% of the winning supporter weight must participate. Among participating weight, at least two thirds must approve. The approval also needs at least the greater of three wallets or 3% of the unique winning supporters. Weight and supporter count are snapshotted at settlement, so later membership changes cannot change the threshold.",
+          "At least 40% of the eligible winning supporter weight must participate. Among participating weight, at least 66.67% (6,667 basis points) must approve. The approval also needs at least the greater of three wallets or 3% of eligible snapshot supporters rounded up. Weight and supporter count are snapshotted at settlement, so later membership changes cannot change the threshold. V2.3 uses an exact two-thirds weight comparison instead; the formulas are not identical.",
       },
       {
         question: "What if supporters do not review the proof?",

@@ -336,7 +336,7 @@ export default function ProtocolStatsPage() {
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mode</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerMilestonesEnabled === undefined ? "—" : backerMilestonesEnabled ? "Enabled" : "Disabled"}</p><p className="mt-1 text-xs text-slate-500">Winning pledgers validate proof</p></article>
-              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Release Rail</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerInitialPayout === undefined ? "—" : `${backerInitialPayout.toString()} / 40 / 40`}</p><p className="mt-1 text-xs text-slate-500">Gross winning pledge allocation</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Release Rail</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerInitialPayout == null ? "—" : `${backerInitialPayout.toString()} / 40 / 40`}</p><p className="mt-1 text-xs text-slate-500">Gross winning pledge allocation</p></article>
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Proof Quorum</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerMilestoneQuorumBps === undefined ? "—" : `${Number(backerMilestoneQuorumBps) / 100}%`}</p><p className="mt-1 text-xs text-slate-500">Of total winning pledge weight</p></article>
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Approval Floor</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">2/3 + {backerMinApproveBackers?.toString() ?? "—"}</p><p className="mt-1 text-xs text-slate-500">Participating weight + backers</p></article>
             </div>
@@ -346,18 +346,18 @@ export default function ProtocolStatsPage() {
           <section className="rounded-2xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(76,29,149,0.2),rgba(8,47,73,0.22))] p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">V3.1 Community Layer</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">Community Layer</p>
                 <h2 className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Live Community Factory and execution safeguards</h2>
               </div>
               <Link href="/v3/communities" className="text-sm font-semibold text-violet-100 underline decoration-violet-300/40 underline-offset-4 hover:text-white">Open Community directory</Link>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Registered Communities</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{communityContracts.factory ? formatInt(communityCount as bigint | undefined) : "Not configured"}</p><p className="mt-1 text-xs text-slate-500">CommunityFactory.communityCount()</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Communities · active Factory</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{communityContracts.factory ? formatInt(communityCount as bigint | undefined) : "Not configured"}</p><p className="mt-1 text-xs text-slate-500">CommunityFactory.communityCount()</p></article>
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Governance Lanes</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">4</p><p className="mt-1 text-xs text-slate-500">Admin and Member · Binary and Slate</p></article>
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Release Rail</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">20 / 40 / 40</p><p className="mt-1 text-xs text-slate-500">Initial tranche plus two reviewed milestones</p></article>
-              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Review Threshold</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">40% · 2/3</p><p className="mt-1 text-xs text-slate-500">Winner-weight quorum and approval threshold</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Review Threshold</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">40% · 66.67%</p><p className="mt-1 text-xs text-slate-500">Eligible winner-weight quorum and participating-weight approval</p></article>
             </div>
-            <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Each V3.1 Community fixes its own executor and timing configuration at deployment. Only sealed winning supporters review delivery; failed plans return unreleased budget pro rata to those supporters.</p>
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Each Community fixes its own executor and timing configuration at deployment. Only sealed winning supporters review delivery; failed plans return unreleased budget pro rata to those supporters.</p>
           </section>
 
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -411,7 +411,7 @@ export default function ProtocolStatsPage() {
             <Link href="/pool" className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100">Pool</Link>
             <Link href="/policy-docs" className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100">Policy Docs</Link>
             <Link href="/on-chain-votes" className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white">On-chain Votes</Link>
-            <Link href="/v3/communities" className="rounded-full border border-violet-300/35 px-4 py-2 text-xs font-semibold text-violet-900 dark:text-violet-100">V3.1 Communities</Link>
+            <Link href="/v3/communities" className="rounded-full border border-violet-300/35 px-4 py-2 text-xs font-semibold text-violet-900 dark:text-violet-100">Communities</Link>
           </section>
         </main>
 

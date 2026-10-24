@@ -93,6 +93,32 @@ type CommunityExecutionPlan @entity(immutable: false) {
   createdAt: BigInt!
   updatedAt: BigInt!
   reviews: [CommunityMilestoneReview!]! @derivedFrom(field: "plan")
+  tranches: [CommunityExecutionTranche!]! @derivedFrom(field: "plan")
+}
+
+"A fixed Admin-authorized payment; supporter approval alone does not mark it paid."
+type CommunityExecutionTranche @entity(immutable: false) {
+  id: ID!
+  plan: CommunityExecutionPlan!
+  stage: Int!
+  amount: BigInt!
+  readyAt: BigInt!
+  expiresAt: BigInt!
+  approvalThreshold: BigInt!
+  status: String!
+  recipient: Bytes
+  paidAt: BigInt
+  approvals: [CommunityExecutionTrancheApproval!]! @derivedFrom(field: "tranche")
+}
+
+"Historical approval: current Admin status and role nonce must be rechecked onchain."
+type CommunityExecutionTrancheApproval @entity(immutable: false) {
+  id: ID!
+  tranche: CommunityExecutionTranche!
+  admin: Bytes!
+  roleNonce: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
 }
 
 "One review window for an execution-plan milestone."

@@ -53,9 +53,9 @@ export default async function DemoIdeaDetailPage({
           </div>
 
           <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
-            <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Initial 30%: {idea.status === "WonVoting" || idea.status === "Funded" || idea.status === "Completed" ? "Eligible" : "Pending"}</p>
+            <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Initial 20%: {idea.status === "WonVoting" || idea.status === "Funded" || idea.status === "Completed" ? "Eligible" : "Pending"}</p>
             <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">In-process 40%: {idea.status === "Funded" || idea.status === "Completed" ? "Progressed" : "Locked"}</p>
-            <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Launch 30%: {idea.status === "Completed" ? "Paid" : "Locked"}</p>
+            <p className="rounded-lg border border-white/10 bg-[#232632] px-3 py-2">Completion 40%: {idea.status === "Completed" ? "Paid" : "Locked"}</p>
           </div>
 
           <div className="mt-4 rounded-2xl border border-white/10 bg-[#232632] p-4">

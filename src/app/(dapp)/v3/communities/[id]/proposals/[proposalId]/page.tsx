@@ -12,7 +12,7 @@ import { BinaryVoteLockPanel } from "@/components/BinaryVoteLockPanel";
 import { BinaryVoteAction } from "@/components/BinaryVoteAction";
 import { MemberValidationFinalizer } from "@/components/MemberValidationFinalizer";
 import { formatCommunityUsdc, formatProposalMode, formatProposalOrigin, formatProposalStatus } from "@/lib/community";
-import { communityContracts, communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityTreasuryAbi } from "@/lib/community-contracts";
 import { communityReferenceHref } from "@/lib/community-links";
 import { formatDateTimeFromUnix, shortAddress } from "@/lib/dapp-onchain";
 import {
@@ -24,12 +24,16 @@ import {
   type CommunityProposal,
 } from "@/lib/community-v3";
 
+import { resolveCommunityReference } from "@/lib/community-reference";
+
 export default function CommunityProposalPage() {
   const params = useParams<{ id: string; proposalId: string }>();
-  const communityId = Number(params.id);
   const proposalId = Number(params.proposalId);
   const { address, chainId } = useAccount();
   const client = usePublicClient({ chainId });
+  const reference = resolveCommunityReference(params.id, client?.chain?.id);
+  const communityId = reference?.id ?? 0;
+  const factory = reference?.factory;
   const [deployment, setDeployment] = useState<CommunityDeployment | null>(null);
   const [proposal, setProposal] = useState<CommunityProposal | null>(null);
   const [vote, setVote] = useState<{ choice: number; stake: bigint } | null>(null);
@@ -41,9 +45,10 @@ export default function CommunityProposalPage() {
     let cancelled = false;
 
     async function load() {
-      if (!client || !communityContracts.factory || communityId < 1 || proposalId < 1) return;
+      if (!client || !factory || communityId < 1 || !Number.isSafeInteger(proposalId) || proposalId < 1) { setLoading(false); return; }
+      setLoading(true); setError(null); setDeployment(null); setProposal(null); setVote(null); setBond(null);
       try {
-        const community = await getCommunityDeployment(client, communityContracts.factory, BigInt(communityId));
+        const community = await getCommunityDeployment(client, factory, BigInt(communityId));
         const item = await getCommunityProposal(client, community.hub, BigInt(proposalId));
         const read = (request: Record<string, unknown>) => (
           client as { readContract: (value: Record<string, unknown>) => Promise<unknown> }
@@ -69,8 +74,9 @@ export default function CommunityProposalPage() {
 
     void load();
     return () => { cancelled = true; };
-  }, [address, chainId, client, communityId, proposalId]);
+  }, [address, chainId, client, communityId, factory, proposalId]);
 
+  if (!reference) return <p role="alert">Unknown Community reference or unsupported network. Open this Community from the directory.</p>;
   if (loading) return <p className="rounded-2xl border border-white/10 bg-[#313443] p-5 text-sm text-slate-300">Loading proposal...</p>;
   if (error || !proposal || !deployment) return <p className="rounded-2xl border border-rose-300/30 bg-rose-400/10 p-5 text-sm text-rose-100">{error ?? "Proposal not found."}</p>;
 
@@ -78,10 +84,10 @@ export default function CommunityProposalPage() {
   const result = proposal.settled
     ? proposal.accepted ? "YES accepted" : "NO / tie won"
     : proposal.yesVotes > proposal.noVotes ? "YES currently leads" : "NO currently leads";
-  const reference = communityReferenceHref(proposal.metadataURI);
+  const metadataHref = communityReferenceHref(proposal.metadataURI);
 
   return <section className="space-y-6">
-    <Link href={`/v3/communities/${communityId}`} className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"><FaArrowLeft /> Back to {deployment.name || `Community #${communityId}`}</Link>
+    <Link href={`/v3/communities/${reference.key}`} className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"><FaArrowLeft /> Back to {deployment.name || `Community #${communityId}`}</Link>
 
     <div className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#243d48,#20232f_55%,#313443)] p-7 sm:p-9">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -89,7 +95,7 @@ export default function CommunityProposalPage() {
         <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-sm font-semibold text-cyan-100">{formatProposalStatus(proposal.status)}</span>
       </div>
       <p className="mt-5 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{proposal.description}</p>
-      {reference ? <a href={reference} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm font-semibold text-cyan-200 underline decoration-cyan-300/40 underline-offset-4 hover:text-cyan-100">Open proposal metadata</a> : proposal.metadataURI ? <p className="mt-4 break-all text-xs text-slate-400">Metadata: {proposal.metadataURI}</p> : null}
+      {metadataHref ? <a href={metadataHref} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm font-semibold text-cyan-200 underline decoration-cyan-300/40 underline-offset-4 hover:text-cyan-100">Open proposal metadata</a> : proposal.metadataURI ? <p className="mt-4 break-all text-xs text-slate-400">Metadata: {proposal.metadataURI}</p> : null}
     </div>
 
     <div className="grid gap-4 md:grid-cols-4">

@@ -47,6 +47,7 @@ Lower values:
 Operational note:
 - if set too high relative to proposal supply, rounds can become harder to reason about
 - if set too low, the system may fragment capital signaling across too many small rounds
+- the contract enforces `5 <= IDEAS_PER_ROUND <= 50`; default policy is `30`
 
 ### `VOTING_DURATION`
 Owned by:
@@ -85,56 +86,50 @@ Owned by:
 - `VotingSystemUpgradeable`
 
 Meaning:
-- whether voting is restricted to wallets with an active human-verification record
+- whether voting is restricted to wallets that pass the configured verified-human policy
 
 When enabled:
-- wallets must finalize a valid verification through `PoPVerifierUpgradeable`
-- the protocol reduces simple sybil pressure from throwaway addresses
-- the frontend and backend must both support the verification flow
-
-When disabled:
-- any wallet that satisfies the normal vote requirements can participate
-- the protocol falls back to purely economic gating
+- enforces the configured attestation gate; Sybil resistance depends on the provider
+- adds integration dependency on an external verifier
+- increases participation quality at the cost of some UX friction
 
 Operational note:
-- this setting changes the trust and UX model of the protocol, not just a cosmetic frontend toggle
+- do not enable this without configuring `humanVerifier`
+
+### `humanVerifier`
+Owned by:
+- `VotingSystemUpgradeable`
+
+Meaning:
+- external verifier contract that decides whether a wallet is allowed to vote as a verified human
+
+Operational note:
+- this should remain provider-agnostic at the protocol layer
+- the verifier can be backed by proof-of-personhood, privacy-preserving identity checks, or stronger compliance flows
+- the verifier stores attestations signed by a trusted backend signer; Arc Testnet currently uses explicitly labelled Demo credentials, not real personhood verification
+- production World ID is a planned policy subject to complete proof verification and deployment readiness
+- operators must keep the trusted signer and backend environment aligned
 
 ### `maxVoteAmount`
 Owned by:
 - `VotingSystemUpgradeable`
 
 Meaning:
-- the maximum amount of USDC one wallet can commit to one idea in a round
+- maximum amount a single wallet can commit in one vote
 
 Higher values:
-- allow larger single-wallet conviction
-- increase the chance of whale-dominant outcomes
+- preserve capital expression for large voters
+- weaken anti-whale protection
 
 Lower values:
-- reduce single-wallet control
-- may force large supporters to spread participation across more ideas or rounds
+- reduce single-wallet influence
+- can push large participants to split capital if identity gating is weak
 
 Operational note:
-- this parameter is meant to work alongside human verification, not replace it
-
-### Human Verification Window
-Owned by:
-- `PoPVerifierUpgradeable`
-- backend proof issuance policy
-
-Meaning:
-- how long a wallet stays verified after submitting a signed verification payload onchain
-
-Higher values:
-- reduce repeat verification friction
-- increase the time window during which a stale verification remains valid
-
-Lower values:
-- tighten recency of personhood checks
-- increase repeat verification frequency for active users
-
-Operational note:
-- the current Arc configuration uses a `14 day` verification window
+- this works best together with verified-human gating, not by itself
+- current live policy target:
+  `humanOnlyVoting = true`
+  `maxVoteAmount = 10_000 * 10^6`
 
 ## Proposal Intake Parameters
 
@@ -160,33 +155,63 @@ Operational note:
 
 ## Grant Release Parameters
 
-### `authorSharePercent`
+### `minimumNetFundingByIdea`
 Owned by:
-- `GrantManagerUpgradeable`
+- `IdeaRegistryUpgradeable`
 
 Meaning:
-- percentage of allocable round capital released to the winning author
+- the minimum USDC amount a proposal must receive after the round's snapshotted pledge fee for it to be eligible to win
 
-Protocol share:
-- `100 - authorSharePercent`
+Why it matters:
+- prevents a proposal from becoming a live grant with insufficient capital for its disclosed scope
+- lets a higher-vote but underfunded proposal be skipped in favor of the highest viable alternative
+- makes the funding threshold visible before a participant pledges
 
-Higher values:
-- increase builder incentives
-- reduce protocol-retained share
+Operational note:
+- this is provided by the author at proposal creation and is not an admin override after votes arrive
+- the check uses net funding after the fee snapshotted for that round
 
-Lower values:
-- increase protocol-retained share
-- may weaken builder-side economic attractiveness
+### `pledgeFeeBps`
+Owned by:
+- `FundingPoolUpgradeable`
 
-Important note:
-- payout release still follows milestone staging even when author share is high
+Meaning:
+- successful-round protocol fee in basis points, charged only to a winning pledge that becomes a live grant
+
+Bounds and behavior:
+- default: `500` basis points, or `5%`
+- maximum: `1,000` basis points, or `10%`
+- each round snapshots the value when opened, so later changes cannot alter an in-progress round
+- losing pledges and a winner that never claims are refunded in full
+- V2.3 vests the fee progressively with paid 20/40/40 tranches; legacy rounds finalize it at `claimGrant`
+
+### `backerMilestonesEnabled`
+Owned by `VotingSystemUpgradeable`. Selects the mode for subsequently started
+rounds. A round snapshots this setting and its verifier when opened. Existing
+rounds cannot switch between legacy 30/40/30 and V2.3 20/40/40 when this flag changes.
+See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the read-only deployment snapshot.
+
+### Grant and Review Deadlines
+Owned by:
+- `GrantManagerUpgradeable` constants
+
+Current policy:
+- claim a settled winning grant within `14 days`
+- submit stage-one proof within `45 days` after the initial payout
+- submit stage-two proof within `60 days` after the stage-one payout
+- winning backers have `14 days` for a V2.3 proof review; legacy reviewers use the same initial window
+- V2.3 no-quorum has one additional `7 day` grace window
+- a rejected proof has a `48 hour` resubmission cooldown
+
+If a deadline is missed, the permissionless expiry path protects pledge capital according to the round state: a never-claimed winner restores its full gross pledge; a failed V2.3 live grant restores unpaid net capital plus unvested fee, while legacy expiry exposes only remaining net capital.
 
 ### Milestone Thresholds and Cooldowns
 Some milestone review logic is embedded as protocol behavior rather than a general open parameter surface.
 
 Operators should still understand:
 - approval thresholds
-- reviewer participation caps
+- legacy reviewer participation caps; these are not V2.3 backer limits
+- V2.3 40% winning-weight quorum, exact two-thirds participating-weight approval, and three eligible approving backers
 - rejection cooldown behavior
 
 These values affect:
@@ -214,8 +239,9 @@ The protocol reserve is not just a number; it is a policy-backed capital bucket.
 
 Operators should understand:
 - rejected author stakes can move into reserve
-- leftover or reserved capital can accumulate separately from live round balances
-- reserve can be explicitly allocated back into idea accounting by authorized action
+- a successful-round fee moves into reserve only after the winning author claims
+- refundable pledges remain outside protocol reserve until their owner claims them
+- reserve allocation is a separate admin action and must never be used to replace a proposal's pledged funding target
 
 ## Role and Dependency Wiring
 
@@ -229,8 +255,6 @@ Critical addresses include:
 - reputation system
 - voter progression
 - roles registry
-- human verifier
-- trusted signer / backend signer
 
 Critical role assignments include:
 - `VOTING_ROLE`
@@ -244,20 +268,18 @@ If addresses or roles are wrong, valid code may still fail at runtime.
 
 ## Recommended Defaults
 
-For the current Arc testnet configuration, active protocol defaults include:
+For local or staging-style testing, existing protocol defaults have included:
 - `IDEAS_PER_ROUND = 30`
 - `VOTING_DURATION = 1 day`
-- `minStake = 10 * tokenUnit`
-- `humanOnlyVoting = true`
-- `maxVoteAmount = 10_000 * tokenUnit`
-- `verificationWindow = 14 days`
-- `authorMinStake = 50 * tokenUnit`
-- `authorSharePercent = 95`
+- `minStake = 10 * 10^6`
+- `authorMinStake = 50 * 10^6`
+- `pledgeFeeBps = 500`
+- `minimumNetFunding` is proposal-specific and must be set by the author
 
-Operational note:
-- `humanOnlyVoting` and `maxVoteAmount` now form one policy pair
-- the first limits sybil scaling
-- the second limits single-wallet dominance per idea
+Current Arc testnet governance policy as of August 18, 2026:
+- `humanOnlyVoting = true`
+- `maxVoteAmount = 10_000 * 10^6`
+- `trustedSigner` must match the PoP backend signer address exactly
 
 These should be treated as environment defaults, not universal policy truths.
 

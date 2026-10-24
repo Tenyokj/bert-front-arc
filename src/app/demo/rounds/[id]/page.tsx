@@ -51,7 +51,7 @@ export default async function DemoRoundDetailPage({
         </div>
 
         <p className="mt-2 text-xs text-slate-300">
-          New payout flow: claim 30% first, then approve milestone proofs for the 40% in-process and final 30% release.
+          V2.3 payout flow: claim 20% of the net grant first, then winning backers review proof for the 40% in-process and final 40% release. Demo values are illustrative.
         </p>
 
         <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#2a2d3a]">

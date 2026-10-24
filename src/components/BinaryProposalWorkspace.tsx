@@ -5,13 +5,14 @@ import { useState } from "react";
 
 import { ClientPagination } from "@/components/ClientPagination";
 import { formatCommunityUsdc, formatProposalOrigin, formatProposalStatus } from "@/lib/community";
+import type { CommunityProposal } from "@/lib/community-v3";
 
-type Proposal = { id: number; origin: bigint; mode: bigint; status: bigint; title: string; description: string; yesVotes: bigint; noVotes: bigint; votingDeadline: bigint; accepted: boolean; settled: boolean };
+type Proposal = CommunityProposal;
 type Filter = "all" | "admin" | "member";
 const pageSize = 8;
 
 /** Compact, paginated Binary proposal workspace driven by CommunityTypes.Proposal origin/mode. */
-export function BinaryProposalWorkspace({ communityId, proposals }: { communityId: number; proposals: Proposal[] }) {
+export function BinaryProposalWorkspace({ communityId, proposals }: { communityId: string; proposals: Proposal[] }) {
   const [filter, setFilter] = useState<Filter>("all"); const [page, setPage] = useState(1);
   const binary = proposals.filter((proposal) => Number(proposal.mode) === 0).filter((proposal) => filter === "all" || (filter === "admin" ? Number(proposal.origin) === 0 : Number(proposal.origin) === 1));
   const totalPages = Math.max(1, Math.ceil(binary.length / pageSize)); const currentPage = Math.min(page, totalPages); const visible = binary.slice((currentPage - 1) * pageSize, currentPage * pageSize);

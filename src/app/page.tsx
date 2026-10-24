@@ -65,7 +65,7 @@ export default function Home() {
               App dashboard
             </Link>
             <Link href="/v3" className="transition-colors hover:text-slate-900">
-              V3.1 Communities
+              Communities
             </Link>
             <a href="https://bertdao-console.vercel.app/" className="transition-colors hover:text-slate-900" target="_blank" rel="noreferrer">
               Console Beta
@@ -88,7 +88,7 @@ export default function Home() {
               App dashboard
             </Link>
             <Link href="/v3" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900">
-              V3.1 Communities
+              Communities
             </Link>
             <a href="https://bertdao-console.vercel.app/" className="rounded-full border border-white/50 bg-white/65 px-3 py-2 whitespace-nowrap transition-colors hover:text-slate-900" target="_blank" rel="noreferrer">
               Console Beta
@@ -146,7 +146,7 @@ export default function Home() {
                 href="/v3"
                 className="rounded-full border border-violet-200 bg-violet-50/70 px-7 py-3 text-center text-sm font-semibold text-violet-900 backdrop-blur transition hover:-translate-y-0.5"
               >
-                V3.1 Communities
+                Communities
               </Link>
             </div>
 
@@ -336,7 +336,7 @@ export default function Home() {
                   for independent auditability.
                 </p>
                 <a
-                  href="https://github.com/Tenyokj/bert-core/blob/main/docs/CONTRACTS.md"
+                  href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/CONTRACTS.md"
                   target="_blank"
                   rel="noreferrer"
                   className="mt-5 inline-block rounded-full bg-slate-900 px-6 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white"
