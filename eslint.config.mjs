@@ -5,6 +5,15 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // Next 16.4 adds compiler-oriented checks to existing code. Keep them visible
+    // without coupling the security update to transaction/clock state refactors.
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/purity": "warn",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
