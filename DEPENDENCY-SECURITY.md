@@ -97,3 +97,92 @@ not downgrade React or claim every external wallet integration has been verified
 Release through a separate PR into `arc-front-migration`. Repeat the production
 smoke check after Vercel deploys the merged commit. The subgraph dependency tree
 is still outside this patch.
+
+## Phase 3 - Subgraph Toolchain
+
+This section supersedes the earlier statement that the critical subgraph finding
+is unaddressed. It does not change the phase-two root application audit results.
+
+Graph CLI remains 0.98.1 and graph-ts remains 0.38.2, now pinned rather than
+floating ranges. AssemblyScript remains on the CLI's existing compiler line.
+The canonical installation is `subgraph/package-lock.json`; V3 scripts already
+invoke `../subgraph/node_modules/.bin/graph`. Both package manifests retain the
+same security overrides to avoid reintroducing old dependencies in an independent
+installation; only the shared lockfile installation is verified here.
+
+### Archive Extraction and Compatible Fixes
+
+The latest reviewed Graph CLI still depends on unscoped `decompress` 4.2.1,
+which has no patched release. The [maintainer advisory](https://github.com/advisories/GHSA-hrh2-vp3x-79xf)
+recommends migrating to `@xhmikosr/decompress`, fixed in 11.1.4. An npm alias
+override resolves Graph CLI's `decompress` import to that exact maintained
+release. This is a deliberate replacement, not an assumed drop-in semver patch:
+the actual CLI extraction helper was exercised with valid and malicious ZIPs.
+
+Graph CLI uses it when installing a local graph-node binary, not in deployed
+AssemblyScript mappings. The fix protects the developer toolchain. Tests download
+or execute no binaries and keep all malicious fixture paths inside temporary
+sandboxes. The maintained fork is ESM; its default export works with the CLI's
+existing ESM import. The archive library and CLI still must not be treated as a
+sandbox for arbitrary untrusted archives.
+
+Same-major overrides update CLI-pinned glob 11, immutable 5, js-yaml 4, undici 7,
+yaml 2 and Gluegun-pinned cross-spawn 7, ejs 3 and semver 7. Brace-expansion stays
+on major 2 for its affected consumers. Compatible transitive fixes and a fresh
+lockfile resolution were also applied; `npm ls` verifies the installed tree
+satisfies the overrides. No forced Graph CLI downgrade was accepted.
+
+| Shared subgraph dependency tree | Before | After |
+| --- | --- | --- |
+| Critical | 1 | 0 |
+| High | 23 | 9 |
+| Moderate | 8 | 3 |
+| Total | 32 | 12 |
+
+These are dated package-level audit counts, including ancestor findings, not
+proof of 12 separate exploitable paths. Deprecation warnings for older CLI
+dependencies are not equivalent to an exhaustive security review.
+
+### Remaining Findings - Open
+
+| Underlying package | Dependency boundary / decision |
+| --- | --- |
+| [axios 0.x](https://github.com/advisories/GHSA-jr5f-v2jv-69x6) | Gluegun -> apisauce. Do not force axios 1 into consumers expecting 0.x. Avoid secrets/untrusted endpoints when using CLI HTTP helpers; upstream migration/reachability review remains needed. |
+| [stream-json](https://github.com/advisories/GHSA-528h-pc64-c93x) | Graph CLI -> jayson. Major API migration is outside this compatible update. Do not feed arbitrary hostile JSON streams into trusted CLI jobs. |
+| [uuid 8](https://github.com/advisories/GHSA-w5hq-g745-h8pq) | jayson dependency. A move to uuid 11+ needs review of the consuming API. |
+| [zod 3](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) | web3 ABI/validator tooling. No incompatible zod 4 replacement is forced. |
+
+These are not dismissed or proven unreachable. `npm audit` continues to exit
+nonzero. Run untrusted contributor jobs without Studio deploy keys, production
+credentials or privileged access. No change here closes every GitHub alert.
+
+### Verification and Release
+
+On Node.js 26.4.0 / npm 11.17.0 (recommended contributor minimum: Node 22.13.0):
+
+- Clean `npm ci --ignore-scripts --no-fund` passed.
+- `npm run test:security`: seven tests passed: actual dependency identity, actual
+  CLI executable extraction/ambiguity checks, parent/absolute path traversal,
+  archive symlink chain and a pre-existing destination symlink.
+- V2 `codegen:arc` and `build:arc`, plus V3 `npm run build`: passed with the
+  current V3.2 Factory/address/block and retained V3.1 history.
+- All 13 pre/post-update WASM, schema and manifest files have identical SHA-256
+  hashes. Mapping sources, ABI files, schema, addresses and start blocks are
+  unchanged. No Studio deployment, wallet signature or public transaction occurred.
+
+```bash
+cd subgraph
+npm ci --ignore-scripts --no-fund
+npm run test:security
+npm run codegen:arc
+npm run build:arc
+cd ../subgraph-v3
+V3_FACTORY_SOURCES= \
+V3_FACTORY_ADDRESS=0xf793786BCecfbfE35a22E36180032b32BD5208Ba \
+V3_FACTORY_START_BLOCK=68888068 npm run build
+```
+
+Merge through a separate PR into `arc-front-migration`. These are tooling-only
+changes: unchanged artifacts do not need a new Graph Studio version or contract
+deployment. Frontend runtime dependencies are untouched. Full browser-wallet E2E
+and independent security review remain separate work.

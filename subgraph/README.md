@@ -46,12 +46,18 @@ This folder contains a working local setup (Hardhat + local graph-node) and an A
 
 ## Local setup (Hardhat) - step by step
 
+Use Node.js 22.13.0 or newer and the committed lockfile. This directory provides
+the shared Graph CLI used by both V2 and `../subgraph-v3` builds. See
+[the dependency security review](../DEPENDENCY-SECURITY.md#phase-3---subgraph-toolchain)
+for the reviewed archive-extraction override and remaining advisories.
+
 1. Start Hardhat node in your contracts repo (`http://127.0.0.1:8545`).
 2. Deploy contracts to that local node.
 3. In this repo:
 ```bash
 cd subgraph
-npm install
+npm ci --ignore-scripts --no-fund
+npm run test:security
 docker compose -f docker-compose.local.yml up -d
 npm run codegen:local
 npm run build:local

@@ -20,6 +20,11 @@ Proposal text and full immutable configuration are still read from `CommunityHub
 
 ## Deploy to Arc Testnet
 
+Install the shared CLI from `../subgraph` with `npm ci --ignore-scripts --no-fund`
+and run `npm run test:security` there first (Node.js >=22.13.0). V3 build scripts
+use that lockfile-backed CLI, not a globally installed `graph`. The reviewed
+tooling changes and open advisories are in [Dependency Security](../DEPENDENCY-SECURITY.md#phase-3---subgraph-toolchain).
+
 V3.2 is deployed: use Factory `0xf793786BCecfbfE35a22E36180032b32BD5208Ba` from block `68888068`. Do not use the legacy V3.0 Factory address. The original modular V3.1 Factory (`0xe16Cd61a21feA97393e6eEE3A7F7A26828021dD0`, block `66809847`) is retained automatically. A new Factory adds a data source; it does not replace old Communities.
 
 ```bash
@@ -45,9 +50,9 @@ unset GRAPH_STUDIO_DEPLOY_KEY
 
 Wait for the deployment to report `SYNCED`, then set the returned query endpoint in the frontend as `NEXT_PUBLIC_V3_SUBGRAPH_URL` and redeploy Vercel. The frontend can continue to use direct RPC reads until that endpoint has fully synced.
 
-Codegen/build success is not publication or synchronization. This repository does not claim that the new Factory or tranche schema has already been deployed. Run `npm run test:community-routing` from the frontend root before release.
+Codegen/build success is not publication or synchronization. For current deployment evidence, see the record below. Run `npm run test:community-routing` from the frontend root before a new release.
 
-The Studio slug stays `bert-v-3-1-arc-testnet`; it is a project identifier, not the release number. Publish a new version of that project, not a replacement of original Factory history. V3.2 has not been deployed by these source changes.
+The Studio slug stays `bert-v-3-1-arc-testnet`; it is a project identifier, not the release number. Publish a new version of that project, not a replacement of original Factory history. A tooling-only security update does not require another Studio deployment when compiled output is unchanged.
 
 ## Current Arc deployment (24 October 2026)
 
