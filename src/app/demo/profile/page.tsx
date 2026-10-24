@@ -69,7 +69,7 @@ export default function DemoProfilePage() {
       <div className="rounded-3xl border border-white/10 bg-[#2a2d3b] p-5 md:p-6">
         <h2 className="font-[var(--font-display)] text-3xl text-white">Grant release flow</h2>
         <p className="mt-3 text-sm leading-relaxed text-slate-300">
-          Funded ideas now move through a staged payout pipeline: 30% after grant claim, 40% after in-process proof approval, and the final 30% after launch proof approval.
+          New V2.3 grants release 20% of the net grant at claim, then 40% and the remaining 40% after winning-backer proof reviews. This demo uses sample data; live rounds retain their snapshotted policy.
         </p>
         <p className="mt-2 text-sm text-slate-400">
           Demo mode keeps this read-only, but the structure matches the same grant story as the live protocol.

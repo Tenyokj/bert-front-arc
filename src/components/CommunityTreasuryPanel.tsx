@@ -8,7 +8,7 @@ import { formatCommunityUsdc } from "@/lib/community";
 /** Read-only accounting view that keeps each Community Treasury liability separate. */
 export function CommunityTreasuryPanel({ treasury }: { treasury: `0x${string}` }) {
   const { chainId } = useAccount();
-  const { data, isLoading, error } = useReadContracts({ chainId, contracts: ["executionBalance", "availableExecutionBalance", "validatorRewardBalance", "totalMembershipLocked", "totalProposalBondLocked", "totalRefundLiability"].map((functionName) => ({ address: treasury, abi: communityTreasuryAbi, functionName })) as never });
+  const { data, isLoading, error } = useReadContracts({ contracts: (["executionBalance", "availableExecutionBalance", "validatorRewardBalance", "totalMembershipLocked", "totalProposalBondLocked", "totalRefundLiability"] as const).map((functionName) => ({ address: treasury, chainId, abi: communityTreasuryAbi, functionName })) });
   if (isLoading) return <div className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-6 text-sm text-slate-300">Loading Treasury accounting...</div>;
   if (error) return <div className="rounded-[28px] border border-rose-300/30 bg-rose-400/10 p-6 text-sm text-rose-100">Could not load Treasury accounting.</div>;
   const values = (data ?? []).map((item) => item.result as bigint | undefined);

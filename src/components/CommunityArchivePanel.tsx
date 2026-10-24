@@ -9,7 +9,7 @@ import { communityErrorMessage } from "@/lib/community-errors";
 /** Shows archive blockers and opens a quorum-protected archive request only when the Hub is clean. */
 export function CommunityArchivePanel({ hub, archived }: { hub: `0x${string}`; archived: boolean }) {
   const reads = useReadContracts({
-    contracts: ["pendingValidationProposalCount", "activeBinaryProposalCount", "activeSlateRoundCount", "unresolvedMemberProposalCount"].map((functionName) => ({ address: hub, abi: communityHubAbi, functionName })) as never,
+    contracts: (["pendingValidationProposalCount", "activeBinaryProposalCount", "activeSlateRoundCount", "unresolvedMemberProposalCount"] as const).map((functionName) => ({ address: hub, abi: communityHubAbi, functionName })),
     query: { refetchInterval: 2_000 },
   });
   const write = useWriteContract();

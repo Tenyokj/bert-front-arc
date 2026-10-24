@@ -26,6 +26,8 @@ BERT aims to preserve the following properties:
 - capital cannot be released twice
 - author stake cannot bypass configured intake rules
 - reserve accounting remains separate from live distributable balances
+- a losing pledge cannot be redirected to an unrelated winning proposal
+- a round fee cannot become reserve revenue before a winning author starts the grant
 - elevated user roles cannot be self-assigned by arbitrary wallets
 - upgrades cannot silently corrupt storage or break dependency wiring
 
@@ -41,6 +43,8 @@ The protocol must defend against:
 - reviewer abuse during milestone approval
 - accounting drift between token balances and internal pool state
 - broken upgrades that preserve admin control but corrupt storage layout
+- a malicious or incorrectly approved Community Factory routing reserve from an arbitrary Treasury
+- a non-standard ERC-20 attempting callbacks during stake intake, payout, or refund
 
 The protocol does not assume a fully trustless governance environment today. Admin authority, role assignment, and reviewer behavior remain meaningful trust boundaries.
 
@@ -59,20 +63,29 @@ Admin compromise is one of the highest-severity scenarios in the system.
 ### System Contract Trust
 Core modules trust each other through configured addresses and role assignments. Incorrect wiring can break valid flows even when the contract code itself is correct.
 
+### Community Factory Trust
+`FundingPoolUpgradeable` maintains an explicit allowlist of Community Factories
+for protocol-reserve intake. The protocol Admin is trusted to add only reviewed
+Factory deployments and to revoke only after considering outstanding Community
+flows. V3.0 and V3.1 Factories may be approved concurrently; replacing the
+legacy Factory pointer is not an authorization migration strategy.
+
 ### Reviewer and Curator Trust
 Curators and reviewers are not arbitrary users; they are earned-role or admin-granted actors. Even so, they remain a trust boundary because:
 - curators can mark ideas as low quality
-- reviewers can influence milestone release timing and success
+- reviewers can influence legacy milestone release; eligible winning backers control V2.3 reviews
 
 ## Primary Attack Surfaces
 
 1. role registry and cross-contract authorization
 2. upgrade and dependency rewiring operations
-3. author stake intake and slashing logic
-4. per-round and per-idea treasury accounting
+3. author bond intake and slashing logic
+4. per-round pledge, refund, and fee-escrow accounting
 5. milestone proof approval and rejection flow
-6. reserve allocation and distribution logic
+6. reserve allocation, fee finalization, and distribution logic
 7. admin-owned configuration parameters
+8. V3.1 Factory/Treasury/module activation and capability binding
+9. non-standard ERC-20 behavior at every transfer boundary
 
 ## Access Control Risks
 
@@ -112,8 +125,9 @@ If granted too broadly or without monitoring, these can allow:
 ### Capital Separation Risk
 BERT distinguishes:
 - direct treasury deposits
-- author submission stake
-- round and idea vote capital
+- author submission bonds
+- round and idea pledge capital
+- pending successful-round fee escrow
 - protocol reserve
 - released grant payouts
 
@@ -123,14 +137,16 @@ Any bug or misconfiguration that merges these buckets incorrectly can distort:
 - slashing behavior
 - donor pool visibility
 
-### Double Distribution Risk
+### Pledge Redirection and Double Distribution Risk
 Grant manager payout flags and funding pool distribution state must prevent:
 - repeated initial grant claim
 - repeated milestone payout
 - repeated reserve allocation for the same intended effect
+- a losing pledge becoming grant capital for an idea the pledger did not select
+- a cancelled winner's pending fee remaining in reserve
 
 ### Reserve Misuse Risk
-`protocolReserve` is intentionally separate from live round balances. Admin or code errors that treat reserve like ordinary distributable liquidity can violate treasury expectations.
+`protocolReserve` is intentionally separate from live round balances and refundable pledge liabilities. Admin or code errors that treat reserve like ordinary distributable liquidity can violate treasury expectations.
 
 ### Accounting Drift Risk
 Internal accounting and actual token balances can drift if:
@@ -143,6 +159,13 @@ Mitigation:
 - explicit pool balance validation
 - controlled use of reserve allocation and pool reconciliation functions
 
+### Community Reserve Routing Risk
+Only an active Treasury recognised by an approved Community Factory may call
+`receiveCommunityReserve`. The Factory list is bounded to keep the authorization
+lookup predictable. Testers must attempt reserve routing from an arbitrary
+Treasury, an inactive Treasury, and a Treasury belonging to a revoked Factory.
+They must also confirm that approving V3.1 leaves V3.0 routing functional.
+
 ## Voting and Round Risks
 
 ### Round Composition Risk
@@ -151,18 +174,23 @@ Rounds are built from the global idea sequence using `lastUsedIdeaId`. Bugs here
 - skip ideas
 - create malformed rounds
 
-### Vote Commitment Risk
+### Pledge and Viability Risk
 Voting is capital-backed. Risks include:
 - wrong minimum stake configuration
+- disabled or weak verified-human gating
+- weak single-vote cap tuning
 - wrong USDC token address
-- faulty accounting for `depositForIdeaFrom`
+- faulty accounting for `recordPledgeFrom`
 - duplicate or misattributed idea membership
+- a funding target or fee policy that makes ordinary proposals systematically non-viable
 
 ### Outcome Propagation Risk
 When a round ends, the protocol updates:
 - winning and losing idea status
 - reputation changes
-- winning vote registration
+- eligibility for a later individual `claimWinningParticipation` progression claim
+
+It also settles escrow policy: losing pledges become refundable, a no-winner round refunds all pledges, and a viable winner's fee stays pending until author claim. Any inconsistency between these outcome and accounting paths is security-relevant.
 
 This is a multi-side-effect step. Partial failure handling and dependency correctness matter because a broken outcome propagation can create inconsistent social or lifecycle state even if the round result itself is known.
 
@@ -177,7 +205,7 @@ Curators can mark ideas as low quality. This introduces:
 - coordination risk if user role thresholds are too easy to satisfy
 
 ### Slashing Risk
-Rejected ideas can have their author stake moved into reserve. Incorrect status checks or wrong registry-to-pool wiring can cause:
+Rejected ideas can have their author bond moved into reserve. Incorrect status checks or wrong registry-to-pool wiring can cause:
 - unslashed rejected stake
 - slash attempts on non-rejected ideas
 - reserve inflation or accounting mismatch
@@ -185,12 +213,14 @@ Rejected ideas can have their author stake moved into reserve. Incorrect status 
 ## Milestone Review Risks
 
 ### Reviewer Collusion Risk
-Milestone release depends on reviewer approvals. A captured reviewer set could:
+V2.3 milestone release depends on eligible winning-backer votes; legacy rounds
+retain protocol reviewers. A captured or inactive eligible cohort could:
 - approve weak proof too early
 - delay legitimate execution through coordinated rejection
 
 ### Duplicate Review Risk
-The protocol must ensure a single reviewer cannot count multiple times in the same active milestone request.
+The protocol must ensure one counted position per eligible V2.3 backer: a change
+of vote replaces its old weight. Legacy reviewers must not count twice in one request.
 
 ### Cooldown Bypass Risk
 Rejected milestone requests record `lastRejectedAt`. If cooldown logic is bypassed or broken:
@@ -220,6 +250,14 @@ An upgrade that changes storage safely can still break the protocol if it change
 - reputation system address
 - voter progression address
 
+### Community Factory Migration Risk
+The V3.1 deployment requires an append-only FundingPool upgrade and a one-time
+initializer that seeds the historical Factory into the allowlist. The migration
+must run while the V2 operational modules are paused. Before authorizing V3.1,
+operators must snapshot `totalPoolBalance`, `protocolReserve`, legacy Factory
+approval, and the configured USDC address; each value must match after the
+migration.
+
 ### Proxy Administration Risk
 Wrong proxy or wrong admin usage can:
 - block upgrades
@@ -232,18 +270,16 @@ Critical parameters include:
 - `IDEAS_PER_ROUND`
 - `VOTING_DURATION`
 - `minStake`
-- `humanOnlyVoting`
-- `maxVoteAmount`
 - `authorMinStake`
-- `authorSharePercent`
+- proposal-level `minimumNetFunding`
+- `pledgeFeeBps`
 
 Configuration mistakes can cause:
 - impossible round creation
 - spammy or economically weak voting
-- human-verification bypass through disabled gating
-- whale-dominant outcomes through an overly large per-wallet cap
 - excessive author friction
-- unfair or unintended payout split
+- proposals that cannot become viable
+- unfair or unintended fee/refund behavior
 
 Security posture is not only contract correctness. It also depends on operator discipline around parameter changes.
 
@@ -257,7 +293,8 @@ Recommended controls:
 - monitor pause status for `FundingPoolUpgradeable`, `VotingSystemUpgradeable`, and `GrantManagerUpgradeable`
 - monitor role change events in `RolesRegistryUpgradeable`
 - monitor large treasury inflows and outflows
-- rehearse every upgrade on localhost and Sepolia before live execution
+- monitor unclaimed-grant, expired-grant, and pledge-refund events
+- rehearse every upgrade on localhost and the target staging/testnet deployment before live execution
 
 ## Incident Response Checklist
 

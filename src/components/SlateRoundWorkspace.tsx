@@ -25,7 +25,7 @@ type Round = {
 };
 
 /** Paginated Slate Round directory backed directly by the CommunityHub. */
-export function SlateRoundWorkspace({ communityId, hub }: { communityId: number; hub: `0x${string}` }) {
+export function SlateRoundWorkspace({ communityId, hub }: { communityId: string; hub: `0x${string}` }) {
   const client = usePublicClient();
   const [rounds, setRounds] = useState<Round[]>([]);
   const [filter, setFilter] = useState<"all" | "admin" | "member">("all");

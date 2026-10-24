@@ -270,20 +270,20 @@ export default function HowItWorksPage() {
 
           <section className="rounded-3xl border border-teal-400/20 bg-[linear-gradient(135deg,rgba(13,148,136,0.10),rgba(255,255,255,0.04))] p-6 md:p-8">
             <div className="max-w-4xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-500">BERT V3.1 Community Layer</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-500">Community Layer: V3.1 live / V3.2 pending</p>
               <h2 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">A self-contained Community where capital release remains reviewable.</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 V3.1 adds stake-backed Community governance without replacing the V2 builder-grant rail above. Each
                 Community receives an independent <strong>CommunityHub</strong> for roles, proposals, voting, active-time
                 clock, and governance requests, plus a paired <strong>CommunityTreasury</strong> for escrow, execution
-                capital, Validator rewards, failed-plan refunds, and withdrawal approvals. A settled winner starts an execution plan: the configured administration recipient receives 20%, then only the wallets that supported that winner review proof for the final 40% / 40%. Community-specific decisions remain local;
+                capital, Validator rewards, failed-plan refunds, and withdrawal approvals. In the original deployed V3.1 model, a settled winner releases 20% immediately and winning supporters review proof for the final 40% / 40%. The unreleased V3.2 source implementation adds fresh Admin quorum before every transfer, including the first 20%; it is not yet deployed. Community-specific decisions remain local;
                 configured protocol-reserve flows remain visible to the broader BERT FundingPool.
               </p>
             </div>
             <div className="mt-7 grid gap-4 md:grid-cols-3">
               {[
                 ["1. Configure", "A creator sets immutable entry stake, proposal bond, vote floor, validator thresholds, Admin quorum, the Administration execution wallet, and every local timing window including proof and review windows. The wallet is not a second Treasury: it receives only approved execution tranches."],
-                ["2. Activate", "Factory reserves the Treasury, deploys the matching Hub, verifies the pair, and indexes a numeric Community ID with Hub, Treasury, creator, and metadata."],
+                ["2. Activate", "Factory reserves the Treasury; the creator deploys the matching Hub, then Factory verifies the pair. Identity includes the Factory address and local Community ID, so old and new releases cannot collide."],
                 ["3. Govern & review", "Participants join locally, submit one of four proposal modes, validate Member ideas, vote with USDC, and winning supporters approve or reject execution proof before later capital is released."],
               ].map(([title, body]) => (
                 <div key={title} className="rounded-2xl border border-white/15 bg-slate-950/15 p-5">
@@ -338,7 +338,7 @@ export default function HowItWorksPage() {
               <div className="mt-5 space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                 <p><strong>Membership stake</strong> stays locked to an active Member and returns only through the guarded exit flow. It is not a discretionary treasury balance.</p>
                 <p><strong>Vote escrow</strong> is held until a binary proposal or Slate Round settles. When NO wins a binary vote, eligible NO voters claim their own stake once, less the Community&apos;s configured NO fee.</p>
-                <p><strong>Execution treasury</strong> holds the local capital available for the Community to implement approved decisions. It can leave only through a request, the configured multi-Admin quorum, and execution.</p>
+                <p><strong>Free execution balance</strong> supports ordinary Admin-quorum withdrawals. A winning proposal budget instead stays in its isolated milestone reserve. V3.2 source code also requires a fresh Admin quorum for each fixed 20/40/40 payment; original deployed Communities retain their earlier payout policy.</p>
                 <p><strong>Validator rewards</strong> accrue only from qualifying Member proposal flows, are finalized after an epoch ends, and are claimed individually by Validators who met the onchain activity threshold.</p>
                 <p><strong>Protocol reserve</strong> is routed through the V2 FundingPool integration where the deployed Community settlement rule requires it, preserving V2 reserve accounting.</p>
               </div>
@@ -350,7 +350,7 @@ export default function HowItWorksPage() {
               <div className="mt-5 space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                 <p>Validation, binary voting, Slate voting, reward epochs, exit cooldowns, and quorum-request expiry are measured in <strong>active Community time</strong>. A pause stops the Community clock; resume continues only the time remaining.</p>
                 <p>Pause blocks governance-sensitive paths such as new proposals, votes, validation progression, and new execution withdrawals. It does not let the frontend bypass settled onchain claim rules.</p>
-                <p>Execution funds are not released by a single arbitrary click. The Community Treasury retains custody, while a settled winner creates an immutable 20 / 40 / 40 plan for the configured Administration execution wallet. Later tranches require sealed winning-supporter quorum and approval. Separate Treasury withdrawals additionally use the configured Admin quorum.</p>
+                <p>Execution funds are not released by a single arbitrary click. The Community Treasury retains custody, while a settled winner creates an immutable 20 / 40 / 40 plan for the configured Administration execution wallet. In original deployed Communities, later tranches require winning-supporter review. The source-only follow-up excludes the execution recipient from reviews and requires fresh Admin approval plus actual payment within seven active Community days for every tranche. Timeout makes the unpaid execution budget refundable to supporters, not free Treasury balance. Validator rewards remain separate.</p>
                 <p>Adding or removing Admins, Validators, pausing, resuming, archiving, and cancelling a withdrawal are also quorum-protected requests. This prevents unilateral roster capture from becoming a treasury takeover.</p>
               </div>
             </div>

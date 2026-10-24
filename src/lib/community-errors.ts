@@ -3,6 +3,13 @@ export function communityErrorMessage(error: unknown): string {
   const technical = error instanceof Error ? error.message : String(error ?? "");
 
   const messages: Array<[string, string]> = [
+    ["tranche quorum not met", "This fixed tranche needs the configured number of current Admin approvals before payment."],
+    ["invalid tranche approver", "An approval is missing, duplicated, unsorted or no longer belongs to a current Admin role. Refresh the approvals."],
+    ["tranche already approved", "This Admin has already approved the current payment tranche."],
+    ["tranche not expired", "The active Community-time payment deadline has not passed."],
+    ["tranche expired", "This payment authorization expired. Enable the plan's unpaid-budget refunds instead of retrying payment."],
+    ["tranche unavailable", "This plan is not waiting for a payment authorization, or that tranche is already paid or failed."],
+    ["execution recipient cannot review", "The execution recipient cannot approve or reject its own execution milestones. Any winning-support refund entitlement is preserved."],
     ["BinaryVoteAlreadyCast", "You have already voted on this binary proposal. One wallet can cast only one vote."],
     ["ProposalAuthorCannotVote", "Proposal authors cannot vote on their own binary proposal."],
     ["RoundVoteAlreadyCast", "You have already voted in this Slate Round. One wallet can cast only one round vote."],

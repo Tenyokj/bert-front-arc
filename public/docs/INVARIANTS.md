@@ -1,5 +1,11 @@
 # Invariants
 
+Unreleased V3.2 / Manager 2.0.0: a passed proof cannot increase `releasedAmount`; only
+valid fixed-tranche payment does. Each stage needs fresh current-role approvals
+before its seven-active-day deadline. Initial payment is not automatic. Ordinary
+withdrawals cannot access plan reserves. Payment expiry refunds all actually unpaid
+plan capital, never the validator reserve. See V3.2-TRANCHE-QUORUM.md.
+
 This document records the core protocol invariants BERT is expected to preserve across normal operation, upgrades, and incident response.
 
 ## Contents
@@ -36,6 +42,11 @@ This document records the core protocol invariants BERT is expected to preserve 
 3. the same grant tranche must not be released twice
 4. rejected author stake must not remain unaccounted after valid slashing
 5. round and idea accounting must remain scoped to the correct round and idea pair
+6. a pledge can be refunded only to its recorded pledger and never redirected to another idea
+7. a winning proposal must satisfy its own net funding target after the fee snapshotted for that round
+8. a successful-round fee cannot enter protocol reserve before the winning author starts the grant
+9. an unclaimed winner restores its full gross pledge for refund
+10. a failed V2.3 live grant refunds unpaid net grant plus unvested fee only to winning pledgers; legacy expiry refunds remaining net capital
 
 ## Role and Permission Invariants
 
@@ -46,10 +57,13 @@ This document records the core protocol invariants BERT is expected to preserve 
 
 ## Milestone Review Invariants
 
-1. a reviewer cannot count twice in the same active milestone request
+1. each eligible V2.3 backer has one counted weighted position; changing it replaces the old position; legacy reviewers cannot count twice
 2. rejected proof must respect cooldown before resubmission
 3. inactive or already-settled requests must not reopen payout accidentally
 4. stage ordering must be preserved
+5. a claim, submission, review, or grant-expiry deadline cannot be bypassed after its configured window closes
+6. a V2 round's milestone mode is fixed at start; legacy reviewer writes cannot authorize V2.3 releases
+7. V2.3 releases require 40% quorum, exact two-thirds weighted approval and three eligible approvers; V3.1 instead uses 6,667 bps approval and max(3, ceil(3% of eligible supporters)) addresses
 
 ## Upgrade Invariants
 

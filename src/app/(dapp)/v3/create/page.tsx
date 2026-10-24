@@ -1,5 +1,9 @@
 "use client";
 
+import { communityRouteKey } from "@/lib/community-reference";
+
+import { communityCreationContext, assertCommunityCreator, matchesCommunityCreator, type CommunityCreationContext } from "@/lib/community-creation";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaArrowRight, FaCircleInfo, FaRocket } from "react-icons/fa6";
@@ -128,9 +132,12 @@ function linkCommunityHubBytecode(library: Address) {
 }
 
 export default function CreateCommunityPage() {
-  const { address, isConnected } = useAccount();
+  const { address, chainId, isConnected } = useAccount();
+  const [creationContext, setCreationContext] = useState<CommunityCreationContext | null>(null);
+  const creatorMatches = !creationContext || matchesCommunityCreator(creationContext, address, chainId);
   const { data: isVerifiedHuman } = useReadContract({
     address: contracts.popVerifier,
+    chainId,
     abi: popVerifierAbi,
     functionName: "isVerifiedHuman",
     args: address ? [address] : undefined,
@@ -143,20 +150,23 @@ export default function CreateCommunityPage() {
   const [error, setError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<{
     id: bigint;
+    factory: Address;
     treasury: Address;
   } | null>(null);
   const [hub, setHub] = useState<Address | null>(null);
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
   const reserve = useWriteContract();
-  const reserveReceipt = useWaitForTransactionReceipt({ hash: reserve.data });
+  const reserveReceipt = useWaitForTransactionReceipt({ hash: reserve.data, chainId: creationContext?.chainId });
   const deploy = useDeployContract();
-  const deployReceipt = useWaitForTransactionReceipt({ hash: deploy.data });
+  const deployReceipt = useWaitForTransactionReceipt({ hash: deploy.data, chainId: creationContext?.chainId });
   const activate = useWriteContract();
   const activationReceipt = useWaitForTransactionReceipt({
     hash: activate.data,
+    chainId: creationContext?.chainId,
   });
   const busy =
     reserve.isPending ||
+    reserveReceipt.isLoading ||
     deploy.isPending ||
     deployReceipt.isLoading ||
     activate.isPending ||
@@ -174,18 +184,19 @@ export default function CreateCommunityPage() {
   };
 
   useEffect(() => {
-    if (!reserveReceipt.isSuccess || !reserveReceipt.data || reservation)
+    if (!reserveReceipt.isSuccess || !reserveReceipt.data || reservation || !creationContext)
       return;
     try {
       const event = parseEventLogs({
         abi: communityFactoryAbi,
         eventName: "CommunityTreasuryCreated",
-        logs: reserveReceipt.data.logs,
+        logs: reserveReceipt.data.logs.filter((log) => log.address.toLowerCase() === creationContext.factory.toLowerCase()),
       }).at(-1);
       if (!event?.args.communityId || !event.args.treasury)
         throw new Error("Factory reservation event was not found.");
       setReservation({
         id: event.args.communityId,
+        factory: creationContext.factory,
         treasury: event.args.treasury,
       });
     } catch (reason) {
@@ -195,7 +206,7 @@ export default function CreateCommunityPage() {
           : "Could not read Factory receipt.",
       );
     }
-  }, [reservation, reserveReceipt.data, reserveReceipt.isSuccess]);
+  }, [creationContext, reservation, reserveReceipt.data, reserveReceipt.isSuccess]);
   useEffect(() => {
     if (deployReceipt.isSuccess && deployReceipt.data?.contractAddress && !hub)
       setHub(deployReceipt.data.contractAddress);
@@ -281,13 +292,18 @@ export default function CreateCommunityPage() {
   };
   const reserveTreasury = () => {
     try {
-      if (!communityContracts.factory)
-        throw new Error("Set NEXT_PUBLIC_V3_FACTORY_ADDRESS.");
+      const context = communityCreationContext({
+        creator: address, chainId, factory: communityContracts.factory,
+        adminActionsLibrary: communityContracts.adminActionsLibrary,
+      });
       const next = build();
+      setCreationContext(context);
       setConfig(next);
       setError(null);
       reserve.writeContract({
-        address: communityContracts.factory,
+        address: context.factory,
+        chainId: context.chainId,
+        account: context.creator,
         abi: communityFactoryAbi,
         functionName: "createCommunity",
         args: [next],
@@ -299,28 +315,37 @@ export default function CreateCommunityPage() {
     }
   };
   const deployHub = () => {
-    if (
-      reservation &&
-      config &&
-      address &&
-      communityContracts.adminActionsLibrary
-    )
+    try {
+      assertCommunityCreator(creationContext, address, chainId);
+      if (!reservation || !config) throw new Error("Reserve a Treasury first.");
+      setError(null);
       deploy.deployContract({
+        account: creationContext.creator,
+        chainId: creationContext.chainId,
         abi: communityHubArtifact.abi,
-        bytecode: linkCommunityHubBytecode(
-          communityContracts.adminActionsLibrary,
-        ),
-        args: [config, reservation.treasury, address],
+        bytecode: linkCommunityHubBytecode(creationContext.adminActionsLibrary),
+        args: [config, reservation.treasury, creationContext.creator],
       } as never);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not deploy reserved Hub.");
+    }
   };
   const activateHub = () => {
-    if (reservation && hub && communityContracts.factory)
+    try {
+      assertCommunityCreator(creationContext, address, chainId);
+      if (!reservation || !hub) throw new Error("Deploy the reserved Hub first.");
+      setError(null);
       activate.writeContract({
-        address: communityContracts.factory,
+        account: creationContext.creator,
+        chainId: creationContext.chainId,
+        address: creationContext.factory,
         abi: communityFactoryAbi,
         functionName: "activateCommunity",
         args: [reservation.id, hub],
       });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not activate reserved Hub.");
+    }
   };
   if (!communityContracts.factory || !communityContracts.adminActionsLibrary)
     return (
@@ -537,6 +562,7 @@ export default function CreateCommunityPage() {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200">
               Deploy
             </p>
+            {creationContext && !creatorMatches ? <p role="alert" className="mt-3 text-sm text-amber-200">Switch back to {shortAddress(creationContext.creator)} on chain {creationContext.chainId} to continue this reservation. Its Treasury, Factory and configuration have been preserved.</p> : null}
             <div className="mt-4 space-y-3">
               <Action
                 label="1. Reserve Treasury"
@@ -556,7 +582,7 @@ export default function CreateCommunityPage() {
                     : "Deploy exact reserved configuration."
                 }
                 run={deployHub}
-                disabled={busy || !reservation || Boolean(hub)}
+                disabled={busy || !creatorMatches || !reservation || Boolean(hub)}
               />
               <Action
                 label="3. Activate"
@@ -566,12 +592,12 @@ export default function CreateCommunityPage() {
                     : "Factory verifies Hub and Treasury."
                 }
                 run={activateHub}
-                disabled={busy || !hub || activationReceipt.isSuccess}
+                disabled={busy || !creatorMatches || !hub || activationReceipt.isSuccess}
               />
             </div>
             {activationReceipt.isSuccess && reservation ? (
               <Link
-                href={`/v3/communities/${reservation.id}`}
+                href={`/v3/communities/${communityRouteKey(reservation.factory, reservation.id)}`}
                 className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2.5 text-sm font-bold text-slate-950"
               >
                 Open community <FaArrowRight />

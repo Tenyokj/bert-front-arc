@@ -32,7 +32,7 @@ export default function SiteFooter() {
             Terms of Use
           </Link>
           <Link className="footer-link" href="/v3">
-            V3.1 Communities
+            Communities
           </Link>
           <a className="footer-link" href="https://bertdao-console.vercel.app/" target="_blank" rel="noreferrer">
             BERT Console Beta
@@ -71,7 +71,7 @@ export default function SiteFooter() {
               Reputation Layer
             </a>
             <Link className="footer-link" href="/v3">
-              V3.1 Community Layer
+              Community Layer
             </Link>
             <a className="footer-link" href="https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/UPGRADES.md">
               Upgrade Modules

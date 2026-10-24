@@ -27,7 +27,8 @@ Recommended high-level order:
 3. deploy treasury and proposal registry
 4. deploy voting system
 5. deploy grant manager
-6. deploy any test or faucet utilities
+6. deploy optional verified-human verifier
+7. deploy any test or faucet utilities
 
 ## Wiring Order
 
@@ -37,6 +38,8 @@ After deployment, set or validate:
 - idea registry dependency in voting and grant flows
 - reputation system dependency
 - voter progression dependency
+- verified-human verifier address in voting, if human-only voting is enabled
+- trusted signer in the verifier, if PoP attestations are used
 
 ## Role Assignment Order
 
@@ -59,10 +62,15 @@ Validate:
 - dependency addresses in each module
 - system role assignments
 - core parameters such as stake and duration values
+- verified-human parameters such as `humanOnlyVoting`, `humanVerifier`, and `maxVoteAmount`
+- verifier signer settings such as `trustedSigner`
 
 Recommended smoke tests:
 - create idea
 - start round
-- vote
+- verify a wallet through the configured human-verification flow
+- vote with a verified wallet
+- confirm an unverified wallet cannot vote when `humanOnlyVoting = true`
+- confirm a vote above `maxVoteAmount` reverts
 - end round
 - check claimability

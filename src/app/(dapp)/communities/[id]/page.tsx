@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveCommunityReference } from "@/lib/community-reference";
+
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useParams, usePathname } from "next/navigation";
@@ -9,7 +11,6 @@ import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteCont
 
 import { AddressIdentity } from "@/components/AddressIdentity";
 import {
-  communityContracts,
   communityFactoryAbi,
   communityHubAbi,
   communityMembershipModuleAbi,
@@ -121,7 +122,9 @@ export default function CommunityDetailsPage() {
   const { data: txHash, error: transactionError, isPending, writeContract } = useWriteContract();
   const sendTransaction = writeContract as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
-  const communityId = Number(params?.id);
+  const reference = resolveCommunityReference(String(params?.id ?? ""), client?.chain?.id);
+  const communityId = reference?.id ?? 0;
+  const factory = reference?.factory;
   const hubAddress = deployment?.hub !== zeroAddress ? deployment?.hub : undefined;
   const communityIndexPath = pathname.startsWith("/v3") ? "/v3/communities" : "/communities";
 
@@ -133,18 +136,19 @@ export default function CommunityDetailsPage() {
     let cancelled = false;
 
     async function loadCommunity() {
-      if (!client || !communityContracts.factory || !Number.isInteger(communityId) || communityId <= 0) {
+      if (!client || !factory || !Number.isInteger(communityId) || communityId <= 0) {
         if (!cancelled) setLoading(false);
         return;
       }
 
       setLoading(true);
       setError(null);
+      setDeployment(null);
       try {
         const read = (config: Record<string, unknown>) =>
           (client as { readContract: (arg: Record<string, unknown>) => Promise<unknown> }).readContract(config);
         const row = (await read({
-          address: communityContracts.factory,
+          address: factory,
           abi: communityFactoryAbi,
           functionName: "getCommunity",
           args: [BigInt(communityId)],
@@ -276,7 +280,7 @@ export default function CommunityDetailsPage() {
 
     void loadCommunity();
     return () => { cancelled = true; };
-  }, [address, client, communityId, refreshKey]);
+  }, [address, client, communityId, factory, refreshKey]);
 
   const approveEntryStake = () => {
     if (!treasury || !hub) return;
@@ -377,7 +381,7 @@ export default function CommunityDetailsPage() {
   });
   const executeWithdrawal = (requestId: number) => deployment && sendTransaction({ address: deployment.treasury as `0x${string}`, abi: communityTreasuryAbi, functionName: "executeWithdrawal", args: [BigInt(requestId)] });
 
-  if (!communityContracts.factory) return <p className="rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">Set <code>NEXT_PUBLIC_V3_FACTORY_ADDRESS</code> to open Community Layer data.</p>;
+  if (!factory) return <p className="rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">Unknown Community reference or unsupported network. Open a Factory-specific link from the directory.</p>;
   if (loading) return <p className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-sm text-slate-300">Loading community governance state...</p>;
   if (error || !deployment) return <p className="rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error ?? "Community not found."}</p>;
   if (deployment.hub === zeroAddress) return <section className="rounded-[28px] border border-amber-300/20 bg-[#2a2d3b] p-6 sm:p-8"><Link href={communityIndexPath} className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"><FaArrowLeft /> Communities</Link><h1 className="mt-5 font-[var(--font-display)] text-4xl text-white">Community #{communityId} is waiting for activation.</h1><p className="mt-4 max-w-2xl text-slate-300">A Treasury has been reserved, but its creator has not yet deployed and activated the matching CommunityHub.</p></section>;

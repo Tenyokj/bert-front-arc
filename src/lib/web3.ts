@@ -1,4 +1,5 @@
-import { connectorsForWallets, getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { createConfig } from "wagmi";
 import {
   coinbaseWallet,
   metaMaskWallet,
@@ -95,12 +96,7 @@ const connectors = connectorsForWallets(
   }
 );
 
-export const web3Config = getDefaultConfig({
-  appName: "BERT",
-  appDescription: "Programmable USDC-native funding infrastructure on Arc.",
-  appUrl: "https://bertdao.vercel.app",
-  appIcon: "/bert-logo.png",
-  projectId: effectiveWalletConnectProjectId,
+export const web3Config = createConfig({
   chains: [...supportedChains],
   connectors,
   transports: {

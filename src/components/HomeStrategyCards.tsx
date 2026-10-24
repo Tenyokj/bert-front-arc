@@ -1,5 +1,7 @@
 "use client";
 
+import { distributionAmount } from "@/lib/contract-results";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
@@ -120,10 +122,7 @@ export function HomeStrategyCards() {
             )
           );
 
-          const paidOut = distributions.reduce((sum, distribution) => {
-            if (!distribution) return sum;
-            return sum + (distribution as readonly [bigint, bigint, bigint, bigint])[2];
-          }, 0n);
+          const paidOut = distributions.reduce<bigint>((sum, distribution) => sum + (distributionAmount(distribution) ?? 0n), 0n);
 
           if (!cancelled) {
             setStats((prev) => ({ ...prev, paidOutTotal: paidOut }));

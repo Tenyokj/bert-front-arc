@@ -81,7 +81,7 @@ Expected acquisition path:
 
 ### `REVIEWER_ROLE`
 Purpose:
-- allows reviewing ideas and milestone proof requests
+- allows reviewing ideas and legacy-round milestone proof requests; it does not authorize V2.3 winning-backer milestone votes
 
 Expected acquisition path:
 - earned through winning-vote progression
@@ -133,7 +133,7 @@ Expected target:
 ## Trust and Abuse Considerations
 
 1. misgranted system roles can break protocol integrity immediately
-2. misgranted reviewer roles can distort milestone release quality
+2. misgranted reviewer roles can distort idea signals and legacy milestone review; V2.3 release authority belongs to the eligible winning pledge cohort
 3. misgranted curator roles can grief legitimate proposals
 4. `AUTO_GRANT_ROLE` is sensitive because it affects earned authority pathways
 5. admin override remains necessary operationally, but increases trust assumptions

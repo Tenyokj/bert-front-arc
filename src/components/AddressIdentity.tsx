@@ -63,12 +63,12 @@ export function AddressIdentity({ address, className }: AddressIdentityProps) {
         <span className="rounded-full border border-cyan-300/40 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-semibold text-cyan-200">
           REP: {isRepInitialized ? String(reputation ?? 0n) : "0"}
         </span>
-        {isReviewer && (
+        {isReviewer === true && (
           <span className="rounded-full border border-indigo-300/45 bg-indigo-500/10 px-2 py-0.5 text-[11px] font-semibold text-indigo-200">
             Reviewer
           </span>
         )}
-        {isCurator && (
+        {isCurator === true && (
           <span className="rounded-full border border-emerald-300/45 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
             Curator
           </span>

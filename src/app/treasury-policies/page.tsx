@@ -155,9 +155,17 @@ export default function TreasuryPoliciesPage() {
                 Funding Pool and Grant Manager split responsibilities so pledge custody and payout logic are not mixed in one contract.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                After payout, project delivery should be closed by author completion marker. This links financial execution with delivery accountability,
-                reducing ambiguity in grant lifecycle reporting.
+                In V2.3, the approved completion milestone and its actual payout mark the idea Completed. A separate author-only completion marker is not the authority for releasing escrow.
               </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Community Treasury Is a Separate Rail</h2>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                V3.1 keeps proposal execution reserves, supporter refunds, validator rewards and free execution balance separate. Original deployed Managers release the initial 20% at settlement and later 40% tranches after supporter review.
+                The source-only Manager 2.0.0 follow-up requires fresh Admin quorum for every payment, excludes the execution recipient from proof review, and refunds the entire unpaid execution budget after payment expiry. It has not been deployed and does not change old Communities.
+              </p>
+              <Link href="/docs/V3.1-TRANCHE-QUORUM.md" className="text-sm font-semibold text-teal-600 underline">Read the pending payment-policy specification</Link>
             </section>
 
             <section id="reserves" className="space-y-4">
