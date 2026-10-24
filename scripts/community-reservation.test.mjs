@@ -70,11 +70,54 @@ test("changing any immutable configuration field cannot recover an incompatible 
   }
 });
 
-test("creation UI offers read-only recovery and blocks resubmission after already-known", () => {
+test("creation UI loads confirmed calldata, locks original settings and blocks duplicate reservation", () => {
   const page = readFileSync(new URL("../src/app/(dapp)/v3/create/page.tsx", import.meta.url), "utf8");
   assert.match(page, /busy \|\| reservation \|\| alreadyKnown/);
-  assert.match(page, /recoverCommunityReservation\(recoveryClient, context/);
+  assert.match(page, /resumeCommunityReservation\(recoveryClient, context/);
   assert.match(page, /assertCommunityCreator\(context, address, chainId\)/);
-  assert.match(page, /Recover Treasury \(read-only\)/);
-  assert.match(page, /setConfig\(snapshot\)/);
+  assert.match(page, /Load original setup \(read-only\)/);
+  assert.match(page, /setConfig\(result.config\)/);
+  assert.match(page, /setForm\(reservedForm\(result.config\)\)/);
+  assert.match(page, /fieldset disabled=\{Boolean\(reservation\) \|\| busy\}/);
+  assert.match(page, /<details open=\{alreadyKnown \|\| undefined\}/);
+});
+
+const hash = `0x${"11".repeat(32)}`;
+const blockHash = `0x${"22".repeat(32)}`;
+function transactionClient(overrides = {}) {
+  const event = contracts.communityFactoryAbi.find((item) => item.name === "CommunityTreasuryCreated");
+  const log = {
+    address: context.factory,
+    topics: viem.encodeEventTopics({ abi: [event], eventName: event.name, args: { communityId: 1n, creator: context.creator } }),
+    data: viem.encodeAbiParameters(event.inputs.filter((input) => !input.indexed), [treasury, api.communityConfigHash(config), config.name, config.metadataURI]),
+    transactionHash: hash, blockHash, blockNumber: 1n, transactionIndex: 0, logIndex: 0, removed: false,
+  };
+  return {
+    ...client(overrides),
+    async getTransaction() {
+      return { hash, from: context.creator, to: context.factory, blockHash, input: viem.encodeFunctionData({ abi: contracts.communityFactoryAbi, functionName: "createCommunity", args: [config] }), ...overrides.transaction };
+    },
+    async getTransactionReceipt() {
+      return { transactionHash: hash, blockHash, status: "success", logs: [log], ...overrides.receipt };
+    },
+  };
+}
+
+test("resume decodes all original config fields from confirmed transaction, independent of the current form", async () => {
+  const result = await api.resumeCommunityReservation(transactionClient(), context, hash);
+  const decodedConfig = Object.fromEntries(Object.entries(config).map(([key, value]) => [key,
+    Array.isArray(value) ? value.map((address) => viem.getAddress(address)) : typeof value === "string" && viem.isAddress(value) ? viem.getAddress(value) : value,
+  ]));
+  assert.deepEqual(result, { id: 1n, factory: context.factory, treasury, config: decodedConfig });
+});
+
+test("resume rejects pending/reverted transactions, wrong wallet/Factory, inconsistent receipts and missing events", async () => {
+  for (const overrides of [
+    { chainId: 31337 }, { transaction: { from: treasury } }, { transaction: { to: treasury } },
+    { transaction: { blockHash: null } }, { receipt: { status: "reverted" } },
+    { receipt: { blockHash: hash } }, { receipt: { transactionHash: blockHash } },
+    { receipt: { logs: [] } },
+    { transaction: { input: viem.encodeFunctionData({ abi: contracts.communityFactoryAbi, functionName: "activateCommunity", args: [1n, treasury] }) } },
+  ]) await assert.rejects(api.resumeCommunityReservation(transactionClient(overrides), context, hash));
+  await assert.rejects(api.resumeCommunityReservation(transactionClient(), context, "1"));
 });

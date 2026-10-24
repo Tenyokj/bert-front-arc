@@ -1,14 +1,14 @@
 "use client";
 
 import { communityRouteKey } from "@/lib/community-reference";
-import { isAlreadyKnownTransaction, recoverCommunityReservation } from "@/lib/community-reservation";
+import { isAlreadyKnownTransaction, resumeCommunityReservation, type ReservedCommunityConfig } from "@/lib/community-reservation";
 
 import { communityCreationContext, assertCommunityCreator, matchesCommunityCreator, type CommunityCreationContext } from "@/lib/community-creation";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaArrowRight, FaCircleInfo, FaRocket } from "react-icons/fa6";
-import { isAddress, parseEventLogs, parseUnits, type Address } from "viem";
+import { formatUnits, isAddress, parseEventLogs, parseUnits, type Address, type Hash } from "viem";
 import {
   useAccount,
   useDeployContract,
@@ -107,6 +107,22 @@ const whole = (value: string, name: string) => {
 const minutes = (value: string, name: string) => whole(value, name) * 60n;
 const days = (value: string, name: string) => whole(value, name) * 86_400n;
 
+function reservedForm(config: ReservedCommunityConfig): Form {
+  const duration = (seconds: bigint, unit: bigint) => formatUnits(seconds * 10n ** 18n / unit, 18);
+  return {
+    name: config.name, metadataURI: config.metadataURI, executionRecipient: config.executionRecipient,
+    entryStake: formatUnits(config.entryStakeUSDC, 6), proposalBond: formatUnits(config.proposalBondUSDC, 6),
+    voteMinStake: formatUnits(config.voteMinStakeUSDC, 6),
+    exitCooldownMinutes: duration(config.membershipExitCooldown, 60n),
+    validatorThreshold: String(config.validatorApprovalThreshold), adminThreshold: String(config.adminApprovalThreshold),
+    validatorPointsThreshold: String(config.validatorProposalPointsThreshold), rejectionFeeBps: String(config.binaryRejectionFeeBps),
+    validatorRewardBps: String(config.validatorRewardShareBps), validatorActivityBps: String(config.validatorActiveThresholdBps),
+    validationMinutes: duration(config.validationWindow, 60n), binaryVotingMinutes: duration(config.binaryVotingDuration, 60n),
+    roundVotingMinutes: duration(config.roundVotingDuration, 60n), rewardEpochMinutes: duration(config.validatorRewardEpoch, 60n),
+    milestoneReviewDays: duration(config.milestoneReviewDuration, 86_400n), milestoneProofMinutes: duration(config.milestoneProofDuration, 60n),
+  };
+}
+
 /** Replaces Hardhat library placeholders with the deployed V3 Admin-actions library address. */
 function linkCommunityHubBytecode(library: Address) {
   const artifact = communityHubArtifact as typeof communityHubArtifact & {
@@ -150,7 +166,7 @@ export default function CreateCommunityPage() {
   const [admins, setAdmins] = useState<Address[]>([]);
   const [validators, setValidators] = useState<Address[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [recoveryId, setRecoveryId] = useState("");
+  const [resumeHash, setResumeHash] = useState("");
   const [recovering, setRecovering] = useState(false);
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [reservation, setReservation] = useState<{
@@ -334,13 +350,16 @@ export default function CreateCommunityPage() {
       });
       assertCommunityCreator(context, address, chainId);
       if (!recoveryClient) throw new Error("Connect the creator wallet on the reservation network.");
-      const snapshot = config ?? build();
-      const result = await recoverCommunityReservation(recoveryClient, context, whole(recoveryId, "Reservation ID"), snapshot);
+      const result = await resumeCommunityReservation(recoveryClient, context, resumeHash.trim() as Hash);
       setCreationContext(context);
-      setConfig(snapshot);
-      setReservation(result);
+      setConfig(result.config);
+      setForm(reservedForm(result.config));
+      setAdmins([...result.config.initialAdmins]);
+      setValidators([...result.config.initialValidators]);
+      setTimingPreset("custom");
+      setReservation({ id: result.id, factory: result.factory, treasury: result.treasury });
       reserve.reset();
-      setRecoveryNotice(`Confirmed reservation #${result.id}: Treasury recovered without sending a transaction. Continue with Deploy Hub using the original configuration.`);
+      setRecoveryNotice(`Community #${result.id}: original settings loaded and Treasury confirmed. No transaction was sent. Continue with Deploy Hub.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not recover the reservation.");
     } finally {
@@ -408,7 +427,7 @@ export default function CreateCommunityPage() {
         </p>
       ) : (
         <>
-          <div className="grid gap-6 xl:grid-cols-2">
+          <fieldset disabled={Boolean(reservation) || busy} className="grid gap-6 xl:grid-cols-2">
             <div className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-6">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
                 Identity & roles
@@ -590,7 +609,7 @@ export default function CreateCommunityPage() {
                 />
               </div>
             </div>
-          </div>
+          </fieldset>
           <div className="rounded-[28px] border border-cyan-300/18 bg-[linear-gradient(145deg,rgba(8,47,73,0.45),rgba(42,45,59,0.96))] p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200">
               Deploy
@@ -628,14 +647,14 @@ export default function CreateCommunityPage() {
                 disabled={busy || !creatorMatches || !hub || activationReceipt.isSuccess}
               />
             </div>
-            {!reservation && isConnected ? <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4">
-              <p className="text-sm font-semibold text-amber-100">Already submitted Reserve Treasury?</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">Do not send another reservation after an RPC error. Enter the Community ID from the Factory transaction. Recovery checks the creator, network and exact original configuration with read-only calls. After a refresh, restore every original form value first.</p>
+            {!reservation && isConnected ? <details open={alreadyKnown || undefined} className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Continue an unfinished Community setup</summary>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">Paste the confirmed Reserve Treasury transaction hash from wallet activity. We will load its original settings and verify the Treasury. No need to fill the form again, connect another wallet or send another reservation.</p>
               <div className="mt-3 flex flex-wrap items-end gap-3">
-                <label className="text-sm text-slate-300">Reservation ID<input aria-label="Reservation ID" inputMode="numeric" value={recoveryId} onChange={(event) => setRecoveryId(event.target.value)} className="mt-1 block w-40 rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 text-white" /></label>
-                <button type="button" disabled={busy || !creatorMatches || !recoveryId} onClick={recoverTreasury} className="rounded-xl border border-cyan-300/30 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{recovering ? "Checking reservation..." : "Recover Treasury (read-only)"}</button>
+                <label className="min-w-0 flex-1 text-sm text-slate-300">Reservation transaction hash<input aria-label="Reservation transaction hash" value={resumeHash} onChange={(event) => setResumeHash(event.target.value)} placeholder="0x..." className="mt-1 block w-full min-w-48 rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 font-mono text-white" /></label>
+                <button type="button" disabled={busy || !creatorMatches || !resumeHash.trim()} onClick={recoverTreasury} className="rounded-xl border border-cyan-300/30 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{recovering ? "Loading original setup..." : "Load original setup (read-only)"}</button>
               </div>
-            </div> : null}
+            </details> : null}
             {alreadyKnown ? <p role="status" className="mt-4 text-sm text-amber-100">The RPC reports that this transaction is already known. It may already be confirmed; this is not proof of a contract revert. Check wallet activity and recover its reservation instead of sending another transaction.</p> : null}
             {recoveryNotice ? <p role="status" className="mt-4 text-sm text-cyan-100">{recoveryNotice}</p> : null}
             {activationReceipt.isSuccess && reservation ? (
