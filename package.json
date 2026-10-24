@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test": "node --test scripts/*.test.mjs",
+    "test:e2e": "node scripts/e2e/run-local.mjs",
     "test:community-routing": "node --test scripts/community-reference.test.mjs",
     "sync:core-docs": "node scripts/sync-core-docs.mjs",
     "sync:v2-artifacts": "node scripts/sync-v2-artifacts.mjs",
@@ -34,6 +35,7 @@
     "zod@>=4.0.0 <4.6.6": "4.6.6"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -38,7 +38,9 @@ export function BinaryLifecycleActions({
     : 0n;
 
   useEffect(() => {
-    if (receipt.isSuccess) window.setTimeout(() => window.location.reload(), 400);
+    if (!receipt.isSuccess) return;
+    const timer = window.setTimeout(() => window.location.reload(), 400);
+    return () => window.clearTimeout(timer);
   }, [receipt.isSuccess]);
 
   if (status === 2 && isAdmin) {
