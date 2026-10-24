@@ -147,6 +147,7 @@ const validatorRewardEpoch = {
 export const communityFactoryAbi = [
   { type: "event", anonymous: false, name: "CommunityTreasuryCreated", inputs: [{ indexed: true, name: "communityId", type: "uint256" }, { indexed: true, name: "creator", type: "address" }, { indexed: false, name: "treasury", type: "address" }, { indexed: false, name: "configHash", type: "bytes32" }, { indexed: false, name: "name", type: "string" }, { indexed: false, name: "metadataURI", type: "string" }] },
   { type: "function", stateMutability: "view", name: "communityCount", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", stateMutability: "view", name: "configHashByCommunityId", inputs: [{ name: "communityId", type: "uint256" }], outputs: [{ type: "bytes32" }] },
   { type: "function", stateMutability: "view", name: "getCommunity", inputs: [{ name: "communityId", type: "uint256" }], outputs: [communityDeployment] },
   { type: "function", stateMutability: "view", name: "getCreatorCommunityIds", inputs: [{ name: "creator", type: "address" }], outputs: [{ type: "uint256[]" }] },
   { type: "function", stateMutability: "view", name: "isActiveCommunityTreasury", inputs: [{ name: "treasury", type: "address" }], outputs: [{ type: "bool" }] },

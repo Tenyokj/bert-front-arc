@@ -1,6 +1,7 @@
 "use client";
 
 import { communityRouteKey } from "@/lib/community-reference";
+import { isAlreadyKnownTransaction, recoverCommunityReservation } from "@/lib/community-reservation";
 
 import { communityCreationContext, assertCommunityCreator, matchesCommunityCreator, type CommunityCreationContext } from "@/lib/community-creation";
 
@@ -11,6 +12,7 @@ import { isAddress, parseEventLogs, parseUnits, type Address } from "viem";
 import {
   useAccount,
   useDeployContract,
+  usePublicClient,
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -148,6 +150,9 @@ export default function CreateCommunityPage() {
   const [admins, setAdmins] = useState<Address[]>([]);
   const [validators, setValidators] = useState<Address[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [recoveryId, setRecoveryId] = useState("");
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [reservation, setReservation] = useState<{
     id: bigint;
     factory: Address;
@@ -156,6 +161,8 @@ export default function CreateCommunityPage() {
   const [hub, setHub] = useState<Address | null>(null);
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
   const reserve = useWriteContract();
+  const recoveryClient = usePublicClient({ chainId });
+  const alreadyKnown = isAlreadyKnownTransaction(reserve.error);
   const reserveReceipt = useWaitForTransactionReceipt({ hash: reserve.data, chainId: creationContext?.chainId });
   const deploy = useDeployContract();
   const deployReceipt = useWaitForTransactionReceipt({ hash: deploy.data, chainId: creationContext?.chainId });
@@ -165,6 +172,7 @@ export default function CreateCommunityPage() {
     chainId: creationContext?.chainId,
   });
   const busy =
+    recovering ||
     reserve.isPending ||
     reserveReceipt.isLoading ||
     deploy.isPending ||
@@ -291,6 +299,7 @@ export default function CreateCommunityPage() {
     };
   };
   const reserveTreasury = () => {
+    if (busy || reservation || alreadyKnown) return;
     try {
       const context = communityCreationContext({
         creator: address, chainId, factory: communityContracts.factory,
@@ -312,6 +321,30 @@ export default function CreateCommunityPage() {
       setError(
         reason instanceof Error ? reason.message : "Invalid configuration.",
       );
+    }
+  };
+  const recoverTreasury = async () => {
+    if (busy || reservation) return;
+    setRecovering(true);
+    setError(null);
+    try {
+      const context = creationContext ?? communityCreationContext({
+        creator: address, chainId, factory: communityContracts.factory,
+        adminActionsLibrary: communityContracts.adminActionsLibrary,
+      });
+      assertCommunityCreator(context, address, chainId);
+      if (!recoveryClient) throw new Error("Connect the creator wallet on the reservation network.");
+      const snapshot = config ?? build();
+      const result = await recoverCommunityReservation(recoveryClient, context, whole(recoveryId, "Reservation ID"), snapshot);
+      setCreationContext(context);
+      setConfig(snapshot);
+      setReservation(result);
+      reserve.reset();
+      setRecoveryNotice(`Confirmed reservation #${result.id}: Treasury recovered without sending a transaction. Continue with Deploy Hub using the original configuration.`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not recover the reservation.");
+    } finally {
+      setRecovering(false);
     }
   };
   const deployHub = () => {
@@ -572,7 +605,7 @@ export default function CreateCommunityPage() {
                     : "Creates isolated Treasury."
                 }
                 run={reserveTreasury}
-                disabled={busy || Boolean(reservation) || !isVerifiedHuman}
+                disabled={busy || Boolean(reservation) || alreadyKnown || !isVerifiedHuman}
               />
               <Action
                 label="2. Deploy Hub"
@@ -595,6 +628,16 @@ export default function CreateCommunityPage() {
                 disabled={busy || !creatorMatches || !hub || activationReceipt.isSuccess}
               />
             </div>
+            {!reservation && isConnected ? <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4">
+              <p className="text-sm font-semibold text-amber-100">Already submitted Reserve Treasury?</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">Do not send another reservation after an RPC error. Enter the Community ID from the Factory transaction. Recovery checks the creator, network and exact original configuration with read-only calls. After a refresh, restore every original form value first.</p>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <label className="text-sm text-slate-300">Reservation ID<input aria-label="Reservation ID" inputMode="numeric" value={recoveryId} onChange={(event) => setRecoveryId(event.target.value)} className="mt-1 block w-40 rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 text-white" /></label>
+                <button type="button" disabled={busy || !creatorMatches || !recoveryId} onClick={recoverTreasury} className="rounded-xl border border-cyan-300/30 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{recovering ? "Checking reservation..." : "Recover Treasury (read-only)"}</button>
+              </div>
+            </div> : null}
+            {alreadyKnown ? <p role="status" className="mt-4 text-sm text-amber-100">The RPC reports that this transaction is already known. It may already be confirmed; this is not proof of a contract revert. Check wallet activity and recover its reservation instead of sending another transaction.</p> : null}
+            {recoveryNotice ? <p role="status" className="mt-4 text-sm text-cyan-100">{recoveryNotice}</p> : null}
             {activationReceipt.isSuccess && reservation ? (
               <Link
                 href={`/v3/communities/${communityRouteKey(reservation.factory, reservation.id)}`}
@@ -611,10 +654,10 @@ export default function CreateCommunityPage() {
                 Complete <Link href="/profile" className="font-semibold underline">human verification</Link> before reserving a Community.
               </p>
             )}
-      {error || reserve.error || deploy.error || activate.error ? (
+      {error || (!alreadyKnown && reserve.error) || deploy.error || activate.error ? (
         <p className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
           {error ??
-            reserve.error?.message ??
+            (!alreadyKnown ? reserve.error?.message : undefined) ??
             deploy.error?.message ??
             activate.error?.message}
         </p>
