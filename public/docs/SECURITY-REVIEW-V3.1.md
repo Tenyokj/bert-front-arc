@@ -3,6 +3,42 @@
 **Status:** internal Arc Testnet release review. This document is not an audit
 and does not claim that V3.1 is safe for mainnet use.
 
+## Reading the Counts: Whole Run Versus Changed Manager
+
+The saved **25 October 2026** correction-hotfix report contains **229 detector
+results** across the analyzed project, not 229 proven exploitable vulnerabilities:
+
+| Slither impact | Detector results |
+| --- | --- |
+| High | 6 |
+| Medium | 17 |
+| Low | 78 |
+| Informational | 117 |
+| Optimization | 11 |
+
+All six High results are `arbitrary-send-erc20`: two FundingPool pull functions
+and four CommunityTreasury deposit functions. The 17 Medium results consist of
+seven `reentrancy-no-eth` and ten `unused-return` results. Thirty results reference
+test mocks; findings can include several source elements, so these are not
+disjoint per-contract counts.
+
+**Only CommunityMilestoneManager:** one Low `calls-loop` result, Medium confidence,
+for `hasExecutionTrancheApproval` when called from `executeExecutionTranche`.
+It reads the fixed Hub's current Admin role and role-incarnation nonce for each
+address in the threshold-sized witness. These reads prevent stale approvals;
+removing them to silence the detector would weaken authorization. Worst-case
+quorum gas/liveness still deserves independent review. One Low in this contract
+must not be described as one Low in the entire protocol.
+
+This clarification re-read the saved report; it did not rerun Slither or prove
+every detector result unreachable. The raw local report is
+`/private/tmp/bert-v3-correction-slither-20261025.json`, SHA-256
+`13cb641b3ae7eabbc89594d8a487139b47e7d70d657c1a8eea8919b1e3492e35`.
+That temporary path is local evidence, not a portable release attachment.
+[Slither detector documentation](https://github.com/crytic/slither/wiki/Detector-Documentation)
+explains detector severity and confidence. Dependency `npm audit` findings concern
+Node/tooling packages and are tracked separately; neither report is a security certificate.
+
 ## 2026-10-25 V3.2 correction liveness finding and V3.2.1 rollout
 
 Local browser E2E and a targeted Manager characterization reproduced an expired
@@ -98,10 +134,12 @@ deployment failure and must never be described as a clean security pass.
 
 ### High: arbitrary-send-erc20
 
-Slither reports `safeTransferFrom` in V3.1 membership, proposal-bond and vote-escrow deposit functions. The tool cannot infer BERT's capability graph.
+Slither reports `safeTransferFrom` with a parameter-supplied `from` in four CommunityTreasury deposits and two V2 FundingPool pull functions. A public unguarded function of this shape would be dangerous; the access-control and caller-to-user binding must be reviewed rather than inferred from the detector label.
 
 **Current disposition: mitigated by access control, requires audit confirmation.**
 
+- V2 `depositAuthorStakeFrom` is `onlyIdeaRegistry nonReentrant`; IdeaRegistry passes its caller as `from`.
+- V2 `recordPledgeFrom` is `onlyVotingSystem nonReentrant`; VotingSystem passes its caller as `from`.
 - `depositMembershipStake` is callable only by the Factory-bound Membership module.
 - `depositProposalBond` is callable only by the Factory-bound Proposal module.
 - `depositVoteStake`, `depositRoundVoteStake`, and settlement functions are callable only by the Factory-bound Voting module.
@@ -123,10 +161,12 @@ Slither reports external calls before all local state writes in `join`, voting, 
 
 Residual risk: a non-standard ERC-20 can execute arbitrary callbacks during `transferFrom` or `transfer`. Regression tests now prove that callbacks cannot duplicate a Treasury vote escrow or overdraw an execution-plan tranche. Membership, Hub-level voting, settlement, and refund callbacks remain required external-audit targets.
 
-### Medium: bounded external calls in loops
+### Low: external calls in loops
 
-Slither reports external reads/calls in the Factory allowlist, Slate handling,
-and legacy V2 round loops.
+The saved report classifies `calls-loop` as Low. It reports external reads/calls
+in Factory authorization, Slate handling, V2 round loops and the Manager's quorum
+witness. Separate gas/loop-related detector categories must not be assigned this
+severity by analogy.
 
 **Current disposition: bounded by protocol configuration, requires audit confirmation.**
 
