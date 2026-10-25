@@ -1,6 +1,6 @@
 # BERT Contributor Testing Guide
 
-For the V3.2 Manager 2.0.0, also test the complete
+For the V3.2.1 Manager 2.0.1, also test the complete
 [Admin-tranche quorum flow](V3.2-TRANCHE-QUORUM.md): no automatic initial payout,
 fresh approvals per stage, current-role nonce validity, permissionless fixed
 payment, seven-active-day expiry, 100/80/40 unpaid-budget refunds, pause and
@@ -236,3 +236,9 @@ Next references:
 2. [V2.3-BACKER-MILESTONES-SPEC.md](V2.3-BACKER-MILESTONES-SPEC.md) for V2.3 policy.
 3. [SECURITY-REVIEW-V3.1.md](SECURITY-REVIEW-V3.1.md) for Slither triage.
 4. [OPERATIONS.md](OPERATIONS.md) and deployment scripts for release controls.
+
+V3.2.1 regression focus: reject after the initial proof window, wait through
+cooldown, submit within the new fixed correction window, and verify reopening
+cannot extend that deadline. Also expire an abandoned cooldown permissionlessly;
+assert only unpaid execution capital becomes refundable. Use a new Factory/Manager,
+not a historical immutable V3.2.0 Community, for the corrected pilot.

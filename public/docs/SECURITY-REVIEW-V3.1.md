@@ -3,6 +3,27 @@
 **Status:** internal Arc Testnet release review. This document is not an audit
 and does not claim that V3.1 is safe for mainnet use.
 
+## 2026-10-25 V3.2 correction liveness finding and V3.2.1 rollout
+
+Local browser E2E and a targeted Manager characterization reproduced an expired
+correction deadline: review + cooldown can outlast the original proof window,
+and reopening does not renew it. An absent executor can also leave the plan in
+`CorrectionCooldown`, where permissionless `failExpiredPlan` is unavailable.
+See [the finding and release implications](V3.2-CORRECTION-DEADLINE-FINDING.md).
+**Manager 2.0.1 is included in the new V3.2.1 infrastructure deployed on 25 October.**
+See [receipt-backed release evidence](V3.2.1-ARC-TESTNET-RELEASE.md). A fixed correction window is assigned at rejection and can expire
+without the executor reopening it. Targeted regressions: 16 passing; full core:
+237 passing. Existing immutable Manager instances remain affected.
+
+Fresh Slither analysis of the patched source completed: **94 contracts, 102
+detectors, 229 findings**, exit status 255 because findings exist. For the changed
+Manager the only reported item remains the Low `calls-loop` finding in bounded
+current-Admin authority reads; the added correction/expiry transitions add no
+Manager finding. This is not a clean audit. Runtime sizes after compilation:
+Manager 14,196 bytes, milestone deployer 17,680 bytes, Hub 18,833 bytes; all below
+the 24,576-byte EIP-170 limit. The Hub's initcode is 24,137 bytes before constructor
+arguments, below the 49,152-byte EIP-3860 limit.
+
 ## 2026-10-24 follow-up: execution-recipient conflict of interest
 
 **Historical V3.1 finding; fixed for newly created V3.2 Communities, still present in original immutable V3.1 instances.** V3.1 disallows

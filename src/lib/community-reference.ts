@@ -1,6 +1,7 @@
 import type { Address } from "viem";
 
 export const ORIGINAL_V31_FACTORY = "0xe16Cd61a21feA97393e6eEE3A7F7A26828021dD0" as Address;
+export const ORIGINAL_V32_FACTORY = "0xf793786BCecfbfE35a22E36180032b32BD5208Ba" as Address;
 const addressPattern = /^0x[a-fA-F0-9]{40}$/;
 const configuredChain = (process.env.NEXT_PUBLIC_DEFAULT_CHAIN || "arc").toLowerCase() === "hardhat" ? 31337 : 5042002;
 
@@ -9,7 +10,7 @@ export function getCommunityFactories(chainId = configuredChain): Address[] {
   if (chainId !== configuredChain) return [];
   const candidates = [process.env.NEXT_PUBLIC_V3_FACTORY_ADDRESS];
   if (chainId === 5042002) {
-    candidates.push(ORIGINAL_V31_FACTORY, ...(process.env.NEXT_PUBLIC_V3_LEGACY_FACTORY_ADDRESSES || "").split(","));
+    candidates.push(ORIGINAL_V31_FACTORY, ORIGINAL_V32_FACTORY, ...(process.env.NEXT_PUBLIC_V3_LEGACY_FACTORY_ADDRESSES || "").split(","));
   }
   return [...new Map(candidates.map((value) => value?.trim()).filter((value): value is Address => Boolean(value && addressPattern.test(value) && !/^0x0{40}$/i.test(value)))
     .map((value) => [value.toLowerCase(), value])).values()];

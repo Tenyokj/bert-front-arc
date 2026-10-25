@@ -8,8 +8,8 @@ an arbitrary execution wallet can. The pre-patch end-to-end characterization rep
 such a wallet supporting and approving its own execution plan; new regression tests
 now require rejection on the patched code. Use a non-participating
 Administration execution wallet for pilots; do not claim universal executor
-exclusion for those original instances. V3.2 Manager 2.0.0, deployed through the new Factory, separates review
-eligibility from financial refund rights. See [current deployment](V3.2-ARC-TESTNET-RELEASE.md).
+exclusion for those original instances. V3.2.1 Manager 2.0.1, deployed through the new Factory, separates review
+eligibility from financial refund rights. See [current deployment](V3.2.1-ARC-TESTNET-RELEASE.md).
 Handling existing immutable V3.1 Communities remains a separate operational task.
 
 This document records current protocol limitations and trust assumptions that should be stated explicitly.
@@ -41,3 +41,10 @@ Transparent protocol documentation should not imply that every risk has already 
 - contributors
 
 Understand the current maturity of the system honestly.
+
+## Historical correction liveness defect
+
+Original V3.2.0 Managers can leave correction unavailable or stuck in cooldown.
+V3.2.1 Manager 2.0.1 assigns a bounded deadline at rejection and permits
+permissionless expiry of overdue cooldowns. Existing immutable instances are
+not upgraded. See [the finding](V3.2-CORRECTION-DEADLINE-FINDING.md).

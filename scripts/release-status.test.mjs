@@ -23,12 +23,12 @@ test("current public entry points identify deployed V3.2, not a pending release"
 
 test("published release evidence and env distinguish new creation from retained history", () => {
   const env = read(".env.example");
-  assert.match(env, /NEXT_PUBLIC_V3_FACTORY_ADDRESS=0xf793786BCecfbfE35a22E36180032b32BD5208Ba/);
+  assert.match(env, /NEXT_PUBLIC_V3_FACTORY_ADDRESS=0x23E023E0D8B3436319BC6e5e72615Bc7A0c6234E/);
   assert.match(env, /NEXT_PUBLIC_V3_EVENT_FROM_BLOCK=66809847/);
-  assert.match(env, /bert-v-3-1-arc-testnet\/v3\.2\.0/);
-  const record = read("public/docs/V3.2-ARC-TESTNET-RELEASE.md");
-  assert.match(record, /68888068/);
-  assert.match(record, /68888345/);
+  assert.match(env, /bert-v-3-1-arc-testnet\/v3\.2\.1/);
+  const record = read("public/docs/V3.2.1-ARC-TESTNET-RELEASE.md");
+  assert.match(record, /69044184/);
+  assert.match(record, /69044535/);
   assert.match(record, /not upgraded/);
-  assert.match(read("public/docs/CURRENT-RELEASE.md"), /Current release: Community Layer V3\.2, deployed/);
+  assert.match(read("public/docs/CURRENT-RELEASE.md"), /Current release: Community Layer V3\.2\.1, deployed/);
 });

@@ -216,12 +216,12 @@ const sections: FaqSection[] = [
       {
         question: "What happens after a V3.2 proposal wins?",
         answer:
-          "A settled winner reserves its execution budget in CommunityTreasury. In deployed V3.2 Communities (Manager 2.0.0), all three 20/40/40 transfers require separate current Admin approvals; the two 40% stages first need winning-supporter proof approval. Each transfer has a seven-day active-time deadline. If it is not paid, the unpaid execution budget becomes refundable after permissionless expiry. Original live V3.1 Managers retain automatic transfers; a source update does not change an existing Community.",
+          "A settled winner reserves its execution budget in CommunityTreasury. In new V3.2.1 Communities (Manager 2.0.1), all three 20/40/40 transfers require separate current Admin approvals; the two 40% stages first need winning-supporter proof approval. Each transfer has a seven-day active-time deadline. If it is not paid, the unpaid execution budget becomes refundable after permissionless expiry. Original live V3.1 Managers retain automatic transfers; a source update does not change an existing Community.",
       },
       {
         question: "Who can review a V3.2 milestone?",
         answer:
-          "Only winning supporters can review: YES supporters for a Binary winner, or voters for the winning Slate proposal. Authors cannot vote for their own proposal. The V3.2 Manager 2.0.0 also rejects the execution recipient and excludes its weight/count from review thresholds while retaining its financial refund rights. The patch is not automatically applied to existing immutable Communities: original V3.1 managers retain the self-review gap. Check the plan's Manager and deployment status; use a non-participating Administration execution wallet for legacy pilots.",
+          "Only winning supporters can review: YES supporters for a Binary winner, or voters for the winning Slate proposal. Authors cannot vote for their own proposal. The V3.2 Manager 2.0.1 also rejects the execution recipient and excludes its weight/count from review thresholds while retaining its financial refund rights. The patch is not automatically applied to existing immutable Communities: original V3.1 managers retain the self-review gap. Check the plan's Manager and deployment status; use a non-participating Administration execution wallet for legacy pilots.",
       },
       {
         question: "What makes a milestone pass?",
@@ -236,7 +236,7 @@ const sections: FaqSection[] = [
       {
         question: "What if supporters reject a proof?",
         answer:
-          "A rejected first proof gives the execution recipient one correction path after a 48-hour Community-clock cooldown. The corrected proof is reviewed as a new attempt. A second rejection, or a missed proof deadline, fails the plan and converts the unreleased budget into winning-supporter refunds.",
+          "In V3.2.1 (Manager 2.0.1), first rejection fixes a correction deadline at rejection Community time + 48-hour cooldown + configured proof duration. Reopening cannot extend it; abandoned cooldowns can expire permissionlessly. Historical V3.2.0 Managers retain the earlier correction-deadline defect. The corrected proof is reviewed as a new attempt. A second rejection, or a missed proof deadline, fails the plan and converts the unreleased budget into winning-supporter refunds.",
       },
     ],
   },
