@@ -249,6 +249,10 @@ export const communityHubAbi = [
 
 /** Read-only surface of the modular V3 membership module deployed by each CommunityHub. */
 export const communityMembershipModuleAbi = [
+  { type: "event", anonymous: false, name: "AdminAdded", inputs: [{ indexed: true, name: "account", type: "address" }] },
+  { type: "event", anonymous: false, name: "AdminRemoved", inputs: [{ indexed: true, name: "account", type: "address" }] },
+  { type: "event", anonymous: false, name: "ValidatorAdded", inputs: [{ indexed: true, name: "account", type: "address" }] },
+  { type: "event", anonymous: false, name: "ValidatorRemoved", inputs: [{ indexed: true, name: "account", type: "address" }] },
   { type: "function", stateMutability: "view", name: "humanVerifier", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", stateMutability: "view", name: "entryStakeUSDC", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "membershipExitCooldown", inputs: [], outputs: [{ type: "uint256" }] },
@@ -318,6 +322,7 @@ const milestoneReview = {
 } as const;
 
 export const communityMilestoneAbi = [
+  { type: "function", stateMutability: "view", name: "unresolvedPlanCount", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", stateMutability: "view", name: "pendingTrancheByPlan", inputs: [{ name: "planId", type: "uint256" }], outputs: [{ type: "uint8" }] },
   { type: "function", stateMutability: "view", name: "getExecutionTranche", inputs: [{ name: "planId", type: "uint256" }, { name: "tranche", type: "uint8" }], outputs: [{ name: "terms", type: "tuple", components: [{ name: "amount", type: "uint256" }, { name: "readyAt", type: "uint64" }, { name: "expiresAt", type: "uint64" }, { name: "approvalThreshold", type: "uint256" }, { name: "paid", type: "bool" }] }] },
   { type: "function", stateMutability: "view", name: "getExecutionTrancheApprovers", inputs: [{ name: "planId", type: "uint256" }, { name: "tranche", type: "uint8" }], outputs: [{ type: "address[]" }] },

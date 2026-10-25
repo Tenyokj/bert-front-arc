@@ -21,6 +21,13 @@ export function CommunityAdminActionQueue({ hub, quorum, refreshKey, onCancellat
   const busy = write.isPending || receipt.isLoading;
 
   useEffect(() => {
+    if (!receipt.isSuccess) return;
+    // Refresh the parent workspace too: pause, archive and role changes affect its gates.
+    const timer = window.setTimeout(() => window.location.reload(), 400);
+    return () => window.clearTimeout(timer);
+  }, [receipt.isSuccess]);
+
+  useEffect(() => {
     let stale = false;
     async function load() {
       if (!client) return;

@@ -6,7 +6,7 @@ import { formatUnits } from "viem";
 import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { popVerifierAbi, usdcAbi } from "@/lib/contracts";
-import { communityHubAbi, communityMembershipModuleAbi, communityTreasuryAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityMembershipModuleAbi, communityTreasuryAbi, communityVotingModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 import { useCommunityClock } from "@/lib/use-community-clock";
 import { useCommunityModules } from "@/lib/use-community-modules";
@@ -46,6 +46,7 @@ export function CommunityMembershipAction({
   const pointsThresholdRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "validatorProposalPointsThreshold", chainId });
   const { communityTime, paused } = useCommunityClock(hub, chainId);
   const obligationsRead = useReadContract({ address: membershipModule, abi: communityMembershipModuleAbi, functionName: "unresolvedObligationCount", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address && membershipModule), refetchInterval: 1_000 } });
+  const voteLocksRead = useReadContract({ address: moduleRead.modules.voting, abi: communityVotingModuleAbi, functionName: "hasExitBlockingObligation", args: address ? [address] : undefined, chainId, query: { enabled: Boolean(address && moduleRead.modules.voting), refetchInterval: 1_000 } });
   const allowanceRead = useReadContract({
     address: usdcRead.data,
     abi: usdcAbi,
@@ -155,8 +156,10 @@ export function CommunityMembershipAction({
     const cooldownProgress = exitRequested && cooldown && communityTime !== undefined
       ? Math.min(100, Number(((communityTime - member.exitRequestedAt) * 100n) / cooldown))
       : 0;
-    const obligations = (obligationsRead.data as bigint | undefined) ?? 0n;
-    const exitBlocked = obligations > 0n;
+    const obligations = obligationsRead.data;
+    const voteLocks = voteLocksRead.data;
+    const locksLoaded = obligationsRead.data !== undefined && voteLocksRead.data !== undefined;
+    const exitBlocked = !locksLoaded || (obligations ?? 0n) > 0n || voteLocks === true;
     const readyToReturn = exitRequested && cooldownReady && !exitBlocked && !paused;
 
     return <section className="overflow-hidden rounded-[28px] border border-emerald-300/25 bg-[linear-gradient(135deg,rgba(6,78,59,0.33),rgba(42,45,59,0.96)_55%,rgba(20,83,45,0.2))] p-5 sm:p-6">
@@ -181,7 +184,8 @@ export function CommunityMembershipAction({
 
         <div className="rounded-2xl border border-white/10 bg-slate-950/20 p-4">
           <p className="text-sm font-semibold text-white">Step 3 of 3 · Clear governance locks</p>
-          <div className="mt-3"><LockState label="Unresolved governance obligations" value={obligations} description={obligations === 0n ? "No vote, proposal, or milestone obligation blocks exit." : "Settle or clear the relevant proposal, vote, or milestone obligation before finalizing exit."} /></div>
+          <div className="mt-3"><LockState label="Unresolved governance obligations" value={obligations} description={obligations === undefined ? "Checking proposal-author obligations." : obligations === 0n ? "No proposal-author obligation blocks exit." : "Resolve the relevant member proposal before finalizing exit."} /></div>
+          <div className="mt-3"><LockState label="Vote and milestone exit block" value={voteLocks} description={!locksLoaded ? "Checking on-chain locks. Stake return stays disabled until both modules respond." : !voteLocks ? "No voting-module lock blocks exit." : "Complete the delivery or claim your failed-plan refund, then clear each settled vote lock."} /></div>
         </div>
 
         <div className={readyToReturn ? "rounded-2xl border border-emerald-300/35 bg-emerald-400/10 p-4" : "rounded-2xl border border-white/10 bg-slate-950/20 p-4"}>
@@ -202,9 +206,9 @@ function Metric({ label, value, tone }: { label: string; value: string; tone: "e
   return <div className="rounded-xl border border-white/10 bg-slate-950/20 p-3"><p className="text-xs text-slate-500">{label}</p><p className={tone === "emerald" ? "mt-1 font-semibold text-emerald-100" : "mt-1 font-semibold text-white"}>{value}</p></div>;
 }
 
-function LockState({ label, value, description }: { label: string; value: bigint; description: string }) {
-  const clear = value === 0n;
-  return <div className={clear ? "rounded-xl border border-emerald-300/20 bg-emerald-400/5 p-3" : "rounded-xl border border-amber-300/20 bg-amber-400/5 p-3"}><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold text-slate-200">{label}</p><span className={clear ? "rounded-full bg-emerald-300 px-2 py-0.5 text-xs font-bold text-slate-950" : "rounded-full bg-amber-300 px-2 py-0.5 text-xs font-bold text-slate-950"}>{clear ? "Clear" : value.toString()}</span></div><p className="mt-2 text-xs leading-relaxed text-slate-400">{description}</p></div>;
+function LockState({ label, value, description }: { label: string; value: bigint | boolean | undefined; description: string }) {
+  const clear = value === 0n || value === false;
+  return <div className={clear ? "rounded-xl border border-emerald-300/20 bg-emerald-400/5 p-3" : "rounded-xl border border-amber-300/20 bg-amber-400/5 p-3"}><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold text-slate-200">{label}</p><span className={clear ? "rounded-full bg-emerald-300 px-2 py-0.5 text-xs font-bold text-slate-950" : "rounded-full bg-amber-300 px-2 py-0.5 text-xs font-bold text-slate-950"}>{value === undefined ? "Checking" : clear ? "Clear" : value === true ? "Blocked" : value.toString()}</span></div><p className="mt-2 text-xs leading-relaxed text-slate-400">{description}</p></div>;
 }
 
 function formatRemaining(seconds: bigint) {

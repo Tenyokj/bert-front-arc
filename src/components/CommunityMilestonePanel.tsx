@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { FaCheckDouble, FaCircleInfo, FaFileShield, FaRotate } from "react-icons/fa6";
-import { useAccount, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { formatCommunityUsdc } from "@/lib/community";
 import { communityErrorMessage, communityTechnicalError } from "@/lib/community-errors";
@@ -68,6 +69,7 @@ export function CommunityMilestonePanel({ hub, proposalIds }: { hub: `0x${string
 
 function MilestonePlanCard({ hub, manager, plan }: { hub: `0x${string}`; manager: `0x${string}`; plan: Plan }) {
   const { address, chainId } = useAccount();
+  const client = usePublicClient({ chainId });
   const { communityTime, paused } = useCommunityClock(hub, chainId);
   const [evidenceHash, setEvidenceHash] = useState("");
   const reviewRead = useReadContract({ address: manager, abi: communityMilestoneAbi, functionName: "getReview", args: [plan.proposalId, plan.currentMilestone], chainId, query: { enabled: plan.currentMilestone > 0 } });
@@ -82,7 +84,6 @@ function MilestonePlanCard({ hub, manager, plan }: { hub: `0x${string}`; manager
   const totalSupport = electorateRead.data?.[0]?.result as bigint | undefined;
   const reviewerCount = electorateRead.data?.[1]?.result as bigint | undefined;
   const hasSeparatedElectorate = totalSupport !== undefined && totalSupport > 0n && reviewerCount !== undefined;
-  const choiceRead = useReadContract({ address: manager, abi: communityMilestoneAbi, functionName: "reviewChoice", args: address && plan.currentMilestone > 0 ? [plan.proposalId, plan.currentMilestone, address] : undefined, chainId, query: { enabled: Boolean(address && plan.currentMilestone > 0) } });
   const write = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: write.data });
   const review = reviewRead.data as Review | undefined;
@@ -91,6 +92,31 @@ function MilestonePlanCard({ hub, manager, plan }: { hub: `0x${string}`; manager
   const validHash = /^0x[0-9a-fA-F]{64}$/.test(evidenceHash);
   const status = planStatus[plan.status] ?? "Unknown";
   const remaining = plan.status === 1 ? plan.proofDeadline - time : (review?.closesAt ?? 0n) - time;
+  const eligibility = useQuery({
+    queryKey: ["community-proof-review", chainId, hub, manager, plan.proposalId.toString(), plan.currentMilestone, review?.proofAttempts, address, plan.status],
+    // Attempt membership is private contract state. Simulate the real call instead of
+    // inferring eligibility from reviewChoice, which retains the previous attempt's vote.
+    queryFn: async () => {
+      if (!client || !address || client.chain?.id !== chainId) throw new Error("Review network is unavailable.");
+      await client.simulateContract({ address: hub, abi: communityHubAbi, functionName: "castMilestoneReview", args: [plan.proposalId, true], account: address });
+      return true;
+    },
+    enabled: Boolean(client && address && recipientRead.isSuccess && !isRecipient && !paused && remaining > 0n && (plan.status === 2 || plan.status === 4) && review),
+    retry: false,
+    refetchInterval: 5_000,
+  });
+  const canReview = eligibility.data === true && !eligibility.isError && !isRecipient;
+  const expiryEligibility = useQuery({
+    queryKey: ["community-proof-expiry", chainId, hub, plan.proposalId.toString(), plan.status, plan.proofDeadline.toString(), address],
+    queryFn: async () => {
+      if (!client || !address || client.chain?.id !== chainId) throw new Error("Expiry network is unavailable.");
+      await client.simulateContract({ address: hub, abi: communityHubAbi, functionName: "failExpiredPlan", args: [plan.proposalId], account: address });
+      return true;
+    },
+    enabled: Boolean(client && address && !paused && (plan.status === 1 || plan.status === 3) && time > plan.proofDeadline),
+    retry: false,
+    refetchInterval: 5_000,
+  });
   const actionBusy = write.isPending || receipt.isLoading;
 
   useEffect(() => {
@@ -114,14 +140,15 @@ function MilestonePlanCard({ hub, manager, plan }: { hub: `0x${string}`; manager
     {plan.status === 1 ? <p className="mt-4 text-sm text-slate-300">Proof deadline: <strong className="text-white">{formatDateTimeFromUnix(plan.proofDeadline)}</strong>{remaining > 0n ? ` (${formatRemaining(remaining)} active Community time left)` : " (deadline elapsed)"}.</p> : null}
     {(plan.status === 2 || plan.status === 4) && review ? <div className="mt-4 rounded-xl border border-white/10 bg-[#313443]/70 p-4 text-sm text-slate-300"><p>Proof: <span className="break-all font-mono text-xs text-cyan-100">{review.evidenceHash}</span></p><p className="mt-2">Review closes: <strong className="text-white">{formatDateTimeFromUnix(review.closesAt)}</strong>{remaining > 0n ? ` (${formatRemaining(remaining)} left)` : " (ready to finalize)"}.</p><p className="mt-2">Approve {formatCommunityUsdc(review.approvingWeight)} / Reject {formatCommunityUsdc(review.rejectingWeight)} USDC · {review.approvingAddresses.toString()} approvers · {review.participatingAddresses.toString()} reviewers.</p></div> : null}
     {plan.status === 3 && review ? <p className="mt-4 text-sm text-amber-100">The first proof did not pass. The execution recipient can submit one corrected proof after {formatDateTimeFromUnix(review.correctionAvailableAt)}.</p> : null}
+    {plan.status === 3 ? <p className="mt-2 text-xs text-slate-300">Correction proof deadline: {formatDateTimeFromUnix(plan.proofDeadline)} of active Community time. Reopening must not be treated as a deadline extension. Original Managers may retain an already elapsed deadline; they are not patched by this interface.</p> : null}
     {paused ? <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-400/10 p-3 text-xs text-amber-100">Community time is frozen while paused. Proof and review deadlines do not advance.</p> : null}
     {plan.status === 7 ? <CommunityTranchePayment hub={hub} manager={manager} planId={plan.proposalId} /> : null}
     <div className="mt-5 flex flex-wrap gap-2">
-      {plan.status === 1 && isRecipient ? <><input value={evidenceHash} onChange={(event) => setEvidenceHash(event.target.value)} placeholder="0x... 32-byte evidence hash" className="min-w-[260px] flex-1 rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2.5 text-sm text-white outline-none" /><button disabled={!validHash || actionBusy || paused} onClick={submit} className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-40"><FaFileShield className="mr-1 inline" /> Submit proof</button></> : null}
-      {plan.status === 1 && !isRecipient && time > plan.proofDeadline ? <button disabled={actionBusy || paused} onClick={fail} className="rounded-full border border-rose-300/40 px-4 py-2 text-sm font-bold text-rose-100 disabled:opacity-40">Fail expired plan</button> : null}
-      {(plan.status === 2 || plan.status === 4) && !isRecipient && recipientRead.isSuccess && choiceRead.data === 0 ? <><button disabled={actionBusy || paused || remaining <= 0n} onClick={() => cast(true)} className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-40"><FaCheckDouble className="mr-1 inline" /> Approve proof</button><button disabled={actionBusy || paused || remaining <= 0n} onClick={() => cast(false)} className="rounded-full border border-rose-300/40 px-4 py-2 text-sm font-bold text-rose-100 disabled:opacity-40">Reject proof</button></> : null}
+      {plan.status === 1 && isRecipient ? <><input value={evidenceHash} onChange={(event) => setEvidenceHash(event.target.value)} placeholder="0x... 32-byte evidence hash" className="min-w-[260px] flex-1 rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2.5 text-sm text-white outline-none" /><button disabled={!validHash || actionBusy || paused || communityTime === undefined || time > plan.proofDeadline} onClick={submit} className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-40"><FaFileShield className="mr-1 inline" /> Submit proof</button></> : null}
+      {(plan.status === 1 || plan.status === 3) && time > plan.proofDeadline && expiryEligibility.data === true && !expiryEligibility.isError ? <button disabled={actionBusy || paused} onClick={fail} className="rounded-full border border-rose-300/40 px-4 py-2 text-sm font-bold text-rose-100 disabled:opacity-40">Fail expired plan</button> : null}
+      {(plan.status === 2 || plan.status === 4) && canReview ? <><button disabled={actionBusy || paused || remaining <= 0n} onClick={() => cast(true)} className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-40"><FaCheckDouble className="mr-1 inline" /> Approve proof</button><button disabled={actionBusy || paused || remaining <= 0n} onClick={() => cast(false)} className="rounded-full border border-rose-300/40 px-4 py-2 text-sm font-bold text-rose-100 disabled:opacity-40">Reject proof</button></> : null}
       {(plan.status === 2 || plan.status === 4) && remaining <= 0n ? <button disabled={actionBusy || paused} onClick={finalize} className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-bold text-cyan-100 disabled:opacity-40">Finalize review</button> : null}
-      {plan.status === 3 && isRecipient && review && time >= review.correctionAvailableAt ? <button disabled={actionBusy || paused} onClick={correct} className="rounded-full border border-amber-300/40 px-4 py-2 text-sm font-bold text-amber-100 disabled:opacity-40"><FaRotate className="mr-1 inline" /> Open correction</button> : null}
+      {plan.status === 3 && isRecipient && review && time >= review.correctionAvailableAt && time <= plan.proofDeadline ? <button disabled={actionBusy || paused} onClick={correct} className="rounded-full border border-amber-300/40 px-4 py-2 text-sm font-bold text-amber-100 disabled:opacity-40"><FaRotate className="mr-1 inline" /> Open correction</button> : null}
       {plan.status === 6 ? <button disabled={actionBusy} onClick={claim} className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-bold text-cyan-100 disabled:opacity-40">Claim failed-plan refund</button> : null}
     </div>
     {plan.status === 1 && isRecipient ? <p className="mt-3 text-xs text-slate-400"><FaCircleInfo className="mr-1 inline" /> Submit an immutable content hash for the full evidence bundle. Put multiple links, artefacts and explanations inside that bundle rather than losing evidence in a short form field.</p> : null}
