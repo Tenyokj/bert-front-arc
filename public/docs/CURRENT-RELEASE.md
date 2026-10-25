@@ -1,17 +1,23 @@
 # Current Release and Payout Modes
 
 This is the current integration summary for **BERT V2.3**, **Community Layer
-V3.2**, and **Console V0.1.0 Beta** on **Arc Testnet, chain ID 5042002**.
+V3.2.1**, and **Console V0.1.0 Beta** on **Arc Testnet, chain ID 5042002**.
 Protocol-layer versions are independent of each contract's `@custom:version`.
 The [deployment manifest](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/deployments/arc-testnet-v3.json) identifies addresses;
 the [documentation audit](DOCUMENTATION-AUDIT-2026-10-24.md) records verification.
 
-**Current release: Community Layer V3.2, deployed on Arc Testnet on 24 October 2026. V2 remains V2.3.**
-See [receipt-backed release evidence](V3.2-ARC-TESTNET-RELEASE.md).
+**Current release: Community Layer V3.2.1, deployed on Arc Testnet on 25 October 2026. V2 remains V2.3.**
+See [receipt-backed release evidence](V3.2.1-ARC-TESTNET-RELEASE.md).
 See [version scopes](V3.2-RELEASE.md).
 
-**New versus existing Communities:** the V3.2 Manager `2.0.0`
-adds explicit Admin quorum for every 20/40/40 transfer, seven-active-day payment
+**Deployed correction hotfix (25 October):** the new bundle uses Manager `2.0.1`, which renews a
+bounded correction proof window and permits expiry of abandoned cooldowns.
+This is not present in historical `2.0.0` Managers; existing immutable Communities are not upgraded. See
+[the finding](V3.2-CORRECTION-DEADLINE-FINDING.md) and
+[the new-infrastructure rollout plan](V3.2-CORRECTION-HOTFIX-ROLLOUT.md).
+
+**New versus existing Communities:** the V3.2.1 Manager `2.0.1` retains V3.2's policy and
+requires explicit Admin quorum for every 20/40/40 transfer, seven-active-day payment
 expiry and refunds of the whole unpaid execution budget. It retains the self-review
 fix. The matching V3.2 infrastructure is deployed; original V3.1 Managers still use automatic transfers.
 See [the tranche-quorum specification](V3.2-TRANCHE-QUORUM.md) for exact new rules.
@@ -63,13 +69,13 @@ Winning progression is claimed individually with `claimWinningParticipation`.
 The old 30-voters-per-idea cap and settlement reward loop are not current V2.3
 rules. Round size remains bounded to 5..50 ideas.
 
-## Current V3.2 and retained V3.1 Communities
+## Current V3.2.1 and retained Communities
 
-V3.2 uses Factory `0xf793786BCecfbfE35a22E36180032b32BD5208Ba`, deployed at
-block `68888068`. V3.1 and V3.0 Communities retain their historical contracts.
-FundingPool approves all three Factories; the V3 graph v3.2.0 indexes both modular
-generations. `v3` in the deployment manifest is current; `v3Previous` preserves
-V3.1 and `v3Legacy` preserves V3.0.
+V3.2.1 uses Factory `0x23E023E0D8B3436319BC6e5e72615Bc7A0c6234E`, deployed at
+block `69044184`. V3.2.0, V3.1 and V3.0 Communities retain their historical contracts.
+FundingPool approves all four Factories; graph v3.2.1 indexes all three modular
+generations. `v3` in the deployment manifest is current; `v3PreviousV32` preserves
+V3.2.0, `v3Previous` preserves V3.1 and `v3Legacy` preserves V3.0.
 
 Original V3.1 Admin/Member Binary/Slate proposals use 20/40/40 execution plans paid to
 the immutable Administration execution recipient. Treasury keeps custody of
@@ -81,7 +87,7 @@ can join as a Member, support another author's proposal and review its own
 execution. This known policy gap is reproduced in the documentation audit.
 
 **Deployed in new V3.2 Communities:** the self-review fix first prepared as
-Manager `1.0.2` is retained in the latest quorum-enabled `2.0.0`. It explicitly rejects
+Manager `1.0.2` is retained in the latest quorum-enabled `2.0.1`. It explicitly rejects
 execution-recipient reviews and excludes its weight/count from the review quorum
 and approver floor. Its financial support remains refundable using a separate
 full-weight denominator. See [the patch record](V3.1-SELF-REVIEW-FIX.md). Do not
@@ -125,6 +131,16 @@ for the next unused ID. This snapshot does not prove a completed grant or E2E.
   `hasIndexingErrors: false`, indexed block **68891161**.
 - The operator reports the matching Vercel environment and frontend deployed.
   Documentation-only cleanup still needs its own commit and publication.
+
+## Hotfix infrastructure verification: 2026-10-25
+
+- New Factory and allowlist receipts succeeded at blocks **69044184** and **69044535**.
+- Implementation/admin slots, ProxyAdmin owner and all six Factory references matched.
+- All four historical/current Factory approvals remain enabled.
+- Graph v3.2.1 returned deployment `QmatHFmHX8JwEh9MnCEsD5KUrXVuaxECiHKBFNMbi5NcHU`,
+  no indexing errors and block **69045843** after the operator reported Synced.
+- Hosted frontend/Console environment switch and a new public Community pilot remain
+  separate rollout checks. These reads do not establish a completed public user flow.
 
 ## Verification and readiness
 

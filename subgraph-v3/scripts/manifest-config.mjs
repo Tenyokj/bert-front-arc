@@ -1,6 +1,9 @@
 export const originalFactory = { address: "0xe16Cd61a21feA97393e6eEE3A7F7A26828021dD0", startBlock: "66809847" };
 
-/** Keep the original modular V3.1 history when adding a new release Factory. */
+export const previousFactory = { address: "0xf793786BCecfbfE35a22E36180032b32BD5208Ba", startBlock: "68888068" };
+const retainedFactories = [originalFactory, previousFactory];
+
+/** Keep both historical modular generations when adding a release Factory. */
 export function factorySources(env) {
   const configured = env.V3_FACTORY_SOURCES
     ? JSON.parse(env.V3_FACTORY_SOURCES)
@@ -24,11 +27,12 @@ export function factorySources(env) {
     const address = item.address.toLowerCase();
     if (seen.has(address)) throw new Error(`Duplicate Factory: ${item.address}`);
     seen.add(address);
-    if (address === originalFactory.address.toLowerCase() && item.startBlock !== originalFactory.startBlock) {
-      throw new Error("The original V3.1 Factory must retain deployment block 66809847.");
+    const historical = retainedFactories.find((entry) => entry.address.toLowerCase() === address);
+    if (historical && item.startBlock !== historical.startBlock) {
+      throw new Error(`Historical Factory ${historical.address} must retain deployment block ${historical.startBlock}.`);
     }
   }
-  if (!seen.has(originalFactory.address.toLowerCase())) sources.unshift(originalFactory);
+  sources.unshift(...retainedFactories.filter((item) => !seen.has(item.address.toLowerCase())));
   return sources;
 }
 

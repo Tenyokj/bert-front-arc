@@ -10,7 +10,7 @@ It presents two on-chain protocol layers:
 - **BERT V2.3**: ideas, conditional pledges, rounds and winning-backer-reviewed 20/40/40 grants. Legacy rounds retain their stored 30/40/30 reviewer policy.
 - **BERT V3.2 Community Layer**: independent modular Community Hubs with membership, validation, Binary/Slate voting, supporter-reviewed 20/40/40 execution plans, validator rewards and quorum-protected treasury actions.
 
-**Community Layer V3.2 is deployed on Arc Testnet (24 October 2026).** V2 remains V2.3. New Communities use the V3.2 Factory and graph v3.2.0. Original V3.1 Communities remain accessible with their immutable earlier policy. See [release scope](public/docs/V3.2-RELEASE.md).
+**Community Layer V3.2.1 is deployed on Arc Testnet (25 October 2026).** V2 remains V2.3. New Communities use the V3.2.1 hotfix Factory and graph v3.2.1. Historical V3.2.0 Communities retain their original Manager correction-deadline defect. Original V3.1 Communities remain accessible with their immutable earlier policy. See [release scope](public/docs/V3.2-RELEASE.md).
 
 The deployed testnet app is available at [bertdao.vercel.app](https://bertdao.vercel.app). This repository contains only public client-side configuration and ABIs. Never put private keys, World ID signing keys, deployment keys, or Redis tokens in `NEXT_PUBLIC_*` variables.
 
@@ -50,7 +50,7 @@ npm run build
 
 ## Environment Configuration
 
-Copy `.env.example` to `.env.local`. The example deliberately contains placeholders only.
+Copy `.env.example` to `.env.local`. It includes public V3.2.1 release values; configure the remaining placeholders for your environment.
 
 | Group | Required purpose |
 | --- | --- |
@@ -59,7 +59,7 @@ Copy `.env.example` to `.env.local`. The example deliberately contains placehold
 | `NEXT_PUBLIC_SUBGRAPH_URL` | V2 Graph query endpoint. |
 | `NEXT_PUBLIC_V3_SUBGRAPH_URL` | V3 Graph query endpoint. Direct RPC reads remain a fallback while indexing catches up. |
 | `NEXT_PUBLIC_V3_EVENT_FROM_BLOCK` | Earliest retained modular V3.1 deployment block (`66809847` on Arc); do not move past old Communities. |
-| `NEXT_PUBLIC_V3_LEGACY_FACTORY_ADDRESSES` | Optional comma-separated trusted older modular Factories; original V3.1 is retained automatically on Arc. |
+| `NEXT_PUBLIC_V3_LEGACY_FACTORY_ADDRESSES` | Optional comma-separated trusted older modular Factories; original V3.1 and V3.2.0 are retained automatically on Arc. |
 | `NEXT_PUBLIC_POP_BACKEND_URL` | Public URL of the BERT PoP backend. |
 | `NEXT_PUBLIC_POP_DEMO_ENABLED` | Set `true` only for Arc Testnet. Enables the clearly labelled test-only Demo verification path. |
 | `NEXT_PUBLIC_WORLD_*` | Public World ID client configuration. |
@@ -86,7 +86,7 @@ The browser reads public contract state directly through viem/wagmi. The Graph i
 - Community identity binds chain, Factory and local ID. Links include the Factory address; numeric Arc bookmarks remain pinned to the original modular V3.1 Factory. Unknown Factory URLs are rejected, not trusted as transaction targets.
 - If Treasury reservation reports RPC `already known`, do not send another reservation. Open **Continue an unfinished Community setup** and paste the confirmed reservation transaction hash from wallet activity. Read-only checks validate its creator, chain, Factory, successful receipt, canonical Treasury and immutable configuration hash. Original settings are decoded from calldata and loaded into the form automatically; the reserved configuration is locked for the remaining deployment steps. This resumes setup, not a wallet/key recovery or an admin bypass. Never infer success from the RPC error alone.
 - All three creation steps await wallet errors and share a synchronous submission lock. Before Hub deployment/activation the client reconciles Factory state, verifies an existing Hub's creator/Treasury/config hash, and blocks sends while account nonces indicate a pending transaction. Viem can label `already known` as `NonceTooLowError`; neither message proves failure. Uncertain responses trigger read-only reconciliation, never an automatic resend or nonce increment. **Refresh on-chain setup status** rechecks confirmed state. Hub discovery checks only the last eight CREATE nonces; an older Hub address may be supplied and verified explicitly. RPC failures never count as proof that no Hub exists. Already activated Communities can be resumed as completed setups.
-- Manager 2.0.0 is deployed through the new matching V3.2 deployers/Factory. Creation with the known original Factory and new Hub artifact remains blocked; old Communities remain readable with their old policy. See [deployment evidence and current env](public/docs/V3.2-ARC-TESTNET-RELEASE.md).
+- Manager 2.0.1 is deployed through the new matching V3.2.1 deployers/Factory, assigning a fixed correction proof deadline and permitting expiry of abandoned correction cooldowns. Creation with the known original Factory and new Hub artifact remains blocked; old Communities remain readable with their old policy. See [deployment evidence and current env](public/docs/V3.2.1-ARC-TESTNET-RELEASE.md).
 - Run `npm run test:community-routing` for routing/manifest regressions. See [the release runbook](public/docs/V3.2-QUORUM-ROLLOUT.md); generated graph output is not evidence of publication.
 - Permission checks, balances, settlement availability and transaction actions are always derived from live on-chain state.
 
