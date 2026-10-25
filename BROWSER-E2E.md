@@ -46,7 +46,7 @@ The default command runs V3.2; `--suite v2` and `--suite all` select the other s
 | 1 | Second Admin for payment quorum | Unused |
 | 2 | Validator | Losing pledger and ineligible milestone reviewer |
 | 3 | Member proposal author; wallet cancellation check | Winning author |
-| 4 | Additional active Member | Losing author |
+| 4 | Member, then exit and quorum-protected Admin add/remove | Losing author |
 | 5, 6, 7 | Independent winning supporters and reviewers | Independent winning pledgers and reviewers |
 
 The injected EIP-1193 wallet represents an already-authorized returning user.
@@ -63,7 +63,8 @@ another Next build concurrently in the same checkout. The runner stops its owned
 services on completion; local chain state is disposable.
 On macOS, the owned runner temporarily inhibits idle sleep with `caffeinate`;
 it does not change persistent power settings. The V2 suite switches these local
-test accounts in one browser context, without a real wallet extension.
+test accounts in one browser context, without a real wallet extension. V3 now
+uses the same account-switching mechanism to avoid many idle polling contexts.
 
 ## V3.2 Scope
 
@@ -80,6 +81,24 @@ test accounts in one browser context, without a real wallet extension.
 - Other three lanes: initial authorization expiry and exact 100% unpaid execution
   budget pull refunds to the three winning supporters.
 - Member-origin budgets reflect the separately reserved 15% validator share.
+- A single Admin cannot execute a fixed tranche or protected administrative
+  action. Reserved plan capital cannot fund an ordinary Treasury withdrawal.
+- After 20% is paid, three supporters reject proof, wait the 48-hour cooldown,
+  submit/review a correction and reject it again. Exactly 80% returns to the
+  supporters; a second refund claim is rejected.
+- After 60% is paid, stage-two proof is rejected. Quorum-protected pause freezes
+  the correction clock. After resume, an absent executor's overdue cooldown can
+  be expired without reopening it; exactly 40% returns to supporters.
+- Recipient/outsider reviews, duplicate reviews and early correction are rejected
+  through read-only contract calls with unchanged account nonces. Corrected proof
+  grants a fresh vote to each eligible supporter despite the old `reviewChoice`.
+- A pending exit cannot return stake while vote/milestone locks remain. Another
+  unencumbered Member waits its cooldown, exits and receives the exact entry stake.
+- Finalize a funded validator epoch and claim the independently reserved reward;
+  the transfer leaves execution balance untouched and cannot be repeated.
+- Add and remove an Admin through the actual two-Admin queue, reconstructing role
+  events from Membership, then archive an idle Community through quorum. Further
+  proposal creation is rejected.
 
 Production Solidity deadlines are unchanged. Five-minute demo voting and local
 `evm_increaseTime` skip one-day reviews / seven-day payment expiry. No waiting for
@@ -112,7 +131,31 @@ skips the waits. No public chain is modified.
 
 ## Reports and Limits
 
-### Verified Combined Run: 25 October 2026
+### Expanded Combined Run: 25 October 2026
+
+`npm run test:e2e:all` passed both browser tests in 3.3 minutes of Playwright
+runtime: 163 confirmed V3 UI transactions and 60 V2.3 UI transactions. Another
+44 expected contract rejections were simulated read-only, without broadcasting;
+25 direct V2 queue-fixture receipts remain separately labeled. All 63 frontend
+regression/source-guard tests and the normal production build with TypeScript
+passed. ESLint: no errors, 28 existing warnings.
+
+**Important source/deployment distinction:** this run deploys source Manager
+`2.0.1` locally. It found and now regression-tests a real correction deadline
+defect in released `2.0.0`: review/cooldown can outlast the original proof window,
+and an absent executor can leave correction unexpirable. The source patch assigns
+a fixed correction deadline at rejection and permits overdue cooldown expiry.
+It does not update immutable Arc Communities. See the core finding and rollout
+plan in `docs/V3.2-CORRECTION-DEADLINE-FINDING.md` and
+`docs/V3.2-CORRECTION-HOTFIX-ROLLOUT.md` in the core repository. No public deployment
+or mainnet readiness is claimed.
+
+Frontend fixes exercised by this run: attempt-aware read-only review eligibility,
+both modules' membership-exit blockers, archive blockers from their owning
+modules, role-event fallback from Membership rather than Hub, and parent
+workspace refresh after quorum actions. No Graph schema/event signature changed.
+
+### Earlier Combined Run: 25 October 2026
 
 `npm run test:e2e:all` passed both browser tests in 2.6 minutes of Playwright
 runtime, excluding local deployment and Next build. V3.2 recorded 88 successful
@@ -158,9 +201,10 @@ in one report, or retain a copy before starting a separate suite.
 
 This is the first bounded browser suite, not every possible user flow. The real
 MetaMask extension, WalletConnect mobile, public RPC behavior, backend World ID,
-Graph indexing/reorgs, reward claims, membership exit, role rotation, pause/archive,
-correction/rejection and V3.2 80/40% partial-payment refunds still need separate
-browser/integration coverage. V2.3 rejection/correction, claim and proof timeouts,
-and cancellation after a paid second tranche are also outside this bounded suite. Many of those
+Graph indexing/reorgs, positive free-balance withdrawals/cancellations, Validator
+nomination/removal, multi-validator inactive/dust reward epochs, rejected binary
+NO-side fees/refunds, and V3 no-quorum grace still need separate browser coverage.
+V2.3 rejection/correction, claim and proof timeouts, and cancellation after a paid
+second tranche are also outside this bounded suite. Many of those
 contract branches have direct Solidity integration tests; that does not make
 them browser E2E. This suite is not an independent audit or mainnet readiness claim.

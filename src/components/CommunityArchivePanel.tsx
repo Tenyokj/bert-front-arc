@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect } from "react";
-import { useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityHubAbi } from "@/lib/community-contracts";
+import { communityHubAbi, communityMilestoneAbi, communityProposalModuleAbi, communityVotingModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
+import { useCommunityModules } from "@/lib/use-community-modules";
+import { useCommunityClock } from "@/lib/use-community-clock";
 
 /** Shows archive blockers and opens a quorum-protected archive request only when the Hub is clean. */
 export function CommunityArchivePanel({ hub, archived }: { hub: `0x${string}`; archived: boolean }) {
+  const { chainId } = useAccount();
+  const { modules } = useCommunityModules(hub, chainId);
+  const { paused } = useCommunityClock(hub, chainId);
   const reads = useReadContracts({
-    contracts: (["pendingValidationProposalCount", "activeBinaryProposalCount", "activeSlateRoundCount", "unresolvedMemberProposalCount"] as const).map((functionName) => ({ address: hub, abi: communityHubAbi, functionName })),
+    contracts: modules.proposal && modules.voting && modules.milestone ? [
+      { address: modules.proposal, chainId, abi: communityProposalModuleAbi, functionName: "pendingValidationProposalCount" },
+      { address: modules.voting, chainId, abi: communityVotingModuleAbi, functionName: "activeBinaryProposalCount" },
+      { address: modules.voting, chainId, abi: communityVotingModuleAbi, functionName: "activeSlateRoundCount" },
+      { address: modules.milestone, chainId, abi: communityMilestoneAbi, functionName: "unresolvedPlanCount" },
+    ] : [],
     query: { refetchInterval: 2_000 },
   });
   const write = useWriteContract();
@@ -18,10 +28,12 @@ export function CommunityArchivePanel({ hub, archived }: { hub: `0x${string}`; a
   const values = (reads.data ?? []).map((item) => item.result) as (bigint | undefined)[];
   const [pendingValidation, activeBinary, activeSlate, unresolvedMember] = values;
   const loaded = values.length === 4 && values.every((value) => value !== undefined);
-  const canArchive = loaded && values.every((value) => value === 0n);
+  const canArchive = !paused && loaded && values.every((value) => value === 0n);
 
   useEffect(() => {
-    if (receipt.isSuccess) window.setTimeout(() => window.location.reload(), 400);
+    if (!receipt.isSuccess) return;
+    const timer = window.setTimeout(() => window.location.reload(), 400);
+    return () => window.clearTimeout(timer);
   }, [receipt.isSuccess]);
 
   return <article className="rounded-[28px] border border-rose-300/20 bg-[linear-gradient(145deg,rgba(127,29,29,0.16),rgba(42,45,59,0.96))] p-5">
@@ -32,7 +44,7 @@ export function CommunityArchivePanel({ hub, archived }: { hub: `0x${string}`; a
       <Metric label="Pending validation" value={pendingValidation} />
       <Metric label="Open binary votes" value={activeBinary} />
       <Metric label="Open Slate Rounds" value={activeSlate} />
-      <Metric label="Unresolved member proposals" value={unresolvedMember} />
+      <Metric label="Unresolved execution plans" value={unresolvedMember} />
     </div>
     {archived ? <p className="mt-4 rounded-xl border border-slate-300/15 bg-slate-950/20 p-3 text-sm text-slate-300">This Community is already archived.</p> : <button disabled={!canArchive || busy} onClick={() => write.writeContract({ address: hub, abi: communityHubAbi, functionName: "createAdminActionRequest", args: [2, "0x0000000000000000000000000000000000000000", 0n] })} className="mt-4 rounded-full border border-rose-300/50 px-4 py-2 text-sm font-bold text-rose-100 disabled:opacity-40">{busy ? "Requesting..." : canArchive ? "Request Community archive" : "Resolve all blockers before archival"}</button>}
     {write.error ? <p className="mt-3 text-sm text-rose-200">{communityErrorMessage(write.error)}</p> : null}

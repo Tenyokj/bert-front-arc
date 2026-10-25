@@ -84,7 +84,9 @@ export function ValidatorRewardsPanel({ hub, treasury, isValidator }: { hub: `0x
   const receipt = useWaitForTransactionReceipt({ hash: write.data });
 
   useEffect(() => {
-    if (receipt.isSuccess) window.setTimeout(() => window.location.reload(), 400);
+    if (!receipt.isSuccess) return;
+    const timer = window.setTimeout(() => window.location.reload(), 400);
+    return () => window.clearTimeout(timer);
   }, [receipt.isSuccess]);
 
   if (!isValidator) return null;

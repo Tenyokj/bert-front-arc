@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { isAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-import { communityEventFromBlock, communityHubAbi } from "@/lib/community-contracts";
+import { communityEventFromBlock, communityHubAbi, communityMembershipModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 import { fetchIndexedCommunityRoleSets } from "@/lib/community-v3-subgraph";
+import { getCommunityModules } from "@/lib/community-v3";
 
 type RoleEvent = {
   account: Address;
@@ -19,10 +20,10 @@ type RoleEvent = {
 // ABI ordering changes whenever contract functions or events are added. Resolve
 // these events by name so roster reconstruction always reads the intended logs.
 const communityRoleEvents = {
-  adminAdded: communityHubAbi.find((item) => item.type === "event" && item.name === "AdminAdded"),
-  adminRemoved: communityHubAbi.find((item) => item.type === "event" && item.name === "AdminRemoved"),
-  validatorAdded: communityHubAbi.find((item) => item.type === "event" && item.name === "ValidatorAdded"),
-  validatorRemoved: communityHubAbi.find((item) => item.type === "event" && item.name === "ValidatorRemoved"),
+  adminAdded: communityMembershipModuleAbi.find((item) => item.type === "event" && item.name === "AdminAdded"),
+  adminRemoved: communityMembershipModuleAbi.find((item) => item.type === "event" && item.name === "AdminRemoved"),
+  validatorAdded: communityMembershipModuleAbi.find((item) => item.type === "event" && item.name === "ValidatorAdded"),
+  validatorRemoved: communityMembershipModuleAbi.find((item) => item.type === "event" && item.name === "ValidatorRemoved"),
 };
 
 /** Reconstructs and manages the Hub's current local Admin and Validator sets from indexed Hub events. */
@@ -57,6 +58,7 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
         if (Object.values(communityRoleEvents).some((event) => !event)) {
           throw new Error("CommunityHub role events are missing from the ABI.");
         }
+        const modules = await getCommunityModules(client, hub);
         const latestBlock = await client.getBlockNumber();
         const recentWindow = 30_000n;
         const recentFromBlock = latestBlock > recentWindow ? latestBlock - recentWindow : 0n;
@@ -64,16 +66,16 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
           ? communityEventFromBlock
           : recentFromBlock;
         const [adminAdded, adminRemoved, validatorAdded, validatorRemoved] = await Promise.all([
-          client.getLogs({ address: hub, event: communityRoleEvents.adminAdded as never, fromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityRoleEvents.adminRemoved as never, fromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityRoleEvents.validatorAdded as never, fromBlock, toBlock: "latest" }),
-          client.getLogs({ address: hub, event: communityRoleEvents.validatorRemoved as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: modules.membership, event: communityRoleEvents.adminAdded as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: modules.membership, event: communityRoleEvents.adminRemoved as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: modules.membership, event: communityRoleEvents.validatorAdded as never, fromBlock, toBlock: "latest" }),
+          client.getLogs({ address: modules.membership, event: communityRoleEvents.validatorRemoved as never, fromBlock, toBlock: "latest" }),
         ]);
         const events: RoleEvent[] = [
-          ...toRoleEvents(adminAdded, "admin", true, "admin"),
-          ...toRoleEvents(adminRemoved, "admin", false, "admin"),
-          ...toRoleEvents(validatorAdded, "validator", true, "validator"),
-          ...toRoleEvents(validatorRemoved, "validator", false, "validator"),
+          ...toRoleEvents(adminAdded, "admin", true),
+          ...toRoleEvents(adminRemoved, "admin", false),
+          ...toRoleEvents(validatorAdded, "validator", true),
+          ...toRoleEvents(validatorRemoved, "validator", false),
         ].sort(compareRoleEvents);
         const activeAdmins = new Set<Address>();
         const activeValidators = new Set<Address>();
@@ -101,7 +103,9 @@ export function CommunityRoleManagementPanel({ hub, archived }: { hub: `0x${stri
   }, [client, hub, receipt.isSuccess]);
 
   useEffect(() => {
-    if (receipt.isSuccess) window.setTimeout(() => window.location.reload(), 400);
+    if (!receipt.isSuccess) return;
+    const timer = window.setTimeout(() => window.location.reload(), 400);
+    return () => window.clearTimeout(timer);
   }, [receipt.isSuccess]);
 
   const newAdminAddress = isAddress(newAdmin) ? newAdmin as Address : undefined;
@@ -144,10 +148,10 @@ function RoleSet({ title, holders, loading, actionLabel, disabled, onRemove }: {
   </div>;
 }
 
-function toRoleEvents(logs: readonly unknown[], role: RoleEvent["role"], assigned: boolean, field: "admin" | "validator"): RoleEvent[] {
+function toRoleEvents(logs: readonly unknown[], role: RoleEvent["role"], assigned: boolean): RoleEvent[] {
   return logs.flatMap((log) => {
     const event = log as { args?: Record<string, unknown>; blockNumber?: bigint; logIndex?: number };
-    const account = event.args?.[field];
+    const account = event.args?.account;
     return typeof account === "string" && isAddress(account) ? [{ account: account as Address, role, assigned, blockNumber: event.blockNumber ?? 0n, logIndex: event.logIndex ?? 0 }] : [];
   });
 }
