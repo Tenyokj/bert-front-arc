@@ -12,6 +12,17 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    id: "v3-2-community-governance",
+    image: "/news-v-3-2.png",
+    alt: "BERT V3.2 release with Admin-controlled 20/40/40 payments and the V3.2.1 correction hotfix on Arc Testnet",
+    href: "https://bertdao-docs.vercel.app/#v3-tranche-authorizations",
+    aspectRatio: "2103 / 748",
+    objectFit: "contain",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#ffe36b]",
+    maxWidth: 1600,
+  },
+  {
     id: "bert-console-beta",
     image: "/news-bert-console.png",
     alt: "BERT Console V0.1.0 Beta launch banner for Arc Testnet",
