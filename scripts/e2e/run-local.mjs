@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +14,9 @@ const rpc = "http://127.0.0.1:18545";
 const baseURL = "http://127.0.0.1:13000";
 const children = [];
 const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const args = process.argv.slice(2);
+assert.ok(args.length === 0 || (args.length === 2 && args[0] === "--suite" && ["v2", "v3", "all"].includes(args[1])), "Use --suite v2, v3 or all");
+const suite = args[1] || "v3";
 const nextEnvBefore = await readFile(path.join(root, "next-env.d.ts"), "utf8");
 // Explicit local network selection and public development accounts only. Never read a deployer key.
 const env = { ...process.env, DEPLOYER_KEY: "", ARC_TESTNET_RPC_URL: "", SEPOLIA_RPC_URL: "", LOCAL_RPC_URL: rpc };
@@ -37,8 +41,8 @@ function start(name, args, cwd, childEnv) {
   child.logName = name;
   return child;
 }
-async function run(name, args, childEnv = env) {
-  const child = start(name, args, core, childEnv);
+async function run(name, args, childEnv = env, cwd = core) {
+  const child = start(name, args, cwd, childEnv);
   const timeout = setTimeout(() => child.kill("SIGTERM"), 180_000);
   const [code] = await once(child, "exit");
   clearTimeout(timeout);
@@ -67,10 +71,15 @@ const extract = (log, label) => {
 
 try {
   await mkdir(output, { recursive: true });
+  if (process.platform === "darwin") {
+    // Keep only this local rehearsal awake; never change persistent macOS power settings.
+    const awake = spawn("/usr/bin/caffeinate", ["-i", "-w", String(process.pid)], { stdio: ["ignore", "pipe", "pipe"] });
+    children.push(awake); awake.logName = "keep-awake"; awake.log = () => "Temporary idle-sleep inhibition for the owned E2E runner.\n";
+  }
   const tsconfig = JSON.parse(await readFile(path.join(root, "tsconfig.json"), "utf8"));
   await writeFile(path.join(output, "tsconfig.json"), JSON.stringify({
     ...tsconfig,
-    compilerOptions: { ...tsconfig.compilerOptions, baseUrl: root },
+    compilerOptions: { ...tsconfig.compilerOptions, baseUrl: ".." },
     include: [...tsconfig.include, ".next-e2e/types/**/*.ts", ".next-e2e/dev/types/**/*.ts"].map((pattern) => path.resolve(root, pattern)),
     exclude: tsconfig.exclude.map((pattern) => path.resolve(root, pattern)),
   }, null, 2));
@@ -92,7 +101,30 @@ try {
   await run("configure-reserve", [...hardhat, "run", "scripts/deploy/configure-v3-2-funding-pool.ts", "--network", "localhost"], { ...env, FUNDING_POOL_ADDRESS: funding, V3_2_FACTORY_ADDRESS: factory });
   await run("mint", [...hardhat, "run", "scripts/local/mint-v3-test-usdc.ts", "--network", "localhost"], { ...env, MOCK_USDC_ADDRESS: usdc, LOCAL_TEST_WALLET_COUNT: "8", MOCK_USDC_AMOUNT: "100000" });
   await run("verify", [...hardhat, "run", "scripts/local/verify-v3-test-wallets.ts", "--network", "localhost"], { ...env, POP_VERIFIER_ADDRESS: verifier, LOCAL_TEST_WALLET_COUNT: "8", LOCAL_POP_VALIDITY_DAYS: "365" });
-  const fixture = { rpc, baseURL, core, usdc, verifier, funding, factory, library, accounts: (await rpcCall("eth_accounts")).slice(0, 8) };
+  const v2Addresses = {
+    registry: extract(summary, "IdeaRegistryUpgradeable"),
+    voting: extract(summary, "VotingSystemUpgradeable"),
+    grant: extract(summary, "GrantManagerUpgradeable"),
+  };
+  if (suite !== "v3") {
+    const require = createRequire(path.join(core, "package.json"));
+    const { Contract, JsonRpcProvider } = require("ethers");
+    const provider = new JsonRpcProvider(rpc, undefined, { cacheTimeout: -1 });
+    try {
+      assert.equal((await provider.getNetwork()).chainId, 31337n);
+      const artifact = require(path.join(core, "artifacts/contracts/BERT/DAO/VotingSystemUpgradeable.sol/VotingSystemUpgradeable.json"));
+      const voting = new Contract(v2Addresses.voting, artifact.abi, await provider.getSigner(address));
+      for (const [method, values] of [["pause", []], ["setIdeaPerRound", [5]], ["setBackerMilestonesEnabled", [true]], ["unpause", []]]) {
+        const receipt = await (await voting[method](...values)).wait();
+        assert.equal(receipt.status, 1);
+      }
+      assert.equal(await voting.backerMilestonesEnabled(), true);
+      assert.equal(await voting.humanOnlyVoting(), true);
+      assert.equal(await voting.IDEAS_PER_ROUND(), 5n);
+      console.log("[E2E] V2.3 mode enabled locally; five ideas per round, production review deadlines unchanged.");
+    } finally { provider.destroy(); }
+  }
+  const fixture = { rpc, baseURL, core, usdc, verifier, funding, factory, library, v2: v2Addresses, accounts: (await rpcCall("eth_accounts")).slice(0, 8) };
   const fixturePath = path.join(output, "fixture.json");
   await writeFile(fixturePath, JSON.stringify(fixture, null, 2));
   const frontendEnv = {
@@ -106,10 +138,12 @@ try {
     frontendEnv[`NEXT_PUBLIC_${key}_ADDRESS`] = extract(summary, contract);
   }
   // Separate output directory avoids contaminating the developer's regular .next build.
-  const next = start("frontend", [path.join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "--hostname", "127.0.0.1", "--port", "13000"], root, { ...frontendEnv, BERT_E2E: "1" });
+  const nextCommand = path.join(root, "node_modules/next/dist/bin/next");
+  await run("frontend-build", [nextCommand, "build"], { ...frontendEnv, BERT_E2E: "1" }, root);
+  const next = start("frontend", [nextCommand, "start", "--hostname", "127.0.0.1", "--port", "13000"], root, { ...frontendEnv, BERT_E2E: "1" });
   await waitFor(async () => (await fetch(`${baseURL}/v3/create`)).ok, next);
   console.log("[E2E] Local dApp ready; starting browser flows.");
-  const tests = start("browser", [path.join(root, "node_modules/@playwright/test/cli.js"), "test", "--config", "scripts/e2e/playwright.config.mjs"], root, { ...env, BERT_E2E_FIXTURE: fixturePath });
+  const tests = start("browser", [path.join(root, "node_modules/@playwright/test/cli.js"), "test", "--config", "scripts/e2e/playwright.config.mjs"], root, { ...env, BERT_E2E_FIXTURE: fixturePath, BERT_E2E_SUITE: suite });
   tests.stdout.on("data", (chunk) => process.stdout.write(chunk));
   tests.stderr.on("data", (chunk) => process.stderr.write(chunk));
   const [code] = await once(tests, "exit");
@@ -121,6 +155,6 @@ try {
     if (child.exitCode === null) child.kill("SIGTERM");
     await writeFile(path.join(output, `${child.logName}.log`), child.log()).catch(() => {});
   }
-  // next dev owns this generated file; do not leave its temporary distDir in the regular build.
+  // Next owns this generated file; do not leave its temporary distDir in the regular build.
   await writeFile(path.join(root, "next-env.d.ts"), nextEnvBefore);
 }

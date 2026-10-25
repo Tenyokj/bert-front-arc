@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { FaArrowLeft, FaExternalLinkAlt } from "react-icons/fa";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useAccount,
   usePublicClient,
@@ -444,7 +445,8 @@ function MilestoneCard({
 export default function IdeaDetailsPage() {
   const params = useParams<{ id: string }>();
   const client = usePublicClient();
-  const { address, isConnected } = useAccount();
+  const { address, chainId, isConnected } = useAccount();
+  const queryClient = useQueryClient();
   const [idea, setIdea] = useState<IdeaDetails | null>(null);
   const [roundId, setRoundId] = useState<number | null>(null);
   const [voters, setVoters] = useState<string[]>([]);
@@ -519,6 +521,23 @@ export default function IdeaDetailsPage() {
   const { isLoading: isMilestoneReviewConfirming, isSuccess: isMilestoneReviewSuccess } = useWaitForTransactionReceipt({ hash: milestoneReviewTxHash });
   const { isLoading: isPlanConfirming, isSuccess: isPlanSuccess } = useWaitForTransactionReceipt({ hash: planTxHash });
   const { isLoading: isBackerFinalizeConfirming, isSuccess: isBackerFinalizeSuccess } = useWaitForTransactionReceipt({ hash: backerFinalizeTxHash });
+  const confirmedWriteKey = [
+    isPlanSuccess ? planTxHash : "",
+    isClaimSuccess ? claimTxHash : "",
+    isMilestoneSubmitSuccess ? milestoneSubmitTxHash : "",
+    isMilestoneReviewSuccess ? milestoneReviewTxHash : "",
+    isBackerFinalizeSuccess ? backerFinalizeTxHash : "",
+    isReviewSuccess ? reviewTxHash : "",
+    isMarkSuccess ? markTxHash : "",
+  ].filter(Boolean).join(":");
+
+  useEffect(() => {
+    if (!confirmedWriteKey || chainId === undefined) return;
+    // Refresh active contract queries once per confirmed write, without reloading the page.
+    for (const target of [contracts.ideaRegistry, contracts.grantManager, contracts.fundingPool, contracts.votingSystem, contracts.voterProgression]) {
+      if (target) void queryClient.invalidateQueries({ queryKey: ["readContract", { address: target, chainId }] });
+    }
+  }, [confirmedWriteKey, chainId, queryClient]);
 
   const { data: isReviewer } = useReadContract({
     address: contracts.voterProgression,

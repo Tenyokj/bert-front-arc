@@ -5,10 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { formatUnits, parseUnits } from "viem";
 import { FaArrowLeft } from "react-icons/fa";
-import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useBlock, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import { AddressIdentity } from "@/components/AddressIdentity";
 import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
+import { fundingRoundCanSettle } from "@/lib/funding-round-clock";
 import {
   contracts,
   fundingPoolAbi,
@@ -108,7 +109,7 @@ function prettyRoundError(message?: string) {
 export default function RoundDetailsPage() {
   const params = useParams<{ id: string }>();
   const client = usePublicClient();
-  const { address, isConnected } = useAccount();
+  const { address, chainId, isConnected } = useAccount();
 
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [ideas, setIdeas] = useState<RoundIdea[]>([]);
@@ -118,6 +119,10 @@ export default function RoundDetailsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [allowanceOwner, setAllowanceOwner] = useState<string | null>(null);
   const [balanceOwner, setBalanceOwner] = useState<string | null>(null);
+  const { data: latestBlock } = useBlock({
+    chainId,
+    query: { enabled: Boolean(round?.active && !round.ended), refetchInterval: 5_000 },
+  });
 
   const {
     data: approveTxHash,
@@ -591,7 +596,8 @@ export default function RoundDetailsPage() {
   }
 
   const canVote = isConnected && round.active && !round.ended && !Boolean(userHasVotedValue);
-  const canEndRound = round.active && !round.ended && Math.floor(Date.now() / 1000) > Number(round.endTime);
+  // The contract uses block.timestamp, not the visitor's potentially skewed computer clock.
+  const canEndRound = fundingRoundCanSettle(round, latestBlock?.timestamp);
   const shouldShowEndRoundButton = round.active && !round.ended;
   const shouldShowClaimButton = Boolean(contracts.grantManager && round.ended && round.winningIdeaId > 0n && canClaimByWallet);
 

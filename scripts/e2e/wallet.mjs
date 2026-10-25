@@ -1,8 +1,12 @@
 /** Browser-only EIP-1193 test wallet. Signs no credentials and forwards writes only to our owned local node. */
-export function installWallet({ account, rpc }) {
+export function installWallet({ account, rpc, accounts = [account] }) {
+  // Init scripts also run in opaque about:blank documents, where storage is unavailable.
+  if (location.protocol !== "http:" || location.hostname !== "127.0.0.1") return;
   const url = new URL(rpc);
   if (url.hostname !== "127.0.0.1" || url.port !== "18545") throw new Error("Non-local E2E RPC refused");
   const listeners = new Map();
+  const savedAccount = sessionStorage.getItem("bert-e2e-selected-account");
+  if (savedAccount && accounts.some((candidate) => candidate.toLowerCase() === savedAccount.toLowerCase())) account = savedAccount;
   window.__e2eTransactions = JSON.parse(sessionStorage.getItem("bert-e2e-transactions") || "[]");
   window.__e2eRejectNext = false;
   const call = async (method, params = []) => {
@@ -40,6 +44,13 @@ export function installWallet({ account, rpc }) {
     },
   };
   Object.defineProperty(window, "ethereum", { value: provider, configurable: true });
+  window.__e2eSetAccount = (next) => {
+    if (!accounts.some((candidate) => candidate.toLowerCase() === next.toLowerCase())) throw new Error("Unknown local test account");
+    account = next;
+    provider.selectedAddress = next;
+    sessionStorage.setItem("bert-e2e-selected-account", next);
+    for (const listener of listeners.get("accountsChanged") || []) listener([next]);
+  };
   const announce = () => window.dispatchEvent(new CustomEvent("eip6963:announceProvider", { detail: {
     info: { uuid: "6f8a2204-0868-4245-9b47-3e532f737a2c", name: "MetaMask", icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>", rdns: "io.metamask" }, provider,
   } }));

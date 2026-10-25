@@ -10,6 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test": "node --test scripts/*.test.mjs",
     "test:e2e": "node scripts/e2e/run-local.mjs",
+    "test:e2e:v2": "node scripts/e2e/run-local.mjs --suite v2",
+    "test:e2e:all": "node scripts/e2e/run-local.mjs --suite all",
     "test:community-routing": "node --test scripts/community-reference.test.mjs",
     "sync:core-docs": "node scripts/sync-core-docs.mjs",
     "sync:v2-artifacts": "node scripts/sync-v2-artifacts.mjs",
