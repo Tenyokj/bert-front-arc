@@ -1,5 +1,72 @@
 # Dependency Security Update - 2026-10-24
 
+## 2026-11-04 - PR #45 Review: Compatibility Checks, Zod Risk Still Open
+
+The owner chose to retain the working wallet stack. This change adds tests and
+records the unresolved risk; it does **not** remediate Zod 3 or change installed
+dependency versions. The dated phase snapshots below remain historical.
+
+[Dependabot PR #45](https://github.com/Tenyokj/bert-front-arc/pull/45) proposes
+wagmi 2.19.5 -> 3.7.9. Its Vercel Preview failed during `npm install`, before
+the build: RainbowKit 2.2.11 requires peer wagmi `^2.9.0`. That failure does not
+describe the separate Production deployment. Do not merge this PR as-is or use
+`--force` / `--legacy-peer-deps` to bypass the incompatibility.
+
+### Open Risk and Dependency Boundary
+
+- [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
+  reports unbounded work/memory while validating oversized collections. A schema
+  array maximum in Zod 3 does not prevent traversal and accumulation of errors.
+  This is a denial-of-service advisory, not evidence of stolen funds or an EVM bug.
+- Registry check on November 4: latest stable Zod 3 is 3.25.76; no patched v3
+  release is published. Coinbase CDP SDK 1.60.0 still requests `^3.25.76`, and
+  Reown appkit-wallet 1.8.24 still requests 3.22.4. Updating either SDK alone is
+  not a verified remedy. The installed CDP SDK remains the reviewed 1.44.1.
+- Do not force Zod 4 into v3 consumers. Importing the legacy `zod/v3` API from a
+  v4 package is not proof of remediation either; see the
+  [upstream discussion](https://github.com/colinhacks/zod/issues/6653).
+- BERT configures Coinbase and WalletConnect connectors. Actual SDK policy/frame
+  schemas were checked, but remote attacker reachability and resource limits
+  across every connector were **not** established. The finding stays open, not
+  dismissed as unreachable. Avoid passing arbitrary large external data into
+  SDK validators; new public validation endpoints need input-size limits before
+  parsing/validation, not just a Zod `.max()`.
+- Follow-up: obtain an upstream v3 backport or a compatible SDK migration;
+  otherwise separately review a coordinated wallet-stack migration and its
+  RainbowKit/Wagmi/TypeScript peers. Test injected, Coinbase and WalletConnect
+  flows, cancellation, wrong chain and uncertain RPC outcomes before release.
+  Re-run audit and assess actual validation behavior, not only package versions.
+
+### Checks and Limits
+
+`scripts/wallet-dependency-boundaries.test.mjs` runs with `npm test`. It checks
+the reviewed RainbowKit/Wagmi pins across manifest/lock/installation, legacy
+Zod API compatibility, and actual Reown/Coinbase schemas with valid and invalid
+payloads. A deliberately bounded 32-element reproduction confirms the **open**
+Zod 3 behavior for both consumers. A passing reproduction means the risk remains,
+not that validation has been fixed. An upstream behavior change requires review
+and updating this check. No network requests or wallet transactions are made.
+
+Baseline root audit on November 4: **48 package-level findings: 0 critical,
+19 high, 27 moderate, 2 low**. This is a newer snapshot than the October counts,
+includes ancestor/metavulnerability chains, and is not 48 proven exploit paths.
+Zod remains high; `npm audit` exits nonzero. The post-check audit has the same
+counts. Subgraph/core audits are not rerun in this scoped review.
+
+Local verification on November 4:
+
+- Clean `npm ci --ignore-scripts --no-fund`: passed; existing React/Valtio peer
+  warnings remain. No package manifest or lockfile changes.
+- `npm test`: 70 passed, including five new dependency-boundary/schema checks.
+- `npm run typecheck` and `npm run build`: passed.
+- `npm run lint`: zero errors, 28 existing warnings; no lint rules relaxed.
+- `git diff --check`: passed. No new browser-wallet E2E, live signatures, deployment,
+  public PR action or independent audit was performed.
+
+These tests and this record are prepared locally on `fix/zod-security-compat`.
+Publishing them does not fix the advisory. Keep PR #45 unmerged pending a reviewed
+migration or a compatible upstream remedy; this review does not close that PR.
+
 ## Scope
 
 - Next.js and eslint-config-next: 16.1.6 -> 16.4.3, pinned in package.json and package-lock.json.
