@@ -182,3 +182,83 @@ type ProtocolStats @entity(immutable: false) {
   createdAtBlock: BigInt!
   updatedAtBlock: BigInt!
 }
+
+# Event-derived revenue, not total custody, APY or investor ownership.
+type ProtocolRevenueState @entity(immutable: false) {
+  id: ID!
+  currentPolicyKnown: Boolean!
+  currentTreasury: Bytes!
+  currentShareBps: BigInt!
+  scheduled: Boolean!
+  scheduledTreasury: Bytes!
+  scheduledShareBps: BigInt!
+  readyAt: BigInt!
+  accrued: BigInt!
+  claimed: BigInt!
+  pending: BigInt!
+  firstObservedBlock: BigInt!
+  updatedAtBlock: BigInt!
+  receivers: [ProtocolRevenueReceiver!]! @derivedFrom(field: "pool")
+  rounds: [FundingRoundRevenue!]! @derivedFrom(field: "pool")
+}
+
+type FundingRoundRevenue @entity(immutable: false) {
+  id: ID!
+  pool: ProtocolRevenueState!
+  round: Round!
+  roundId: BigInt!
+  treasury: ProtocolRevenueReceiver
+  treasuryAddress: Bytes!
+  shareBps: BigInt!
+  baseObserved: Boolean!
+  eligibleFee: BigInt!
+  totalFee: BigInt!
+  accrued: BigInt!
+  createdAtBlock: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type ProtocolRevenueReceiver @entity(immutable: false) {
+  id: ID!
+  pool: ProtocolRevenueState!
+  token: Bytes
+  discoveryStatus: String!
+  templateStarted: Boolean!
+  payeeCount: Int!
+  accrued: BigInt!
+  claimed: BigInt!
+  pending: BigInt!
+  observedCollected: BigInt!
+  observedReleased: BigInt!
+  firstObservedBlock: BigInt!
+  trackingStartedAtBlock: BigInt
+  updatedAtBlock: BigInt!
+  beneficiaries: [RevenueBeneficiary!]! @derivedFrom(field: "treasury")
+}
+
+type RevenueBeneficiary @entity(immutable: false) {
+  id: ID!
+  treasury: ProtocolRevenueReceiver!
+  address: Bytes!
+  shareBps: BigInt!
+  observedReleased: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type RevenueEvent @entity(immutable: true) {
+  id: ID!
+  kind: String!
+  pool: ProtocolRevenueState!
+  treasury: ProtocolRevenueReceiver
+  round: FundingRoundRevenue
+  payee: Bytes
+  amount: BigInt
+  shareBps: BigInt
+  readyAt: BigInt
+  eligibleFee: BigInt
+  totalFee: BigInt
+  txHash: Bytes!
+  logIndex: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}

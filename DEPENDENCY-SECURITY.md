@@ -1,5 +1,42 @@
 # Dependency Security Update - 2026-10-24
 
+## 2026-11-24 - Next.js Patch for the V2.4 Client Candidate
+
+Next.js and eslint-config-next are pinned to **16.4.6**, replacing 16.4.3.
+Manifest, lockfile and installed versions agree. Installation used
+`npm install --ignore-scripts`, without force or peer-dependency bypasses.
+Only the Next package family changed in this patch; React, RainbowKit 2.2.11,
+Wagmi 2.19.5, Viem 2.57.11 and the existing overrides are unchanged.
+
+The November audit identifies seven direct Next advisories in 16.4.3, including
+[cross-root-parameter cache disclosure](https://github.com/vercel/next.js/security/advisories/GHSA-mfr8-8qww-v76h).
+The [16.4.6 release](https://github.com/vercel/next.js/releases/tag/v16.4.6)
+is outside their affected ranges. After the patch, Next is absent from both
+full and production-only audit results. No security guard was disabled.
+
+| November 24 snapshot | All dependencies | Production-only |
+| --- | --- | --- |
+| dApp after patch | 38: 19 high, 19 moderate | 31: 19 high, 12 moderate |
+| Console after patch | 7 moderate | 0 |
+
+These are package-level audit counts, including dependency ancestors, not
+independent exploit counts. Advisory data can change between runs. The dApp
+still reports Zod 3, decode-uri-component, follow-redirects, Hono, stream-json,
+uuid and development minimatch paths. They remain open for scoped reachability
+and compatible-fix review; this patch does not assert they are harmless. Console's
+remaining findings are the development minimatch/TypeScript-ESLint chain.
+The owner's decision not to force Zod 4 or migrate the wallet stack is preserved.
+
+Verification: 77 dApp tests, six Console reader tests, both TypeScript checks,
+both production builds, local compiled-contract reader checks and desktop/mobile
+treasury browser smoke pass. dApp lint has zero errors and 28 existing warnings;
+Console lint is clean. Browser checks use anonymous legacy reads and a modern
+local-contract fixture, not real wallet writes or full GrantManager/indexer E2E.
+Private environment files, Solidity, addresses and subgraph packages were not
+changed. The client changes are local on `feat/v2-4-treasury-ui`; no commit, push,
+merge or public deployment was performed. Already deployed clients are not
+patched until the reviewed changes are published.
+
 ## 2026-11-04 - PR #45 Review: Compatibility Checks, Zod Risk Still Open
 
 The owner chose to retain the working wallet stack. This change adds tests and

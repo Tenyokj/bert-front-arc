@@ -12,8 +12,8 @@ let drift = 0;
 
 for (const name of (await readdir(sourceRoot)).filter((entry) => entry.endsWith(".md")).sort()) {
   const source = await readFile(path.join(sourceRoot, name), "utf8");
-  // Static downloads cannot resolve ../contracts or ../deployments on the website.
-  const content = source.replace(/\]\((\.\.\/[^)\s]+)\)/g, (_, target) => {
+  // Static downloads cannot resolve repository parents or unmirrored report folders.
+  const content = source.replace(/\]\(((?:\.\.\/|security-reports\/|contributor-issues\/)[^)\s]+)\)/g, (_, target) => {
     const resolved = path.posix.normalize(path.posix.join("docs", target));
     return `](${repository}${resolved})`;
   });

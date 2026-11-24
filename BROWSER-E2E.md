@@ -26,7 +26,10 @@ npm run test:e2e
 # V2.3 funding lifecycle only:
 npm run test:e2e:v2
 
-# Both V3.2 and V2.3, with a combined browser report:
+# V2.4 revenue plus the zero-revenue V2.3 baseline:
+npm run test:e2e:revenue
+
+# V3.2.1 and the V2.4 revenue/baseline matrix, with a combined browser report:
 npm run test:e2e:all
 ```
 
@@ -36,14 +39,17 @@ production mode and serves it on `127.0.0.1:13000`. Occupied ports cause an abor
 reused or reset. It deploys the actual proxy core and V3.2 Factory/module
 infrastructure using the existing deployment scripts, allowlists the Factory,
 mints 100,000 MockUSDC for eight accounts and records real local PoP attestations.
-The default command runs V3.2; `--suite v2` and `--suite all` select the other scopes.
+The default command runs V3.2.1 source; `--suite v2`, `--suite revenue` and
+`--suite all` select the other scopes. Revenue/all also deploy a local immutable
+Treasury. Revenue starts disabled, then the browser schedules a 2,000-bps share
+after completing the baseline round. No public activation is implied.
 
 ## Accounts and Network Safety
 
 | Hardhat account | V3.2 role | V2.3 role |
 | --- | --- | --- |
 | 0 | Creator, first Admin, execution recipient and local PoP signer | Round operator, filler author and permissionless review finalizer |
-| 1 | Second Admin for payment quorum | Unused |
+| 1 | Second Admin for payment quorum | Fixed local revenue beneficiary in revenue/all; unused by legacy-only suite |
 | 2 | Validator | Losing pledger and ineligible milestone reviewer |
 | 3 | Member proposal author; wallet cancellation check | Winning author |
 | 4 | Member, then exit and quorum-protected Admin add/remove | Losing author |
@@ -130,6 +136,53 @@ skips the waits. No public chain is modified.
   in full, with no success fee. Rejected author-bond slashing still applies.
 
 ## Reports and Limits
+
+### V2.4 Candidate: 24 November 2026
+
+The combined V3/V2.4 run passed both tests in **3.9 minutes** of browser runtime.
+V3 repeats the four-lane regression described above with the candidate FundingPool.
+V2 records **106 mined UI receipts**, 34 separately labeled fixture receipts,
+four rounds and 36 revenue-related event logs. The unchanged legacy-only suite
+still selects the zero-revenue V2.3 scope; revenue/all additionally exercise:
+
+- A complete zero-share baseline grant, then a new round at 20% of eligible
+  earned fees. Exact 20/40/40 author amounts and remaining reserve are checked.
+- Rejected wallet prompt, schedule/cancel/re-schedule, exact 48-hour local notice,
+  early-execution guard and permissionless activation by another test account.
+- Browser collection and fixed-beneficiary payment after each earned tranche;
+  the relayer receives none of the payout. A direct maintenance pause makes
+  collect unavailable without losing its credit; resume restores it.
+- Disabling future revenue after 60% release does not change that round's
+  final accrual or receiver. The original baseline round retains zero share.
+- Losing pledge/full refund, no-quorum grace/cancellation with 80% gross refund,
+  and no viable winner/full refunds with no earned fee. Treasury accrues,
+  collects and pays exactly **0.36 MockUSDC**, not 360,000 USDC, across the
+  revenue-success and partial-failure cases; pending ends at zero.
+
+`revenue-browser-receipts.json` records successful UI receipts and raw logs with
+their canonical receipt/block checks. The runner deletes the old revenue file
+before setup and, after browser success, executes actual revenue handlers with
+the Graph store/RPC double. Duplicate delivery and clean replay must match the
+expected financial amounts. This is not native Graph Node indexing/query/reorg.
+The offline fixture's beneficiary is a public Hardhat account, not the selected
+public-release beneficiary. The browser uses MockUSDC and an injected test wallet,
+not native Arc USDC or the MetaMask extension.
+
+Core **268 tests** and frontend **87 tests** passed again. The acceptance record
+in core `docs/V2.4-E2E-ACCEPTANCE.md` now includes a separate passing native-Arc
+GrantManager run (160 receipts, 0/20/60% cancellation, 1.08 native USDC paid).
+The separate fresh-chain Graph Node run now passes 38-log agreement, restart,
+two-block reorg and clean replay with MockUSDC. The earlier Arc fork's unavailable
+historical bytecode remains a documented limitation of that path. Slither/
+dependency risks and public rollout are not closed by these local runs. Neither
+native execution nor Graph checks are mislabeled as this browser flow.
+
+To replay a captured revenue file explicitly:
+
+```bash
+BERT_REVENUE_E2E_RECEIPTS=.e2e-results/revenue-browser-receipts.json \
+node --test scripts/revenue-mapping.test.mjs
+```
 
 ### Expanded Combined Run: 25 October 2026
 

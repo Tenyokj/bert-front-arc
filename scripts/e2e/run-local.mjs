@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
@@ -15,7 +15,7 @@ const baseURL = "http://127.0.0.1:13000";
 const children = [];
 const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 const args = process.argv.slice(2);
-assert.ok(args.length === 0 || (args.length === 2 && args[0] === "--suite" && ["v2", "v3", "all"].includes(args[1])), "Use --suite v2, v3 or all");
+assert.ok(args.length === 0 || (args.length === 2 && args[0] === "--suite" && ["v2", "v3", "revenue", "all"].includes(args[1])), "Use --suite v2, v3, revenue or all");
 const suite = args[1] || "v3";
 const nextEnvBefore = await readFile(path.join(root, "next-env.d.ts"), "utf8");
 // Explicit local network selection and public development accounts only. Never read a deployer key.
@@ -71,6 +71,7 @@ const extract = (log, label) => {
 
 try {
   await mkdir(output, { recursive: true });
+  await rm(path.join(output, "revenue-browser-receipts.json"), { force: true });
   if (process.platform === "darwin") {
     // Keep only this local rehearsal awake; never change persistent macOS power settings.
     const awake = spawn("/usr/bin/caffeinate", ["-i", "-w", String(process.pid)], { stdio: ["ignore", "pipe", "pipe"] });
@@ -124,7 +125,24 @@ try {
       console.log("[E2E] V2.3 mode enabled locally; five ideas per round, production review deadlines unchanged.");
     } finally { provider.destroy(); }
   }
-  const fixture = { rpc, baseURL, core, usdc, verifier, funding, factory, library, v2: v2Addresses, accounts: (await rpcCall("eth_accounts")).slice(0, 8) };
+  const accounts = (await rpcCall("eth_accounts")).slice(0, 8);
+  let revenue;
+  if (["revenue", "all"].includes(suite)) {
+    const require = createRequire(path.join(core, "package.json"));
+    const { ContractFactory, JsonRpcProvider } = require("ethers");
+    const provider = new JsonRpcProvider(rpc, undefined, { cacheTimeout: -1 });
+    try {
+      assert.equal((await provider.getNetwork()).chainId, 31337n);
+      const artifact = require(path.join(core, "artifacts/contracts/BERT/DAO/ProtocolRevenueTreasury.sol/ProtocolRevenueTreasury.json"));
+      const treasury = await new ContractFactory(artifact.abi, artifact.bytecode, await provider.getSigner(address))
+        .deploy(funding, usdc, [accounts[1]], [10000]);
+      const receipt = await treasury.deploymentTransaction().wait();
+      assert.equal(receipt.status, 1);
+      revenue = { treasury: await treasury.getAddress(), payee: accounts[1], shareBps: 2000,
+        deploymentHash: receipt.hash, scope: "Local test beneficiary only; not public release custody" };
+    } finally { provider.destroy(); }
+  }
+  const fixture = { rpc, baseURL, core, usdc, verifier, funding, factory, library, v2: v2Addresses, accounts, revenue };
   const fixturePath = path.join(output, "fixture.json");
   await writeFile(fixturePath, JSON.stringify(fixture, null, 2));
   const frontendEnv = {
@@ -147,7 +165,10 @@ try {
   tests.stdout.on("data", (chunk) => process.stdout.write(chunk));
   tests.stderr.on("data", (chunk) => process.stderr.write(chunk));
   const [code] = await once(tests, "exit");
-  process.exitCode = code || 0;
+  assert.equal(code, 0, "Browser acceptance failed; do not reuse an older receipt fixture.");
+  if (revenue) await run("revenue-replay", ["--test", "scripts/revenue-mapping.test.mjs"],
+    { ...env, BERT_REVENUE_E2E_RECEIPTS: path.join(output, "revenue-browser-receipts.json") }, root);
+  process.exitCode = 0;
 } catch (error) {
   console.error(error.message); process.exitCode = 1;
 } finally {

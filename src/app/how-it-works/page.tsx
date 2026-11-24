@@ -152,6 +152,14 @@ export default function HowItWorksPage() {
             </p>
           </section>
 
+          <section className="rounded-2xl border border-amber-300/25 bg-amber-300/5 p-5">
+            <h2 className="text-lg font-semibold">V2.4 Treasury: Unreleased Source Candidate</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              Public V2.3 and V3.2.1 remain unchanged. V2.4 prepares transparent accounting and a separate immutable Treasury for earned-fee revenue, not investor shares or APY. The approved testnet fee-share plan is not yet activated and does not redirect deposits, grant principal, refunds or old rounds.
+            </p>
+            <Link href="/treasury-policies#v2-4-candidate" className="mt-3 inline-block text-sm font-semibold text-teal-600 underline">Read the candidate economics and release boundary</Link>
+          </section>
+
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pillars.map((pillar) => (
               <div key={pillar.label} className="rounded-2xl border border-white/12 bg-white/[0.02] p-5">

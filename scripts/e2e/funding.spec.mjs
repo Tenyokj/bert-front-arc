@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
@@ -8,7 +8,7 @@ import { installWallet } from "./wallet.mjs";
 const fixture = JSON.parse(await readFile(process.env.BERT_E2E_FIXTURE, "utf8"));
 assert.equal(fixture.rpc, "http://127.0.0.1:18545");
 const require = createRequire(path.join(fixture.core, "package.json"));
-const { Contract, JsonRpcProvider, id: hashText } = require("ethers");
+const { Contract, JsonRpcProvider, formatUnits, id: hashText } = require("ethers");
 const provider = new JsonRpcProvider(fixture.rpc, undefined, { cacheTimeout: -1 });
 provider.pollingInterval = 100;
 const abi = (name) => require(path.join(fixture.core, `artifacts/contracts/BERT/DAO/${name}.sol/${name}.json`)).abi;
@@ -19,8 +19,11 @@ const pool = new Contract(fixture.funding, abi("FundingPoolUpgradeable"), provid
 const token = new Contract(fixture.usdc, require(path.join(fixture.core, "artifacts/contracts/Mocks/MockUSDC.sol/MockUSDC.json")).abi, provider);
 const USDC = 1_000_000n;
 const DAY = 86_400;
+const revenue = fixture.revenue;
+const treasury = revenue ? new Contract(revenue.treasury, abi("ProtocolRevenueTreasury"), provider) : null;
+const share = revenue ? BigInt(revenue.shareBps) : 0n;
 
-test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no-winner refunds", async ({ browser }, info) => {
+test("V2 funding browser: legacy isolation, revenue, 20/40/40 and refunds", async ({ browser }, info) => {
   expect((await provider.getNetwork()).chainId).toBe(31337n);
   expect(await voting.backerMilestonesEnabled()).toBe(true);
   const contexts = [];
@@ -29,6 +32,7 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
   const receipts = [];
   const seedReceipts = [];
   const errors = [];
+  const roundEvidence = [];
   async function pageFor(index, url) {
     if (!sharedPage) {
       const context = await browser.newContext({ baseURL: fixture.baseURL, viewport: { width: 1440, height: 1000 } });
@@ -37,6 +41,7 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
       await context.route("**/*", (route) => new URL(route.request().url()).hostname === "127.0.0.1" ? route.continue() : route.abort());
       sharedPage = await context.newPage();
       sharedPage.on("pageerror", (error) => errors.push(error.message));
+      sharedPage.on("dialog", (dialog) => dialog.accept());
     } else if (activeWallet !== index) {
       await sharedPage.evaluate((account) => window.__e2eSetAccount(account), fixture.accounts[index]);
     }
@@ -54,6 +59,7 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
     const receipt = await provider.waitForTransaction(hash, 1, 25_000);
     expect(receipt.status, `Mined receipt ${hash}`).toBe(1);
     receipts.push({ hash, blockNumber: receipt.blockNumber, status: receipt.status });
+    await expect(page.getByText(/Checking current onchain state|Submitted; waiting for an onchain receipt/)).toHaveCount(0);
   }
   async function advanceTo(timestamp) {
     await provider.send("evm_setNextBlockTimestamp", [Number(timestamp) + 1]);
@@ -136,13 +142,85 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
     const page = await pageFor(0, `/ideas/${ideaId}`);
     await transaction(page, milestone(page, stage).getByRole("button", { name: "Finalize after review window", exact: true }));
   }
+  async function policy(enabled, cancellationProbe = false) {
+    const page = await pageFor(0, "/pool");
+    const destination = enabled ? revenue.treasury : `0x${"0".repeat(40)}`;
+    await page.getByLabel("Revenue Treasury address", { exact: true }).fill(destination);
+    await page.getByLabel("Revenue share basis points", { exact: true }).fill(enabled ? String(share) : "0");
+    if (cancellationProbe) {
+      const previous = await pool.revenuePolicyReadyAt();
+      const sent = await page.evaluate(() => window.__e2eTransactions.length);
+      await page.evaluate(() => { window.__e2eRejectNext = true; });
+      await page.getByRole("button", { name: "Schedule settings", exact: true }).click();
+      await expect(page.getByRole("status").filter({ hasText: /User rejected/ })).toBeVisible();
+      expect(await pool.revenuePolicyReadyAt()).toBe(previous);
+      expect(await page.evaluate(() => window.__e2eTransactions.length)).toBe(sent);
+    }
+    await transaction(page, page.getByRole("button", { name: "Schedule settings", exact: true }));
+    const ready = await pool.revenuePolicyReadyAt();
+    const scheduledReceipt = await provider.getTransactionReceipt(receipts.at(-1).hash);
+    const scheduledBlock = await provider.getBlock(scheduledReceipt.blockNumber);
+    expect(ready - BigInt(scheduledBlock.timestamp)).toBe(2n * BigInt(DAY));
+    await expect(page.getByRole("button", { name: "Activate announced settings", exact: true })).toBeDisabled();
+    if (cancellationProbe) {
+      await transaction(page, page.getByRole("button", { name: "Cancel scheduled settings", exact: true }));
+      expect(await pool.revenuePolicyReadyAt()).toBe(0n);
+      await transaction(page, page.getByRole("button", { name: "Schedule settings", exact: true }));
+    }
+    await advanceTo(await pool.revenuePolicyReadyAt());
+    const relayer = await pageFor(2, "/pool");
+    await expect(relayer.getByRole("button", { name: "Schedule settings", exact: true })).toBeDisabled();
+    await transaction(relayer, relayer.getByRole("button", { name: "Activate announced settings", exact: true }));
+    expect(await pool.revenueShareBps()).toBe(enabled ? share : 0n);
+  }
+  async function collectAndPay(roundId, pauseProbe = false) {
+    const pending = await pool.pendingRevenueByTreasury(revenue.treasury);
+    expect(pending).toBeGreaterThan(0n);
+    const payeeBefore = await token.balanceOf(revenue.payee);
+    const callerBefore = await token.balanceOf(fixture.accounts[2]);
+    const page = await pageFor(2, "/pool");
+    await page.getByLabel("Revenue round ID", { exact: true }).fill(String(roundId));
+    await page.getByRole("button", { name: "Inspect round snapshot", exact: true }).click();
+    await expect(page.getByRole("heading", { name: `Round #${roundId} snapshot`, exact: true })).toBeVisible();
+    const pendingDisplay = page.getByRole("heading", { name: "Earned revenue awaiting collection", exact: true }).locator("..").locator("strong");
+    await expect(pendingDisplay).toHaveText(`${formatUnits(pending, 6).replace(/\.0$/, "")} USDC`);
+    const collect = page.getByRole("button", { name: "Collect earned revenue to this Treasury", exact: true });
+    if (pauseProbe) {
+      const admin = await provider.getSigner(fixture.accounts[0]);
+      for (const method of ["pause", "unpause"]) {
+        const receipt = await (await pool.connect(admin)[method]()).wait();
+        expect(receipt.status).toBe(1); seedReceipts.push(receipt.hash);
+        await page.getByRole("button", { name: "Refresh accounting (read-only)", exact: true }).click();
+        if (method === "pause") {
+          await expect(collect).toBeDisabled();
+          expect(await pool.pendingRevenueByTreasury(revenue.treasury)).toBe(pending);
+        }
+      }
+    }
+    await transaction(page, collect);
+    await expect(pendingDisplay).toHaveText("0 USDC");
+    expect(await pool.pendingRevenueByTreasury(revenue.treasury)).toBe(0n);
+    expect(await token.balanceOf(revenue.treasury)).toBe(pending);
+    await transaction(page, page.getByRole("button", { name: "Pay fixed beneficiary", exact: true }));
+    expect(await token.balanceOf(revenue.payee) - payeeBefore).toBe(pending);
+    expect(await token.balanceOf(fixture.accounts[2])).toBe(callerBefore);
+    expect(await token.balanceOf(revenue.treasury)).toBe(0n);
+    const accounting = await pool.getTreasuryAccounting();
+    expect(accounting.actual).toBe(await token.balanceOf(fixture.funding));
+    expect(accounting.accounted).toBe(accounting.reserve + accounting.revenue + accounting.otherFunds);
+    expect(accounting.actual).toBe(accounting.accounted);
+    expect(accounting.shortfall).toBe(0n);
+  }
   try {
-    await test.step("Browser-created winner and loser, immutable plans, three winning pledgers", async () => {
+    for (const enabled of revenue ? [false, true] : [false]) {
+    if (enabled) await policy(true, true);
+    await test.step(`Browser-created winner and loser; revenue ${enabled ? "20%" : "disabled"}`, async () => {
       console.log("[E2E V2.3] Funding targets, plans and pledges");
       await seedFillers(3);
       const winner = await createIdea(3, "V2.3 delivered project", 20);
       const loser = await createIdea(4, "V2.3 losing project", 20);
       const roundId = await startRound();
+      expect((await pool.fundingRoundRevenue(roundId)).shareBps).toBe(enabled ? share : 0n);
       for (const index of [5, 6, 7]) await pledge(index, roundId, winner);
       await pledge(2, roundId, loser);
       const reserveBeforeSettlement = await pool.protocolReserve();
@@ -159,7 +237,9 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
       const author = await pageFor(3, `/ideas/${winner}`);
       await transaction(author, author.getByRole("button", { name: "Claim initial 20%", exact: true }));
       expect((await grant.getGrantPayout(roundId)).released).toBe(net * 20n / 100n);
-      expect(await pool.protocolReserve() - reserveBefore).toBe(300_000n);
+      const initialRevenue = enabled ? 300_000n * share / 10000n : 0n;
+      expect(await pool.protocolReserve() - reserveBefore).toBe(300_000n - initialRevenue);
+      if (enabled) await collectAndPay(roundId, true);
       for (const stage of [1, 2]) {
         console.log(`[E2E V2.3] Milestone ${stage}: independent backers and exact progressive fee`);
         await submitProof(winner, stage);
@@ -175,10 +255,22 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
         const percentage = stage === 1 ? 60n : 100n;
         expect((await grant.getGrantPayout(roundId)).released).toBe(net * percentage / 100n);
         expect(await token.balanceOf(fixture.accounts[3]) - authorBefore).toBe(50n * USDC + net * percentage / 100n);
-        expect(await pool.protocolReserve() - reserveBefore).toBe(1_500_000n * percentage / 100n);
+        const earned = 1_500_000n * percentage / 100n;
+        expect(await pool.protocolReserve() - reserveBefore).toBe(earned - (enabled ? earned * share / 10000n : 0n));
+        if (enabled) {
+          await collectAndPay(roundId);
+          if (stage === 1) {
+            await policy(false);
+            expect((await pool.fundingRoundRevenue(roundId)).shareBps).toBe(share);
+            expect((await pool.fundingRoundRevenue(1)).shareBps).toBe(0n);
+          }
+        }
       }
       expect((await grant.getGrantPayout(roundId)).completionPaid).toBe(true);
+      roundEvidence.push({ roundId: String(roundId), scenario: enabled ? "full-revenue-after-policy-disable" : "full-legacy-zero-revenue" });
     });
+    }
+    if (revenue) await policy(true);
     await test.step("Silence never approves: grace expiry restores unvested gross escrow", async () => {
       console.log("[E2E V2.3] No-quorum cancellation and refunds including unvested fee");
       await seedFillers(4);
@@ -203,7 +295,9 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
       expect(await pool.grantRefundTotalByRound(roundId)).toBe(24n * USDC);
       for (const index of [5, 6, 7]) await refund(index, roundId, 8n * USDC);
       expect(await pool.grantRefundPaidByRound(roundId)).toBe(24n * USDC);
-      expect(await pool.protocolReserve() - reserveBefore).toBe(300_000n);
+      expect(await pool.protocolReserve() - reserveBefore).toBe(300_000n - 300_000n * share / 10000n);
+      if (revenue) await collectAndPay(roundId);
+      roundEvidence.push({ roundId: String(roundId), scenario: "no-quorum-80-percent-gross-refund" });
     });
     await test.step("No viable winner: every pledge is returned without a success fee", async () => {
       console.log("[E2E V2.3] No viable winner, full refunds");
@@ -217,7 +311,34 @@ test("V2.3 browser: 20/40/40, progressive fees, losing pledges, no-quorum and no
       for (const index of [5, 6, 7]) await refund(index, roundId, 10n * USDC);
       expect(await pool.protocolReserve()).toBe(reserveBefore + 5n * 50n * USDC);
       expect(await pool.pendingProtocolFeeByRound(roundId)).toBe(0n);
+      roundEvidence.push({ roundId: String(roundId), scenario: "no-winner-full-refund-no-fee" });
     });
+    if (revenue) {
+      expect(await treasury.totalReleased()).toBe(360_000n);
+      expect(await pool.totalPendingProtocolRevenue()).toBe(0n);
+      await policy(false);
+      const names = new Set(["FundingRoundOpened", "RevenuePolicyScheduled", "RevenuePolicyCancelled", "RevenuePolicyActivated",
+        "FundingRoundRevenueSnapshotted", "FundingRoundRevenueBaseSet", "ProtocolRevenueAccrued", "ProtocolRevenueClaimed", "RevenueCollected", "RevenueReleased"]);
+      const logs = [];
+      for (const log of await provider.getLogs({ address: [fixture.funding, revenue.treasury], fromBlock: 0, toBlock: "latest" })) {
+        const contract = log.address.toLowerCase() === fixture.funding.toLowerCase() ? pool : treasury;
+        const decoded = contract.interface.parseLog(log);
+        if (!decoded || !names.has(decoded.name)) continue;
+        const receipt = await provider.getTransactionReceipt(log.transactionHash);
+        expect(receipt.status).toBe(1);
+        expect(receipt.blockHash).toBe(log.blockHash);
+        const block = await provider.getBlock(log.blockNumber);
+        logs.push({ address: log.address, topics: [...log.topics], data: log.data, transactionHash: log.transactionHash,
+          blockHash: log.blockHash, blockNumber: log.blockNumber, blockTimestamp: block.timestamp, logIndex: log.index });
+      }
+      await writeFile(path.join(path.dirname(process.env.BERT_E2E_FIXTURE), "revenue-browser-receipts.json"), JSON.stringify({
+        chainId: 31337, publicTransactionsSent: false, wallet: "local EIP-1193 test provider; not MetaMask extension",
+        asset: "MockUSDC; native Arc semantics tested separately", pool: fixture.funding, treasury: revenue.treasury,
+        token: fixture.usdc, payee: revenue.payee, beneficiaries: [{ address: revenue.payee, shareBps: 10000 }],
+        rounds: roundEvidence, uiReceipts: receipts, fixtureReceipts: seedReceipts, logs,
+        expected: { pending: "0", accrued: "360000", claimed: "360000", collected: "360000", released: "360000", shareBps: "0" },
+      }, null, 2));
+    }
     expect(errors).toEqual([]);
   } finally {
     await info.attach("v2-ui-confirmed-receipts", { body: JSON.stringify(receipts, null, 2), contentType: "application/json" });

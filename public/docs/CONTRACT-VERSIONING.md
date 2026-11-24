@@ -1,5 +1,14 @@
 # Contract Versioning
 
+## Unreleased V2.4 Candidate
+
+FundingPool `1.4.0` -> `2.0.0`: new future-round fee ownership and bounded
+withdrawal authority materially change its financial trust boundary. This is
+not a patch/minor bump merely because old storage and round rules are preserved.
+New immutable ProtocolRevenueTreasury starts at `1.0.0`. Product candidate V2.4
+does not change the deployed V2.3/V3.2.1 release labels. See
+[candidate scope and gates](V2.4-PROTOCOL-REVENUE.md).
+
 Every deployable BERT contract carries a NatSpec `@custom:version` tag in
 `MAJOR.MINOR.PATCH` format. The version belongs to that contract alone; it is
 not the protocol, product, deployment, or release version.

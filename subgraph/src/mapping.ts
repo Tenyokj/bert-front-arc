@@ -1,5 +1,15 @@
 import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 
+export {
+  handleRevenuePolicyScheduled,
+  handleRevenuePolicyCancelled,
+  handleRevenuePolicyActivated,
+  handleFundingRoundRevenueSnapshotted,
+  handleFundingRoundRevenueBaseSet,
+  handleProtocolRevenueAccrued,
+  handleProtocolRevenueClaimed,
+} from "./revenue-mapping";
+
 import {
   IdeaCreated,
   IdeaMarkedLowQuality,

@@ -1,0 +1,54 @@
+services:
+  ipfs:
+    image: ipfs/kubo:v0.34.1
+    command: ["daemon", "--offline", "--migrate=true"]
+    restart: "no"
+    mem_limit: 256m
+    ports:
+      - "127.0.0.1:19501:5001"
+    volumes:
+      - revenue-ipfs:/data/ipfs
+  postgres:
+    image: postgres:14
+    restart: "no"
+    mem_limit: 256m
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: local-revenue-only
+      POSTGRES_DB: graph-node
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    volumes:
+      - revenue-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graph-node -d graph-node"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  graph-node:
+    image: graphprotocol/graph-node:v0.45.0
+    platform: linux/amd64
+    restart: "no"
+    mem_limit: 1536m
+    cpus: 2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    ports:
+      - "127.0.0.1:19000:8000"
+      - "127.0.0.1:19020:8020"
+      - "127.0.0.1:19030:8030"
+    environment:
+      postgres_host: postgres
+      postgres_user: graph-node
+      postgres_pass: local-revenue-only
+      postgres_db: graph-node
+      ipfs: ipfs:5001
+      ethereum: "hardhat:http://host.docker.internal:${REVENUE_LAB_RPC_PORT:-19548}"
+      GRAPH_LOG: info
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+volumes:
+  revenue-postgres:
+  revenue-ipfs:

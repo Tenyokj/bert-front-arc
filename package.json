@@ -11,6 +11,7 @@
     "test": "node --test scripts/*.test.mjs",
     "test:e2e": "node scripts/e2e/run-local.mjs",
     "test:e2e:v2": "node scripts/e2e/run-local.mjs --suite v2",
+    "test:e2e:revenue": "node scripts/e2e/run-local.mjs --suite revenue",
     "test:e2e:all": "node scripts/e2e/run-local.mjs --suite all",
     "test:community-routing": "node --test scripts/community-reference.test.mjs",
     "sync:core-docs": "node scripts/sync-core-docs.mjs",
@@ -21,7 +22,7 @@
     "@worldcoin/idkit": "^4.2.2",
     "@rainbow-me/rainbowkit": "2.2.11",
     "@tanstack/react-query": "^5.90.20",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-icons": "^5.5.0",
@@ -43,7 +44,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
     "typescript": "5.6.3"
   }

@@ -1,5 +1,9 @@
 # Treasury
 
+For the **unreleased** V2.4 accounting/revenue candidate and its migration limits,
+see [Protocol Revenue](V2.4-PROTOCOL-REVENUE.md). The deployed model described here
+does not yet expose the candidate's new API or revenue receiver.
+
 This document explains how BERT V2 accounts for capital, how the funding pool is structured, and why author bonds, pledges, fee escrow, reserve, and payouts must be understood as separate buckets.
 
 Current V2.3 uses 20/40/40 net grants with progressive fee vesting. Legacy rounds

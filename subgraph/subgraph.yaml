@@ -80,10 +80,31 @@ dataSources:
         - ProtocolStats
         - Pledge
         - PledgeRefund
+        - ProtocolRevenueState
+        - FundingRoundRevenue
+        - ProtocolRevenueReceiver
+        - RevenueBeneficiary
+        - RevenueEvent
       abis:
         - name: FundingPoolUpgradeable
           file: ./abis/DAO/FundingPoolUpgradeable.json
+        - name: ProtocolRevenueTreasury
+          file: ./abis/DAO/ProtocolRevenueTreasury.json
       eventHandlers:
+        - event: RevenuePolicyScheduled(indexed address,uint256,uint256)
+          handler: handleRevenuePolicyScheduled
+        - event: RevenuePolicyCancelled()
+          handler: handleRevenuePolicyCancelled
+        - event: RevenuePolicyActivated(indexed address,uint256)
+          handler: handleRevenuePolicyActivated
+        - event: FundingRoundRevenueSnapshotted(indexed uint256,indexed address,uint256)
+          handler: handleFundingRoundRevenueSnapshotted
+        - event: FundingRoundRevenueBaseSet(indexed uint256,uint256,uint256)
+          handler: handleFundingRoundRevenueBaseSet
+        - event: ProtocolRevenueAccrued(indexed uint256,indexed address,uint256)
+          handler: handleProtocolRevenueAccrued
+        - event: ProtocolRevenueClaimed(indexed address,uint256)
+          handler: handleProtocolRevenueClaimed
         - event: FundsDeposited(indexed address,uint256)
           handler: handleFundsDeposited
         - event: AuthorStakeDeposited(indexed uint256,indexed address,uint256)
@@ -203,3 +224,29 @@ dataSources:
         - event: ReputationDeinitialized(indexed address)
           handler: handleReputationDeinitialized
       file: ./src/mapping.ts
+
+templates:
+  - kind: ethereum
+    name: ProtocolRevenueTreasury
+    network: arc-testnet
+    source:
+      abi: ProtocolRevenueTreasury
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ProtocolRevenueReceiver
+        - RevenueBeneficiary
+        - RevenueEvent
+      abis:
+        - name: ProtocolRevenueTreasury
+          file: ./abis/DAO/ProtocolRevenueTreasury.json
+        - name: FundingPoolUpgradeable
+          file: ./abis/DAO/FundingPoolUpgradeable.json
+      eventHandlers:
+        - event: RevenueCollected(uint256)
+          handler: handleRevenueCollected
+        - event: RevenueReleased(indexed address,uint256)
+          handler: handleRevenueReleased
+      file: ./src/revenue-mapping.ts
