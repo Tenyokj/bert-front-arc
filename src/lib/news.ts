@@ -12,6 +12,17 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    id: "v2-4-transparent-treasury",
+    image: "/news-v-2-4.png",
+    alt: "BERT V2.4 transparent treasury and earned protocol revenue on Arc Testnet; revenue activation scheduled, not active yet",
+    href: "https://bertdao-docs.vercel.app/#v2-4-transparent-treasury",
+    aspectRatio: "2048 / 768",
+    objectFit: "contain",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#020510]",
+    maxWidth: 1600,
+  },
+  {
     id: "v3-2-community-governance",
     image: "/news-v-3-2.png",
     alt: "BERT V3.2 release with Admin-controlled 20/40/40 payments and the V3.2.1 correction hotfix on Arc Testnet",
