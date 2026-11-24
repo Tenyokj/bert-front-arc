@@ -1,8 +1,26 @@
-# V2.4 Revenue Indexer Candidate
+# V2.4 Revenue Indexer - Published and Client Endpoints Verified
 
-Status: **implemented and checked locally on 2026-11-24, not deployed**.
-The existing public V2 pool has not been upgraded. This source change does not
-activate revenue, choose beneficiaries or publish a Graph deployment.
+Status: **published as bert-arc-testnet/v0.4.0; owner reports Synced, both client
+GraphQL proxies verified after URL switch/redeploy**. Deployment:
+`QmespxoHTuLqWtkUn29jMXjcBhFDXLsJjwwvPYRMAXpfAg`.
+Endpoint: <https://api.studio.thegraph.com/query/1742046/bert-arc-testnet/v0.4.0>.
+First independent `_meta` check returned that deployment, indexed block 43491872
+and `hasIndexingErrors: false`; this is historical replay, not evidence of Synced.
+Later probes through the dApp and Console returned the same deployment with no
+indexing errors and indexed blocks 73934887/73934775. Console treasury reads are
+V2.4 and active, custody 1140 USDC, policy/schedule still zero. These bounded
+checks do not constitute the pending public financial pilot or an audit.
+On 2026-11-24 the existing public V2 pool was upgraded to
+implementation `0x06a6497C174f80Cb5D1E49BB5bD2519D520E7643`, immutable Treasury
+`0xeCF9D2fD1914D1aFa124498931fdAA976D4e143b` was deployed, and V2 reopened.
+Revenue is still inactive. A policy was subsequently scheduled in transaction
+`0x7d50e5bfb5fec55ff80a5618c6c6edeb3e11d0701e083993a62c9801d56b41ba` at
+block73935171: reviewed Treasury, 2000bps, readyAt1795730604
+(2026-11-26 22:03:24 UTC). Graph block73935281 agrees with RPC, discovers the
+immutable receiver/payee correctly and has no indexing errors. Active policy
+remains zero; activation is a separate future transaction. See core
+`docs/V2.4-ARC-TESTNET-RELEASE.md` for receipt-backed status. Neither contract nor
+Graph deployment activates the future 2000-bps policy.
 
 ## Indexed Data
 
@@ -171,13 +189,16 @@ The fail-closed historical-RPC check now aborts setup in that condition. Current
 scope and machine evidence are in core `docs/V2.4-E2E-ACCEPTANCE.md`; this is not
 a passing public Graph synchronization check.
 
-Review with the core candidate, then deploy a new **V2** subgraph version to the
-existing V2 Studio project only when authorized. Replay from retained start
-blocks, confirm sync/no indexing errors and query the new entities against
-known post-upgrade receipts. Do not create a V3 Factory or publish this candidate
-as already live. Testnet terms are now selected in core's
+The owner published the reviewed **V2** subgraph to the existing Studio project
+as v0.4.0 and reports Synced. Both client proxies confirm its hash/schema and no
+indexing errors. The first scheduled policy and immutable receiver/payee have
+now been compared with the canonical scheduling receipt and RPC getters. Compare
+the future activation and financial receipts separately; those remain pending.
+Do not create a V3 Factory or call revenue active merely because
+indexing is live. Testnet terms are selected in core's
 `release-config/arc-testnet-v2.4.json`: 20% of eligible earned fees to Treasury,
 100% of Treasury receipts to the recorded single beneficiary, and 48-hour notice.
-That configuration is not a deployed Treasury or active policy. Complete E2E and
-the actual upgrade/Graph/Vercel rollout remain separate release gates; follow
+The Treasury is now deployed, but that configuration is not an active policy.
+Public Graph synchronization is verified. Policy activation remains a separate
+operational step; the public pilot is recommended follow-up, not completed evidence. Follow
 core's `docs/V2.4-RELEASE-CONFIGURATION.md` before any public operation.

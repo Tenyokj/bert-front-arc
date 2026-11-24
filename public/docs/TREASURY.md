@@ -1,8 +1,11 @@
 # Treasury
 
-For the **unreleased** V2.4 accounting/revenue candidate and its migration limits,
-see [Protocol Revenue](V2.4-PROTOCOL-REVENUE.md). The deployed model described here
-does not yet expose the candidate's new API or revenue receiver.
+For deployed V2.4 accounting/revenue and its migration limits, see
+[Protocol Revenue](V2.4-PROTOCOL-REVENUE.md) and the
+[receipt-backed rollout](V2.4-ARC-TESTNET-RELEASE.md). FundingPool was upgraded;
+the 2000-bps policy is scheduled, not active until a separate transaction after
+2026-11-26 22:03:24 UTC. Historical V2.3 fee-destination descriptions below apply
+to old/zero-share rounds; eligible future-round fees can be split after activation.
 
 This document explains how BERT V2 accounts for capital, how the funding pool is structured, and why author bonds, pledges, fee escrow, reserve, and payouts must be understood as separate buckets.
 

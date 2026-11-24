@@ -66,10 +66,11 @@ npx hardhat test test/EconomicTrustBoundaries.fully.ts --network hardhat
 
 ## 3. Local E2E Lab
 
-### Unreleased V2.4 Revenue Regressions
+### V2.4 Revenue Regressions
 
-The [transparent treasury candidate](V2.4-PROTOCOL-REVENUE.md) is local source,
-not the public deployment. Run `npx hardhat test test/ProtocolRevenue.fully.ts`
+The [transparent treasury](V2.4-PROTOCOL-REVENUE.md) is installed on Arc Testnet;
+its revenue policy is scheduled, not active. These tests run locally, not against
+public wallets. Run `npx hardhat test test/ProtocolRevenue.fully.ts`
 for delayed snapshots, earned-fee collection, immutable beneficiary payouts,
 ERC-20 failures, conservation and a populated Transparent-proxy upgrade from
 the frozen 1.4.0 baseline. This does not replace a fork of actual deployed state.

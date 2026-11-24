@@ -1,8 +1,12 @@
-# Treasury UI Candidate
+# Treasury UI and V2.4 Rollout
 
-Status: local source for the **undeployed V2.4 candidate**, updated 2026-11-24.
-The public V2.3 pool remains supported. No address, policy or public deployment
-was changed. Branch: `feat/v2-4-treasury-ui`.
+Status: **V2.4 contracts installed, clients and V2 Graph v0.4.0 published and
+verified; revenue policy scheduled, not active**. Updated 2026-11-24.
+The proxy address is unchanged and legacy-pool compatibility is retained.
+Treasury: `0xeCF9D2fD1914D1aFa124498931fdAA976D4e143b`. A separate activation
+is required at/after 2026-11-26 22:03:24 UTC. A public revenue pilot is recommended
+follow-up, not a technical prerequisite for activation or this testnet release.
+See core `docs/V2.4-ARC-TESTNET-RELEASE.md` for receipts and payout instructions.
 
 ## Behavior
 
@@ -78,7 +82,7 @@ The separately implemented local [revenue indexer candidate](subgraph/REVENUE-V2
 adds event-derived policy/round/receiver/payment history without changing the
 RPC-backed panel above. Ten mapping/manifest tests bring the root suite to 87.
 Both Graph manifests build; compiled local receipts match replay. Graph Node
-public sync remains unverified; the separate Graph acceptance check
+public sync and both client GraphQL proxies were subsequently verified; the separate Graph acceptance check
 is described below. A subsequent bounded
 [browser acceptance run](BROWSER-E2E.md#v24-candidate-24-november-2026) now covers
 the actual GrantManager success/refund path and revenue actions with a local
