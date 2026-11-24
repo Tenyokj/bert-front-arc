@@ -1,21 +1,34 @@
 # Current Release and Payout Modes
 
-This is the current integration summary for **BERT V2.3**, **Community Layer
+This is the current integration summary for **BERT V2.4 rollout (revenue scheduled,
+not active)** with retained V2.3 grant rules, **Community Layer
 V3.2.1**, and **Console V0.1.0 Beta** on **Arc Testnet, chain ID 5042002**.
 Protocol-layer versions are independent of each contract's `@custom:version`.
 The [deployment manifest](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/deployments/arc-testnet-v3.json) identifies addresses;
 the [documentation audit](DOCUMENTATION-AUDIT-2026-10-24.md) records verification.
 
-**Current release: Community Layer V3.2.1, deployed on Arc Testnet on 25 October 2026. V2 remains V2.3.**
+**Current releases: V2.4, installed on Arc Testnet November 24, 2026 with revenue activation pending; Community Layer V3.2.1, deployed October 25, 2026.**
 See [receipt-backed release evidence](V3.2.1-ARC-TESTNET-RELEASE.md).
 See [version scopes](V3.2-RELEASE.md).
 
-**Unreleased source candidate, 24 November 2026:** V2.4 transparent treasury and
-protocol revenue is locally prepared, not deployed. FundingPool 2.0.0 and an
-immutable ProtocolRevenueTreasury 1.0.0 do not change the live version above.
+**Confirmed rollout, 24 November 2026:** FundingPool 2.0.0 is installed at the
+existing proxy and immutable ProtocolRevenueTreasury 1.0.0 is deployed. All three
+V2 modules are active, captured custody/storage/wiring were preserved, and V2
+Graph v0.4.0 plus both client GraphQL proxies were verified. See the
+[receipt-backed rollout record](V2.4-ARC-TESTNET-RELEASE.md) and
+[current staged V2.4 addresses](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/deployments/arc-testnet-v2.4-rollout.json).
+The consolidated manifest records the installed implementation. Its exact
+pre-upgrade snapshot is archived as `deployments/arc-testnet-pre-v2.4.json`.
+Historical rollout/rehearsal tools use that snapshot, not the current manifest.
+Their changed tool fingerprint intentionally cannot resume the original journal;
+keep that journal as evidence and do not repeat completed sends.
 Selected testnet terms are 20% of eligible earned fees to Treasury, a fixed
 single beneficiary receiving 100% of Treasury receipts, and 48-hour policy
-notice. These terms are not active on the public pool. See the
+notice. The terms were scheduled in a successful public transaction; they remain
+inactive until a separate activation at/after **2026-11-26 22:03:24 UTC**
+(23:03:24 Europe/Madrid). A new round opened before activation keeps zero share.
+No full public accrual/collection/payment pilot or independent audit is claimed.
+See the
 [specification](V2.4-PROTOCOL-REVENUE.md),
 [configuration/runbook](V2.4-RELEASE-CONFIGURATION.md) and
 [remaining gates](V2.4-RELEASE-CHECKLIST.md). No investor shares or APY are added.
@@ -66,6 +79,12 @@ fee. With a 5% fee and a 100 USDC gross winning pledge, the author receives
 19 / 38 / 38 USDC; reserve receives the matching 1 / 2 / 2 USDC, subject to token
 unit rounding. Unpaid net grant plus unvested fee remain refundable on terminal
 failure. Already paid author tranches and vested fees are not clawed back.
+
+That reserve-only fee destination remains correct for old/zero-share rounds.
+After V2.4 activation, a newly opened round snapshots its own Treasury/share:
+at 2000 bps, fully delivering a 100-USDC pledge-funded grant with a 5% fee still
+pays the author 95 USDC, but splits the earned 5-USDC fee into 1 USDC Treasury
+and 4 USDC reserve. Reserve-funded top-ups do not increase eligible team revenue.
 
 V2.3 reviews require 40% of original winning pledge weight to participate, exact
 two-thirds approval of participating weight, and at least three eligible approving

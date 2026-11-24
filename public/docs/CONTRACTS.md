@@ -13,13 +13,14 @@ This document maps the major BERT protocol contracts, their responsibilities, th
 ## Version Scope
 
 Historical contract-version milestones below are not one shared version for all
-contracts. The current public protocol layers are V2.3 and V3.2; see
+contracts. The current public protocol layers are V2.4 and V3.2.1; see
 [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for exact payout modes.
 - `v1.0.0`: proposal registry, rounds, voting, treasury accounting, winner selection, one-step grant claim
 - `v1.1.0`: author stake on idea creation, staged grant release `30 / 40 / 30`, milestone proof review, rejection cooldown, reserve-aware rejected stake flow
 - `v1.2.0`: conditional stake-backed grant selection, proposal-level net funding targets, refundable losing pledges, fee escrow, deadline-driven grant refunds, and a bounded `5..50` round size
 - `v1.3.0`: V2.3 supporter-reviewed grant delivery, including winner-only milestone review and refund of unreleased failed-plan capital
 - `v1.4.0`: additive Community Factory authorization in `FundingPoolUpgradeable`, allowing V3.0 and V3.1 Treasuries to route protocol reserve concurrently without replacing either Factory
+- FundingPool `2.0.0` / Treasury `1.0.0`: V2.4 transparent accounting, delayed future-round fee policy, earned-revenue credit and immutable beneficiary payouts. Installed on Arc Testnet November 24; policy is scheduled, not active.
 
 ## Core Contracts
 
@@ -110,6 +111,7 @@ Owns this state:
 - per-round and per-idea pool accounting
 - historical distribution records
 - pledge ownership, refund status, and fee escrow state
+- active/scheduled revenue policy, per-round policy snapshots and earned Treasury credit
 
 Can mutate:
 - contributors can deposit directly
@@ -117,6 +119,8 @@ Can mutate:
 - voting system can record one voter pledge per funding round
 - grant manager or distributor-authorized paths can release funds
 - grant manager can finalize a successful-round fee, cancel an unclaimed winner, or activate an expired-grant refund
+- protocol Admin can announce/cancel a future revenue policy; anyone can execute it after 48 hours
+- a Treasury can collect only its earned credit, not pool principal or someone else's credit
 
 Depends on:
 - configured USDC token address

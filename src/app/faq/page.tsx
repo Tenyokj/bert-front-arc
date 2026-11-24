@@ -149,7 +149,7 @@ const sections: FaqSection[] = [
       {
         question: "Is V2.4 protocol revenue already active?",
         answer:
-          "No. V2.4 is a locally prepared candidate; public contracts remain V2.3 + V3.2.1. The approved testnet plan assigns Treasury 20% of eligible earned success fees, not 20% of pool funds. Activation requires a separately verified upgrade, a deployed immutable Treasury and 48 hours after the policy is scheduled. Existing rounds keep their original policy.",
+          "Not yet. V2.4 FundingPool and immutable Treasury are deployed on Arc Testnet; the clients and V2 Graph v0.4.0 are published. The 20% share of eligible earned success fees is scheduled, not active. A separate activation is required at or after November 26, 2026, 22:03:24 UTC. This is not 20% of pool funds. Existing rounds keep their original policy; a public revenue pilot remains pending.",
       },
       {
         question: "Does a pool deposit give me ownership or interest?",

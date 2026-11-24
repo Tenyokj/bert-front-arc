@@ -139,9 +139,10 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) for current frontend, QA, integration,
 
 ## Required Release Checks
 
-The unreleased transparent-treasury UI is documented in
-[Treasury V2.4](TREASURY-V2.4.md). It preserves legacy-pool compatibility and does
-not imply that the public pool has been upgraded. Donor ledger values are not
+The deployed transparent-treasury UI is documented in
+[Treasury V2.4](TREASURY-V2.4.md). FundingPool is upgraded on Arc Testnet; the
+eligible-fee policy is scheduled, not active until a separate transaction after
+2026-11-26 22:03:24 UTC. Legacy-pool compatibility is retained. Donor ledger values are not
 investor shares or a general withdrawal balance.
 
 Run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` before a PR/release. Type checking is enforced by Next; `ignoreBuildErrors` is no longer enabled. Graph AssemblyScript belongs to the separate subgraph build, not the browser TypeScript project. Runtime-decoding tests cover tuple/named RPC results without unsafe ID/weight conversion.

@@ -1,13 +1,14 @@
 # Contract Versioning
 
-## Unreleased V2.4 Candidate
+## V2.4 Arc Testnet Release
 
 FundingPool `1.4.0` -> `2.0.0`: new future-round fee ownership and bounded
 withdrawal authority materially change its financial trust boundary. This is
 not a patch/minor bump merely because old storage and round rules are preserved.
-New immutable ProtocolRevenueTreasury starts at `1.0.0`. Product candidate V2.4
-does not change the deployed V2.3/V3.2.1 release labels. See
-[candidate scope and gates](V2.4-PROTOCOL-REVENUE.md).
+New immutable ProtocolRevenueTreasury starts at `1.0.0`. Both were installed on
+Arc Testnet November 24, 2026. Product release V2.4 retains V2.3 grant/milestone
+rules and does not change Community Layer V3.2.1. Revenue policy is scheduled,
+not active. See [actual addresses and status](V2.4-ARC-TESTNET-RELEASE.md).
 
 Every deployable BERT contract carries a NatSpec `@custom:version` tag in
 `MAJOR.MINOR.PATCH` format. The version belongs to that contract alone; it is
@@ -38,9 +39,10 @@ is `2.0.0`. The new module and module-deployer contracts begin at `1.0.0`.
 
 ## V3.2 Release
 
-The next Community Layer release is **V3.2**, independently of the unchanged
-Global Funding Layer **V2.3**. Comment/documentation-only V2 changes do not create
-V2.4 or V2.3.1 and do not require an implementation upgrade.
+The October Community Layer release **V3.2** was independent of the then-unchanged
+Global Funding Layer **V2.3**. Those comment/documentation-only V2 changes did not
+create V2.4 or require an implementation upgrade. The November V2.4 release above
+is a separate financial-logic upgrade, not a renaming of that October work.
 
 V3.2 uses Manager `2.0.0`, Hub `2.1.0`, Membership `1.1.0`, CommunityTypes
 `2.1.0`, and Membership/Milestone deployers `1.1.0`. Do not synchronize every
