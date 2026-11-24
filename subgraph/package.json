@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "sync:revenue-abis": "node scripts/sync-revenue-abis.mjs",
     "codegen:local": "graph codegen subgraph.local.yaml",
     "build:local": "graph build subgraph.local.yaml",
     "create:local": "graph create --node http://127.0.0.1:8020 bert-local",

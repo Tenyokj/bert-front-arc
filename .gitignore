@@ -28,6 +28,7 @@ pnpm-debug.log*
 *.tsbuildinfo
 .e2e-results/
 .next-e2e/
+subgraph/.revenue-native/
 
 #other
 bert-contracts/

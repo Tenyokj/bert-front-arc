@@ -147,6 +147,21 @@ const sections: FaqSection[] = [
     title: "Milestones & Treasury",
     items: [
       {
+        question: "Is V2.4 protocol revenue already active?",
+        answer:
+          "No. V2.4 is a locally prepared candidate; public contracts remain V2.3 + V3.2.1. The approved testnet plan assigns Treasury 20% of eligible earned success fees, not 20% of pool funds. Activation requires a separately verified upgrade, a deployed immutable Treasury and 48 hours after the policy is scheduled. Existing rounds keep their original policy.",
+      },
+      {
+        question: "Does a pool deposit give me ownership or interest?",
+        answer:
+          "No. Deposit accounting is not investor equity, a withdrawable share of custody or an APY product. V2.4 does not turn deposits, bonds, grant principal, refunds, direct transfers or V3 reserve inflows into team revenue. Only an opted-in round's eligible earned fee creates a Treasury credit.",
+      },
+      {
+        question: "Can the team redirect a RevenueTreasury payment?",
+        answer:
+          "The candidate RevenueTreasury fixes its pool, token and beneficiaries at deployment. Anyone can relay a payment, but it goes only to the fixed payee. There is no owner rescue or recipient rotation; lost keys or issuer restrictions can strand funds. FundingPool itself remains upgradeable, so this is not a claim of fully trustless administration.",
+      },
+      {
         question: "How are grants released?",
         answer:
           "New V2.3 winning ideas move through a 20% initial claim, 40% in-process release, and 40% completion release. The 5% fee is reserved proportionally as each author tranche is claimed, so the author receives 19% / 38% / 38% of gross winning pledges.",

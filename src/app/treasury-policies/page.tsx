@@ -126,10 +126,24 @@ export default function TreasuryPoliciesPage() {
               </p>
             </section>
 
+            <section id="v2-4-candidate" className="space-y-4 rounded-2xl border border-amber-300/25 bg-amber-300/5 p-5">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">V2.4: Unreleased Treasury Candidate</h2>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                Public deployments remain V2.3 + V3.2.1. The V2.4 candidate separates actual and recorded custody, reserve, earned revenue, other funds and surplus or shortfall. None of the full pool balance is labelled team income, investor ownership or interest-bearing deposits.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                The approved testnet plan assigns an immutable RevenueTreasury 20% of eligible earned fees; at a 5% round fee, full execution of 100 USDC in winning pledges yields 1 USDC to Treasury, 4 USDC retained in reserve and 95 USDC to the author. Existing rounds keep their policy. Reserve-funded top-ups, deposits, bonds, refunds and V3 inflows do not become the revenue base.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                This policy is not active. After a separately reviewed upgrade, scheduling and activation are separate operations with a 48-hour notice. Fixed beneficiaries cannot be rotated for old Treasury funds; USDC issuer restrictions and FundingPool upgrade authority remain risks.
+              </p>
+              <Link href="/docs/V2.4-PROTOCOL-REVENUE.md" className="text-sm font-semibold text-teal-600 underline">Read the candidate specification and release gates</Link>
+            </section>
+
             <section id="sources" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Treasury Sources</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Primary treasury state is represented in <strong>Funding Pool</strong>. V2 separates voluntary reserve deposits from per-round pledge escrow: author bonds deter spam, losing pledges remain refundable, and fees from successfully claimed grants become protocol reserve.
+                Primary treasury state is represented in <strong>Funding Pool</strong>. V2 separates direct contributions from per-round pledge escrow: a direct deposit is not automatically protocol reserve or team revenue. Author bonds deter spam, losing pledges remain refundable, and the deployed V2.3 fees vest to protocol reserve as author tranches are paid.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Any source that changes effective pool balance should be traceable by event history and consistent with on-chain balances.

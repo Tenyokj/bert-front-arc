@@ -1,5 +1,27 @@
 # First Contributor Issues
 
+## Active Shortlist - 2026-11-19
+
+Start with these three opportunities, not the entire protocol. GitHub API check
+on November 19 found frontend #34 open and no open Core issues. Only #34 is
+published; the two linked bodies below are drafts awaiting publication.
+
+| Track | First task | Status / destination |
+| --- | --- | --- |
+| First-time QA | [Navigation and clarity, no wallet](https://github.com/Tenyokj/bert-front-arc/issues/34) | Existing issue; do not duplicate |
+| Frontend / experienced QA | [Account-switch state isolation](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/contributor-issues/frontend-account-switch.md) | Draft for `Tenyokj/bert-front-arc` |
+| Solidity / security-minded contributor | [Correction/refund boundary review](https://github.com/Tenyokj/bert-core-arc/blob/arc-usdc-migration/docs/contributor-issues/core-correction-refunds.md) | Draft for `Tenyokj/bert-core-arc` |
+
+Comment before starting to coordinate scope; this is not a claim that a maintainer
+or contributor has been assigned. Participation is voluntary. No payment, token,
+role or repository access is guaranteed. Report possible exploits privately.
+Do not use `good first issue` for wallet-state or financial-invariant reviews.
+
+## Earlier Backlog
+
+The following four drafts are retained as optional backlog, not four additional
+active recruitment requests. Use the shortlist above for the first invitations.
+
 These are ready-to-publish issue drafts, not claims that GitHub Issues already
 exist. Publish each in the named repository, check for duplicates first, and
 assign one owner before inviting contributors. `good first issue` fits the

@@ -10,6 +10,16 @@ the [documentation audit](DOCUMENTATION-AUDIT-2026-10-24.md) records verificatio
 See [receipt-backed release evidence](V3.2.1-ARC-TESTNET-RELEASE.md).
 See [version scopes](V3.2-RELEASE.md).
 
+**Unreleased source candidate, 24 November 2026:** V2.4 transparent treasury and
+protocol revenue is locally prepared, not deployed. FundingPool 2.0.0 and an
+immutable ProtocolRevenueTreasury 1.0.0 do not change the live version above.
+Selected testnet terms are 20% of eligible earned fees to Treasury, a fixed
+single beneficiary receiving 100% of Treasury receipts, and 48-hour policy
+notice. These terms are not active on the public pool. See the
+[specification](V2.4-PROTOCOL-REVENUE.md),
+[configuration/runbook](V2.4-RELEASE-CONFIGURATION.md) and
+[remaining gates](V2.4-RELEASE-CHECKLIST.md). No investor shares or APY are added.
+
 **Deployed correction hotfix (25 October):** the new bundle uses Manager `2.0.1`, which renews a
 bounded correction proof window and permits expiry of abandoned cooldowns.
 This is not present in historical `2.0.0` Managers; existing immutable Communities are not upgraded. See

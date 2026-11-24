@@ -1,5 +1,8 @@
 # Security
 
+For the source-based privilege matrix, the dated Arc Testnet owner/signer snapshot,
+and focused economic regression scope, see [Authority Map](AUTHORITY-MAP.md).
+
 BERT is an upgradeable, multi-contract protocol with explicit treasury accounting, role-gated state transitions, and milestone-based payout release. Its security model must therefore cover not only typical smart contract bugs, but also role misuse, dependency miswiring, treasury accounting failures, and operational errors during upgrades and live maintenance.
 
 ## Contents

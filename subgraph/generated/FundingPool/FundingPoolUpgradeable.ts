@@ -84,6 +84,28 @@ export class AuthorStakeSlashed__Params {
   }
 }
 
+export class CommunityFactoryApprovalUpdated extends ethereum.Event {
+  get params(): CommunityFactoryApprovalUpdated__Params {
+    return new CommunityFactoryApprovalUpdated__Params(this);
+  }
+}
+
+export class CommunityFactoryApprovalUpdated__Params {
+  _event: CommunityFactoryApprovalUpdated;
+
+  constructor(event: CommunityFactoryApprovalUpdated) {
+    this._event = event;
+  }
+
+  get communityFactory(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get approved(): boolean {
+    return this._event.parameters[1].value.toBoolean();
+  }
+}
+
 export class CommunityFactoryUpdated extends ethereum.Event {
   get params(): CommunityFactoryUpdated__Params {
     return new CommunityFactoryUpdated__Params(this);
@@ -235,6 +257,58 @@ export class FundingRoundOpened__Params {
 
   get feeBps(): BigInt {
     return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class FundingRoundRevenueBaseSet extends ethereum.Event {
+  get params(): FundingRoundRevenueBaseSet__Params {
+    return new FundingRoundRevenueBaseSet__Params(this);
+  }
+}
+
+export class FundingRoundRevenueBaseSet__Params {
+  _event: FundingRoundRevenueBaseSet;
+
+  constructor(event: FundingRoundRevenueBaseSet) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get eligibleFee(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get totalFee(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class FundingRoundRevenueSnapshotted extends ethereum.Event {
+  get params(): FundingRoundRevenueSnapshotted__Params {
+    return new FundingRoundRevenueSnapshotted__Params(this);
+  }
+}
+
+export class FundingRoundRevenueSnapshotted__Params {
+  _event: FundingRoundRevenueSnapshotted;
+
+  constructor(event: FundingRoundRevenueSnapshotted) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get treasury(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get shareBps(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
   }
 }
 
@@ -584,6 +658,116 @@ export class ProtocolReserveAllocated__Params {
   }
 }
 
+export class ProtocolRevenueAccrued extends ethereum.Event {
+  get params(): ProtocolRevenueAccrued__Params {
+    return new ProtocolRevenueAccrued__Params(this);
+  }
+}
+
+export class ProtocolRevenueAccrued__Params {
+  _event: ProtocolRevenueAccrued;
+
+  constructor(event: ProtocolRevenueAccrued) {
+    this._event = event;
+  }
+
+  get roundId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get treasury(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class ProtocolRevenueClaimed extends ethereum.Event {
+  get params(): ProtocolRevenueClaimed__Params {
+    return new ProtocolRevenueClaimed__Params(this);
+  }
+}
+
+export class ProtocolRevenueClaimed__Params {
+  _event: ProtocolRevenueClaimed;
+
+  constructor(event: ProtocolRevenueClaimed) {
+    this._event = event;
+  }
+
+  get treasury(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class RevenuePolicyActivated extends ethereum.Event {
+  get params(): RevenuePolicyActivated__Params {
+    return new RevenuePolicyActivated__Params(this);
+  }
+}
+
+export class RevenuePolicyActivated__Params {
+  _event: RevenuePolicyActivated;
+
+  constructor(event: RevenuePolicyActivated) {
+    this._event = event;
+  }
+
+  get treasury(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get shareBps(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class RevenuePolicyCancelled extends ethereum.Event {
+  get params(): RevenuePolicyCancelled__Params {
+    return new RevenuePolicyCancelled__Params(this);
+  }
+}
+
+export class RevenuePolicyCancelled__Params {
+  _event: RevenuePolicyCancelled;
+
+  constructor(event: RevenuePolicyCancelled) {
+    this._event = event;
+  }
+}
+
+export class RevenuePolicyScheduled extends ethereum.Event {
+  get params(): RevenuePolicyScheduled__Params {
+    return new RevenuePolicyScheduled__Params(this);
+  }
+}
+
+export class RevenuePolicyScheduled__Params {
+  _event: RevenuePolicyScheduled;
+
+  constructor(event: RevenuePolicyScheduled) {
+    this._event = event;
+  }
+
+  get treasury(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get shareBps(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get readyAt(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class Unpaused extends ethereum.Event {
   get params(): Unpaused__Params {
     return new Unpaused__Params(this);
@@ -678,6 +862,58 @@ export class FundingPoolUpgradeable__distributionHistoryResult {
 
   getDistributedAt(): BigInt {
     return this.value3;
+  }
+}
+
+export class FundingPoolUpgradeable__fundingRoundRevenueResult {
+  value0: Address;
+  value1: BigInt;
+  value2: BigInt;
+  value3: BigInt;
+  value4: BigInt;
+
+  constructor(
+    value0: Address,
+    value1: BigInt,
+    value2: BigInt,
+    value3: BigInt,
+    value4: BigInt,
+  ) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+    this.value4 = value4;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromAddress(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    map.set("value4", ethereum.Value.fromUnsignedBigInt(this.value4));
+    return map;
+  }
+
+  getTreasury(): Address {
+    return this.value0;
+  }
+
+  getShareBps(): BigInt {
+    return this.value1;
+  }
+
+  getAccrued(): BigInt {
+    return this.value2;
+  }
+
+  getEligibleFee(): BigInt {
+    return this.value3;
+  }
+
+  getTotalFee(): BigInt {
+    return this.value4;
   }
 }
 
@@ -784,9 +1020,123 @@ export class FundingPoolUpgradeable__getPledgeResult {
   }
 }
 
+export class FundingPoolUpgradeable__getTreasuryAccountingResult {
+  value0: BigInt;
+  value1: BigInt;
+  value2: BigInt;
+  value3: BigInt;
+  value4: BigInt;
+  value5: BigInt;
+  value6: BigInt;
+
+  constructor(
+    value0: BigInt,
+    value1: BigInt,
+    value2: BigInt,
+    value3: BigInt,
+    value4: BigInt,
+    value5: BigInt,
+    value6: BigInt,
+  ) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+    this.value4 = value4;
+    this.value5 = value5;
+    this.value6 = value6;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    map.set("value4", ethereum.Value.fromUnsignedBigInt(this.value4));
+    map.set("value5", ethereum.Value.fromUnsignedBigInt(this.value5));
+    map.set("value6", ethereum.Value.fromUnsignedBigInt(this.value6));
+    return map;
+  }
+
+  getActual(): BigInt {
+    return this.value0;
+  }
+
+  getAccounted(): BigInt {
+    return this.value1;
+  }
+
+  getReserve(): BigInt {
+    return this.value2;
+  }
+
+  getRevenue(): BigInt {
+    return this.value3;
+  }
+
+  getOtherFunds(): BigInt {
+    return this.value4;
+  }
+
+  getSurplus(): BigInt {
+    return this.value5;
+  }
+
+  getShortfall(): BigInt {
+    return this.value6;
+  }
+}
+
 export class FundingPoolUpgradeable extends ethereum.SmartContract {
   static bind(address: Address): FundingPoolUpgradeable {
     return new FundingPoolUpgradeable("FundingPoolUpgradeable", address);
+  }
+
+  MAX_COMMUNITY_FACTORIES(): BigInt {
+    let result = super.call(
+      "MAX_COMMUNITY_FACTORIES",
+      "MAX_COMMUNITY_FACTORIES():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_MAX_COMMUNITY_FACTORIES(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "MAX_COMMUNITY_FACTORIES",
+      "MAX_COMMUNITY_FACTORIES():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  REVENUE_POLICY_DELAY(): BigInt {
+    let result = super.call(
+      "REVENUE_POLICY_DELAY",
+      "REVENUE_POLICY_DELAY():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_REVENUE_POLICY_DELAY(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "REVENUE_POLICY_DELAY",
+      "REVENUE_POLICY_DELAY():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   _poolByRoundAndIdea(param0: BigInt, param1: BigInt): BigInt {
@@ -819,6 +1169,31 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  approvedCommunityFactories(param0: Address): boolean {
+    let result = super.call(
+      "approvedCommunityFactories",
+      "approvedCommunityFactories(address):(bool)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_approvedCommunityFactories(
+    param0: Address,
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "approvedCommunityFactories",
+      "approvedCommunityFactories(address):(bool)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
   authorStakeByIdea(param0: BigInt): BigInt {
@@ -888,6 +1263,52 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  communityFactoryAt(index: BigInt): Address {
+    let result = super.call(
+      "communityFactoryAt",
+      "communityFactoryAt(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(index)],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_communityFactoryAt(index: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "communityFactoryAt",
+      "communityFactoryAt(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(index)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  communityFactoryCount(): BigInt {
+    let result = super.call(
+      "communityFactoryCount",
+      "communityFactoryCount():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_communityFactoryCount(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "communityFactoryCount",
+      "communityFactoryCount():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   distributed(param0: BigInt): boolean {
@@ -1061,6 +1482,47 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  fundingRoundRevenue(
+    param0: BigInt,
+  ): FundingPoolUpgradeable__fundingRoundRevenueResult {
+    let result = super.call(
+      "fundingRoundRevenue",
+      "fundingRoundRevenue(uint256):(address,uint256,uint256,uint256,uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return new FundingPoolUpgradeable__fundingRoundRevenueResult(
+      result[0].toAddress(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+      result[4].toBigInt(),
+    );
+  }
+
+  try_fundingRoundRevenue(
+    param0: BigInt,
+  ): ethereum.CallResult<FundingPoolUpgradeable__fundingRoundRevenueResult> {
+    let result = super.tryCall(
+      "fundingRoundRevenue",
+      "fundingRoundRevenue(uint256):(address,uint256,uint256,uint256,uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new FundingPoolUpgradeable__fundingRoundRevenueResult(
+        value[0].toAddress(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+        value[4].toBigInt(),
+      ),
+    );
   }
 
   fundingRoundSettled(param0: BigInt): boolean {
@@ -1253,6 +1715,47 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     );
   }
 
+  getTreasuryAccounting(): FundingPoolUpgradeable__getTreasuryAccountingResult {
+    let result = super.call(
+      "getTreasuryAccounting",
+      "getTreasuryAccounting():(uint256,uint256,uint256,uint256,uint256,uint256,uint256)",
+      [],
+    );
+
+    return new FundingPoolUpgradeable__getTreasuryAccountingResult(
+      result[0].toBigInt(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+      result[4].toBigInt(),
+      result[5].toBigInt(),
+      result[6].toBigInt(),
+    );
+  }
+
+  try_getTreasuryAccounting(): ethereum.CallResult<FundingPoolUpgradeable__getTreasuryAccountingResult> {
+    let result = super.tryCall(
+      "getTreasuryAccounting",
+      "getTreasuryAccounting():(uint256,uint256,uint256,uint256,uint256,uint256,uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new FundingPoolUpgradeable__getTreasuryAccountingResult(
+        value[0].toBigInt(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+        value[4].toBigInt(),
+        value[5].toBigInt(),
+        value[6].toBigInt(),
+      ),
+    );
+  }
+
   governanceToken(): Address {
     let result = super.call(
       "governanceToken",
@@ -1385,6 +1888,31 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  isCommunityFactoryApproved(factory: Address): boolean {
+    let result = super.call(
+      "isCommunityFactoryApproved",
+      "isCommunityFactoryApproved(address):(bool)",
+      [ethereum.Value.fromAddress(factory)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isCommunityFactoryApproved(
+    factory: Address,
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isCommunityFactoryApproved",
+      "isCommunityFactoryApproved(address):(bool)",
+      [ethereum.Value.fromAddress(factory)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
   isDistributed(roundId: BigInt): boolean {
     let result = super.call("isDistributed", "isDistributed(uint256):(bool)", [
       ethereum.Value.fromUnsignedBigInt(roundId),
@@ -1451,6 +1979,29 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
       "pendingProtocolFeeByRound",
       "pendingProtocolFeeByRound(uint256):(uint256)",
       [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  pendingRevenueByTreasury(param0: Address): BigInt {
+    let result = super.call(
+      "pendingRevenueByTreasury",
+      "pendingRevenueByTreasury(address):(uint256)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_pendingRevenueByTreasury(param0: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "pendingRevenueByTreasury",
+      "pendingRevenueByTreasury(address):(uint256)",
+      [ethereum.Value.fromAddress(param0)],
     );
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -1684,6 +2235,122 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  revenueAsset(): Address {
+    let result = super.call("revenueAsset", "revenueAsset():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_revenueAsset(): ethereum.CallResult<Address> {
+    let result = super.tryCall("revenueAsset", "revenueAsset():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  revenueEligiblePledges(param0: BigInt, param1: BigInt): BigInt {
+    let result = super.call(
+      "revenueEligiblePledges",
+      "revenueEligiblePledges(uint256,uint256):(uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(param0),
+        ethereum.Value.fromUnsignedBigInt(param1),
+      ],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_revenueEligiblePledges(
+    param0: BigInt,
+    param1: BigInt,
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "revenueEligiblePledges",
+      "revenueEligiblePledges(uint256,uint256):(uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(param0),
+        ethereum.Value.fromUnsignedBigInt(param1),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  revenuePolicyReadyAt(): BigInt {
+    let result = super.call(
+      "revenuePolicyReadyAt",
+      "revenuePolicyReadyAt():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_revenuePolicyReadyAt(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "revenuePolicyReadyAt",
+      "revenuePolicyReadyAt():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  revenueShareBps(): BigInt {
+    let result = super.call(
+      "revenueShareBps",
+      "revenueShareBps():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_revenueShareBps(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "revenueShareBps",
+      "revenueShareBps():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  revenueTreasury(): Address {
+    let result = super.call(
+      "revenueTreasury",
+      "revenueTreasury():(address)",
+      [],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_revenueTreasury(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "revenueTreasury",
+      "revenueTreasury():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   roles(): Address {
     let result = super.call("roles", "roles():(address)", []);
 
@@ -1697,6 +2364,75 @@ export class FundingPoolUpgradeable extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  scheduledRevenueShareBps(): BigInt {
+    let result = super.call(
+      "scheduledRevenueShareBps",
+      "scheduledRevenueShareBps():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_scheduledRevenueShareBps(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "scheduledRevenueShareBps",
+      "scheduledRevenueShareBps():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  scheduledRevenueTreasury(): Address {
+    let result = super.call(
+      "scheduledRevenueTreasury",
+      "scheduledRevenueTreasury():(address)",
+      [],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_scheduledRevenueTreasury(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "scheduledRevenueTreasury",
+      "scheduledRevenueTreasury():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  totalPendingProtocolRevenue(): BigInt {
+    let result = super.call(
+      "totalPendingProtocolRevenue",
+      "totalPendingProtocolRevenue():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_totalPendingProtocolRevenue(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "totalPendingProtocolRevenue",
+      "totalPendingProtocolRevenue():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   totalPoolBalance(): BigInt {
@@ -1908,6 +2644,32 @@ export class BeginProgressiveFundingRoundFeeCall__Outputs {
   }
 }
 
+export class CancelRevenuePolicyCall extends ethereum.Call {
+  get inputs(): CancelRevenuePolicyCall__Inputs {
+    return new CancelRevenuePolicyCall__Inputs(this);
+  }
+
+  get outputs(): CancelRevenuePolicyCall__Outputs {
+    return new CancelRevenuePolicyCall__Outputs(this);
+  }
+}
+
+export class CancelRevenuePolicyCall__Inputs {
+  _call: CancelRevenuePolicyCall;
+
+  constructor(call: CancelRevenuePolicyCall) {
+    this._call = call;
+  }
+}
+
+export class CancelRevenuePolicyCall__Outputs {
+  _call: CancelRevenuePolicyCall;
+
+  constructor(call: CancelRevenuePolicyCall) {
+    this._call = call;
+  }
+}
+
 export class CancelUnclaimedFundingRoundCall extends ethereum.Call {
   get inputs(): CancelUnclaimedFundingRoundCall__Inputs {
     return new CancelUnclaimedFundingRoundCall__Inputs(this);
@@ -1969,6 +2731,36 @@ export class ClaimPledgeRefundCall__Outputs {
 
   get amount(): BigInt {
     return this._call.outputValues[0].value.toBigInt();
+  }
+}
+
+export class ClaimProtocolRevenueCall extends ethereum.Call {
+  get inputs(): ClaimProtocolRevenueCall__Inputs {
+    return new ClaimProtocolRevenueCall__Inputs(this);
+  }
+
+  get outputs(): ClaimProtocolRevenueCall__Outputs {
+    return new ClaimProtocolRevenueCall__Outputs(this);
+  }
+}
+
+export class ClaimProtocolRevenueCall__Inputs {
+  _call: ClaimProtocolRevenueCall;
+
+  constructor(call: ClaimProtocolRevenueCall) {
+    this._call = call;
+  }
+
+  get amount(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class ClaimProtocolRevenueCall__Outputs {
+  _call: ClaimProtocolRevenueCall;
+
+  constructor(call: ClaimProtocolRevenueCall) {
+    this._call = call;
   }
 }
 
@@ -2078,6 +2870,32 @@ export class DistributeFundsCall__Outputs {
   }
 }
 
+export class ExecuteRevenuePolicyCall extends ethereum.Call {
+  get inputs(): ExecuteRevenuePolicyCall__Inputs {
+    return new ExecuteRevenuePolicyCall__Inputs(this);
+  }
+
+  get outputs(): ExecuteRevenuePolicyCall__Outputs {
+    return new ExecuteRevenuePolicyCall__Outputs(this);
+  }
+}
+
+export class ExecuteRevenuePolicyCall__Inputs {
+  _call: ExecuteRevenuePolicyCall;
+
+  constructor(call: ExecuteRevenuePolicyCall) {
+    this._call = call;
+  }
+}
+
+export class ExecuteRevenuePolicyCall__Outputs {
+  _call: ExecuteRevenuePolicyCall;
+
+  constructor(call: ExecuteRevenuePolicyCall) {
+    this._call = call;
+  }
+}
+
 export class FinalizeFundingRoundFeeCall extends ethereum.Call {
   get inputs(): FinalizeFundingRoundFeeCall__Inputs {
     return new FinalizeFundingRoundFeeCall__Inputs(this);
@@ -2142,6 +2960,32 @@ export class InitializeCall__Outputs {
   _call: InitializeCall;
 
   constructor(call: InitializeCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCommunityFactoryAllowlistCall extends ethereum.Call {
+  get inputs(): InitializeCommunityFactoryAllowlistCall__Inputs {
+    return new InitializeCommunityFactoryAllowlistCall__Inputs(this);
+  }
+
+  get outputs(): InitializeCommunityFactoryAllowlistCall__Outputs {
+    return new InitializeCommunityFactoryAllowlistCall__Outputs(this);
+  }
+}
+
+export class InitializeCommunityFactoryAllowlistCall__Inputs {
+  _call: InitializeCommunityFactoryAllowlistCall;
+
+  constructor(call: InitializeCommunityFactoryAllowlistCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCommunityFactoryAllowlistCall__Outputs {
+  _call: InitializeCommunityFactoryAllowlistCall;
+
+  constructor(call: InitializeCommunityFactoryAllowlistCall) {
     this._call = call;
   }
 }
@@ -2368,6 +3212,40 @@ export class ReleaseProgressiveFundingRoundFeeCall__Outputs {
   }
 }
 
+export class ScheduleRevenuePolicyCall extends ethereum.Call {
+  get inputs(): ScheduleRevenuePolicyCall__Inputs {
+    return new ScheduleRevenuePolicyCall__Inputs(this);
+  }
+
+  get outputs(): ScheduleRevenuePolicyCall__Outputs {
+    return new ScheduleRevenuePolicyCall__Outputs(this);
+  }
+}
+
+export class ScheduleRevenuePolicyCall__Inputs {
+  _call: ScheduleRevenuePolicyCall;
+
+  constructor(call: ScheduleRevenuePolicyCall) {
+    this._call = call;
+  }
+
+  get treasury(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get shareBps(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class ScheduleRevenuePolicyCall__Outputs {
+  _call: ScheduleRevenuePolicyCall;
+
+  constructor(call: ScheduleRevenuePolicyCall) {
+    this._call = call;
+  }
+}
+
 export class SetCommunityFactoryCall extends ethereum.Call {
   get inputs(): SetCommunityFactoryCall__Inputs {
     return new SetCommunityFactoryCall__Inputs(this);
@@ -2394,6 +3272,40 @@ export class SetCommunityFactoryCall__Outputs {
   _call: SetCommunityFactoryCall;
 
   constructor(call: SetCommunityFactoryCall) {
+    this._call = call;
+  }
+}
+
+export class SetCommunityFactoryApprovalCall extends ethereum.Call {
+  get inputs(): SetCommunityFactoryApprovalCall__Inputs {
+    return new SetCommunityFactoryApprovalCall__Inputs(this);
+  }
+
+  get outputs(): SetCommunityFactoryApprovalCall__Outputs {
+    return new SetCommunityFactoryApprovalCall__Outputs(this);
+  }
+}
+
+export class SetCommunityFactoryApprovalCall__Inputs {
+  _call: SetCommunityFactoryApprovalCall;
+
+  constructor(call: SetCommunityFactoryApprovalCall) {
+    this._call = call;
+  }
+
+  get factory(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get approved(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+}
+
+export class SetCommunityFactoryApprovalCall__Outputs {
+  _call: SetCommunityFactoryApprovalCall;
+
+  constructor(call: SetCommunityFactoryApprovalCall) {
     this._call = call;
   }
 }

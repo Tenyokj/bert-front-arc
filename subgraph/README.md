@@ -2,6 +2,15 @@
 
 This folder contains a working local setup (Hardhat + local graph-node) and an Arc testnet manifest.
 
+## Unreleased V2.4 Revenue Support
+
+The [V2.4 indexer runbook](REVENUE-V2.4.md) documents locally checked policy,
+round-snapshot, accrual, collection and fixed-beneficiary payment indexing.
+Addresses and historical start blocks are retained; receiver templates are
+discovered dynamically. This is a source candidate, not a public deployment.
+The runbook covers bounded queries, reproducible receipt fixtures and the limits
+of the offline mapping tests versus real Graph Node end-to-end acceptance.
+
 ## Layout
 
 - `subgraph.local.yaml` - local Hardhat manifest.
