@@ -84,16 +84,10 @@ export function PoolStats() {
         <article className="group rounded-2xl border border-white/10 bg-[#2a2d3b] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/35">
           <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Treasury status</p>
           <p className="mt-2 text-3xl font-semibold text-slate-100">
-            {isPausedValue === undefined ? "..." : isPausedValue ? "Paused" : "Active"}
+            {isPausedValue === undefined ? "Unavailable" : isPausedValue ? "Paused" : "Not paused"}
           </p>
-          <p className="mt-2 text-sm text-slate-300">Whether contributors can actively move capital into the pool right now.</p>
-          <div className="mt-4 h-2 rounded-full bg-slate-800">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                isPausedValue ? "w-[35%] bg-gradient-to-r from-rose-300 to-rose-500" : "w-[92%] bg-gradient-to-r from-yellow-300 to-green-400"
-              }`}
-            />
-          </div>
+          <p className="mt-2 text-sm text-slate-300">The contract pause flag, not a progress percentage or a guarantee that any specific transaction will pass.</p>
+          <p className="mt-4 text-xs text-slate-400">{isPausedValue === undefined ? "No confirmed pause-state read." : isPausedValue ? "Pause-gated actions are stopped." : "Other transaction checks still apply."}</p>
         </article>
 
         <article className="group rounded-2xl border border-white/10 bg-[#2a2d3b] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-yellow-300/35">

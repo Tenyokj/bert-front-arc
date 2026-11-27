@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
+import { LandingLayers } from "@/components/landing/LandingExperience";
 import {
   FaBook,
   FaExternalLinkAlt,
@@ -12,12 +13,12 @@ const pillars = [
   {
     label: "Proposal Deposit",
     value: "50 USDC",
-    note: "Minimum author commitment to submit a live idea into the registry.",
+    note: "Reference author-bond setting. Check the live proposal form before submitting.",
   },
   {
     label: "Vote Commitment",
     value: "10 USDC",
-    note: "Minimum onchain vote amount required to support an idea in an active round.",
+    note: "Reference V2 voting minimum. The deployed contract determines the live threshold.",
   },
   {
     label: "Release Rail",
@@ -110,55 +111,33 @@ const communityRoles = [
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/how-it-works">
       <div className="mx-auto max-w-[1200px] px-6 py-8 md:px-10">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-                BERT
-              </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-            <Link href="/policy-docs" className="transition-colors hover:text-slate-900">
-              Policy docs
-            </Link>
-          </nav>
-          <Link
-            href="/ideas/new"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Submit Idea
-          </Link>
-        </header>
+
 
         <main className="mt-10 space-y-12">
           <section className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-600">How It Works</p>
             <h1 className="max-w-5xl text-4xl font-semibold text-slate-900 dark:text-slate-100 md:text-5xl">
-              BERT turns USDC commitments into transparent builder funding on Arc.
+              From an idea.<br />To reviewed delivery.
             </h1>
             <p className="max-w-4xl text-lg leading-relaxed text-slate-700 dark:text-slate-200">
-              The protocol is a programmable capital allocation system: builders post a USDC author bond and declare a minimum viable grant,
-              contributors make refundable USDC pledges to one proposal, and only a viable winner unlocks milestone-based releases controlled by its own backers.
+              Choose a global funding round or a Community with its own rules. Both connect a capital-backed decision
+              to execution you can inspect. Voting, delivery review and payment authorization are separate steps.
             </p>
           </section>
 
           <section className="rounded-2xl border border-amber-300/25 bg-amber-300/5 p-5">
-            <h2 className="text-lg font-semibold">V2.4 Treasury: Unreleased Source Candidate</h2>
+            <h2 className="text-lg font-semibold">V2.4 installed. Revenue activation is separate.</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              Public V2.3 and V3.2.1 remain unchanged. V2.4 prepares transparent accounting and a separate immutable Treasury for earned-fee revenue, not investor shares or APY. The approved testnet fee-share plan is not yet activated and does not redirect deposits, grant principal, refunds or old rounds.
+              V2.4 FundingPool and the immutable RevenueTreasury are deployed on Arc Testnet, retaining V2.3 grant rules.
+              The eligible-fee policy was scheduled for a separate activation no earlier than November 26, 2026, 22:03:24 UTC.
+              Check the live Pool page for its current state. Deposits, bonds, principal, refunds and old rounds are not redirected.
             </p>
-            <Link href="/treasury-policies#v2-4-candidate" className="mt-3 inline-block text-sm font-semibold text-teal-600 underline">Read the candidate economics and release boundary</Link>
+            <Link href="/treasury-policies#v2-4-candidate" className="mt-3 inline-block text-sm font-semibold text-teal-600 underline">Read treasury economics and the release boundary</Link>
           </section>
+
+          <section aria-label="Explore both protocol layers"><LandingLayers /></section>
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pillars.map((pillar) => (
@@ -405,8 +384,7 @@ export default function HowItWorksPage() {
           </section>
         </main>
 
-        <SiteFooter />
-      </div>
-    </div>
+        </div>
+    </SiteFrame>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits } from "viem";
-import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { ClientPagination } from "@/components/ClientPagination";
 import { ValidatorRewardsPanel } from "@/components/ValidatorRewardsPanel";

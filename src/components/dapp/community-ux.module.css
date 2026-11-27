@@ -1,0 +1,17 @@
+.workspace { min-width: 0; }
+.workspace h1, .workspace h2, .workspace h3 { overflow-wrap: anywhere; }
+.workspace main { min-width: 0; }
+.guidance { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid #7c8bff40; border-radius: 16px; padding: 1.1rem 1.3rem; background: radial-gradient(ellipse at 100% 0, #7749df25, transparent 70%), #101a32; }
+.guidance > div { flex: 1 1 260px; min-width: 0; }
+.guidance strong { color: #c7d9ff; font-size: .875rem; font-weight: 650; }
+.guidance p { color: #b9c7e0; font-size: .875rem; line-height: 1.7; margin: .4rem 0 0; overflow-wrap: anywhere; }
+.guidance a { border: 1px solid #8e8dff66; border-radius: 10px; padding: .65rem .9rem; color: #d3d4ff; font-size: .875rem; }
+.guidance a:focus-visible, .navigation button:focus-visible { outline: 2px solid #8cddff; outline-offset: 3px; }
+.navigation { border: 1px solid #7b6eda50; border-radius: 20px; background: linear-gradient(110deg, #131d3ce8, #211334e8); padding: .75rem; }
+.navigation nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+.navigation button { flex: 1 1 135px; display: flex; align-items: center; gap: .65rem; padding: .9rem; border-radius: 12px; color: #b8c7df; font-size: .875rem; text-align: left; transition: background .2s, color .2s; }
+.navigation button[aria-pressed="true"] { color: #c6f5ff; background: linear-gradient(120deg, #2866b547, #8862d94d); box-shadow: inset 0 0 0 1px #83b6ff60; }
+.navigation button:hover { background-color: #6b65de22; color: #eef3ff; }
+.roundGuide { margin: 1rem 0; display: grid; gap: 1rem; }
+@media (max-width: 480px) { .guidance { padding: 1rem; } .guidance a { width: 100%; text-align: center; } .navigation button { flex-basis: 40%; } }
+@media (prefers-reduced-motion: reduce) { .navigation button { transition: none; } }

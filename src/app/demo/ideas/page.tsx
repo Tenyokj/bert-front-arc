@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { IdeaSummaryCard } from "@/components/dapp/ProtocolCards";
+import { CollectionFilter } from "@/components/dapp/CollectionFilter";
+import { formatTokenAmount } from "@/lib/dapp-onchain";
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/Pagination";
@@ -30,28 +32,9 @@ function DemoIdeasPageContent() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        {visibleIdeas.map((idea) => (
-          <Link
-            key={idea.id}
-            href={`/demo/ideas/${idea.id}`}
-            className="rounded-2xl border border-white/10 bg-[#313443] p-4 sm:p-5 transition-colors duration-300 hover:border-cyan-400/40"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm text-slate-300">Idea #{idea.id}</p>
-              <span className="rounded-full bg-cyan-500/15 px-2.5 py-1 text-xs font-semibold text-cyan-300">{idea.status}</span>
-            </div>
-            <h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">{idea.title}</h2>
-            <p className="mt-2 line-clamp-2 text-sm text-slate-300">{idea.description}</p>
-            <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
-              <p className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">
-                Total votes: {new Intl.NumberFormat("en-US").format(idea.totalVotes)} USDC
-              </p>
-              <p className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Round: #{idea.roundId}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      <CollectionFilter key={currentPage} items={visibleIdeas} getTitle={(idea) => idea.title} getStatus={(idea) => idea.status} renderItem={(idea) => (
+          <IdeaSummaryCard key={idea.id} id={idea.id} href={`/demo/ideas/${idea.id}`} title={idea.title} description={idea.description} status={idea.status} votes={formatTokenAmount(idea.totalVotes)} demo details={<div><dt>Round</dt><dd>#{idea.roundId}</dd></div>} />
+        )} />
 
       <Pagination basePath="/demo/ideas" currentPage={currentPage} totalItems={ideas.length} pageSize={pageSize} />
     </section>

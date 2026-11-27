@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import { Web3Providers } from "@/components/Web3Providers";
 import { TestnetBanner } from "@/components/TestnetBanner";
+import { WinterTheme } from "@/components/seasonal/WinterTheme";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -36,6 +37,7 @@ export default function RootLayout({
           <TestnetBanner />
           <div className="pt-11">{children}</div>
         </Web3Providers>
+        <WinterTheme />
       </body>
     </html>
   );

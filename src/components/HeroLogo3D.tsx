@@ -113,9 +113,12 @@ function buildRandomPoints(count: number) {
   return pts;
 }
 
-export default function HeroLogo3D() {
+export default function HeroLogo3D({ className, paused = false, framing = "default" }: { className?: string; paused?: boolean; framing?: "default" | "immersive" }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const animRef = useRef<number | null>(null);
+  const pausedRef = useRef(paused);
+
+  useEffect(() => { pausedRef.current = paused; }, [paused]);
 
   useEffect(() => {
     let scene: THREE.Scene | null = new THREE.Scene();
@@ -127,11 +130,20 @@ export default function HeroLogo3D() {
     );
     camera.position.set(0, 0, 8.2);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
     const mount = mountRef.current;
     if (!mount) return;
+    let disposed = false;
+    const fallback = () => {
+      mount.style.background = "url(/bert-logo.png) center / 70% auto no-repeat";
+    };
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch {
+      fallback();
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
     let geometry: THREE.BufferGeometry | null = new THREE.BufferGeometry();
@@ -159,14 +171,23 @@ export default function HeroLogo3D() {
     let colorsB: THREE.Color[] = [];
     let randomPositions: THREE.Vector3[] = [];
     let delays: Float32Array | null = null;
-    const startTime = performance.now();
+    let elapsed = 0;
+    let lastFrame = performance.now();
+    let visible = true;
+    const logoBounds = new THREE.Vector3(6.3, 6.3, 0);
+    const idleColor = new THREE.Color("#cbd5f5");
 
     const resize = () => {
       if (!mount || !camera) return;
       const { width, height } = mount.getBoundingClientRect();
       renderer.setSize(width, height);
       camera.aspect = width / height || 1;
+      // Fit both logos to the narrowest viewport dimension without cropping.
+      if (framing === "immersive") {
+        camera.position.z = Math.max(logoBounds.x / camera.aspect, logoBounds.y) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.82);
+      }
       camera.updateProjectionMatrix();
+      if (scene && geometry?.getAttribute("position")) renderer.render(scene, camera);
     };
 
     const setup = async () => {
@@ -174,6 +195,7 @@ export default function HeroLogo3D() {
         loadImage("/bert-logo.png"),
         loadImage("/arc-logo.png"),
       ]);
+      if (disposed) return;
 
       const ptsA = sampleImagePoints(bertImg, {
         step: 2,
@@ -189,6 +211,8 @@ export default function HeroLogo3D() {
       const count = Math.max(ptsA.points.length, ptsB.points.length);
       positionsA = centerPoints(toArray(ptsA.points, count));
       positionsB = centerPoints(toArray(ptsB.points, count));
+      const bounds = new THREE.Box3().setFromPoints([...positionsA, ...positionsB]);
+      bounds.getSize(logoBounds);
       colorsA = toColorArray(ptsA.colors, count);
       colorsB = toColorArray(ptsB.colors, count);
       randomPositions = centerPoints(buildRandomPoints(count));
@@ -200,9 +224,9 @@ export default function HeroLogo3D() {
       const positionArray = new Float32Array(count * 3);
       const colorArray = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
-        positionArray[i * 3] = randomPositions[i].x;
-        positionArray[i * 3 + 1] = randomPositions[i].y;
-        positionArray[i * 3 + 2] = randomPositions[i].z;
+        positionArray[i * 3] = positionsA[i].x;
+        positionArray[i * 3 + 1] = positionsA[i].y;
+        positionArray[i * 3 + 2] = positionsA[i].z;
 
         colorArray[i * 3] = colorsA[i].r;
         colorArray[i * 3 + 1] = colorsA[i].g;
@@ -220,6 +244,8 @@ export default function HeroLogo3D() {
       geometry?.computeBoundingSphere();
 
       resize();
+      renderer.render(scene!, camera!);
+      lastFrame = performance.now();
       animate();
     };
 
@@ -227,10 +253,15 @@ export default function HeroLogo3D() {
       t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
     const animate = () => {
+      if (disposed) return;
       animRef.current = requestAnimationFrame(animate);
+      const now = performance.now();
+      const delta = Math.min((now - lastFrame) / 1000, 0.1);
+      lastFrame = now;
+      if (pausedRef.current || document.hidden || !visible) return;
       if (!geometry || !positionsA.length || !positionsB.length) return;
 
-      const elapsed = (performance.now() - startTime) / 1000;
+      elapsed += delta;
       const t = elapsed % CYCLE_DURATION;
 
       let from: THREE.Vector3[] = randomPositions;
@@ -295,9 +326,9 @@ export default function HeroLogo3D() {
         array[i * 3 + 2] = fz;
 
         const fromColor =
-          from === positionsA ? colorsA[i] : from === positionsB ? colorsB[i] : new THREE.Color("#cbd5f5");
+          from === positionsA ? colorsA[i] : from === positionsB ? colorsB[i] : idleColor;
         const toColor =
-          to === positionsA ? colorsA[i] : to === positionsB ? colorsB[i] : new THREE.Color("#cbd5f5");
+          to === positionsA ? colorsA[i] : to === positionsB ? colorsB[i] : idleColor;
         const cr = THREE.MathUtils.lerp(fromColor.r, toColor.r, eased);
         const cg = THREE.MathUtils.lerp(fromColor.g, toColor.g, eased);
         const cb = THREE.MathUtils.lerp(fromColor.b, toColor.b, eased);
@@ -312,18 +343,25 @@ export default function HeroLogo3D() {
       material!.color = color;
 
       if (points) {
-        points.rotation.y += 0.003;
+        points.rotation.y += delta * 0.18;
         points.rotation.x = 0;
       }
 
       renderer.render(scene!, camera!);
     };
 
-    setup();
+    void setup().catch(() => { if (!disposed) fallback(); });
     window.addEventListener("resize", resize);
+    const observer = new ResizeObserver(resize);
+    const visibilityObserver = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
+    visibilityObserver.observe(mount);
+    observer.observe(mount);
 
     return () => {
+      disposed = true;
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      observer.disconnect();
+      visibilityObserver.disconnect();
       window.removeEventListener("resize", resize);
       renderer.dispose();
       geometry?.dispose();
@@ -337,14 +375,14 @@ export default function HeroLogo3D() {
       material = null;
       points = null;
     };
-  }, []);
+  }, [framing]);
 
   return (
     <div className="relative">
       <div className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.28),transparent_60%)] blur-2xl" />
       <div
         ref={mountRef}
-        className="pointer-events-none h-[72vw] w-[72vw] max-h-[900px] max-w-[900px] min-h-[280px] min-w-[280px] sm:h-[60vw] sm:w-[60vw] sm:min-h-[420px] sm:min-w-[420px] lg:min-h-[520px] lg:min-w-[520px]"
+        className={className ?? "pointer-events-none h-[72vw] w-[72vw] max-h-[900px] max-w-[900px] min-h-[280px] min-w-[280px] sm:h-[60vw] sm:w-[60vw] sm:min-h-[420px] sm:min-w-[420px] lg:min-h-[520px] lg:min-w-[520px]"}
       />
     </div>
   );

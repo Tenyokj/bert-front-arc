@@ -71,6 +71,23 @@ Copy `.env.example` to `.env.local`. It includes public V3.2.1 release values; c
 
 The dApp uses **Demo verification** so every Arc Testnet wallet can access protected flows. It creates a real on-chain `PoPVerifier` record with provider ID `BERT_TESTNET_DEMO`, but it is not proof of personhood and provides no Sybil resistance. Set `NEXT_PUBLIC_POP_DEMO_ENABLED=true` only alongside a backend configured with `POP_DEMO_ENABLED=true`.
 
+For local preview against the public backend, use its public base URL rather
+than `localhost:3001` unless a backend is actually running there. The public
+backend may allow only the deployed site through CORS. Loopback `next dev`
+therefore relays demo requests through `/api/local-demo-proof`; this route
+requires the explicit demo flag, Arc Testnet, the configured verifier and a
+same-origin request. It returns 404 in production and does not sign credentials
+or transactions itself. The existing backend still issues the test credential,
+and the wallet must confirm the actual onchain activation.
+
+Restart the local dev server after changing public environment values if HMR
+does not pick them up. Keep a single value per variable. A Graph query URL must
+point to a deployed version (the V2.4 rollout endpoint is `bert-arc-testnet/v0.4.0`);
+an HTTP 200 provider message is not GraphQL data. A failed indexer falls back to
+bounded direct RPC reads on the Ideas page with an explicit warning. The Graph
+deploy key is not a runtime frontend setting; never commit it or expose it with
+a `NEXT_PUBLIC_` prefix. Rotate any credentials shared publicly.
+
 ### Mainnet: planned production policy
 
 Demo verification is disabled. The frontend will open World ID, the backend will validate the proof and bind its unique World nullifier to one wallet, then the wallet will finalize a signed payload through `PoPVerifierUpgradeable`. The frontend, backend, World action, Arc chain ID and deployed verifier address must match exactly.
@@ -141,8 +158,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) for current frontend, QA, integration,
 
 The deployed transparent-treasury UI is documented in
 [Treasury V2.4](TREASURY-V2.4.md). FundingPool is upgraded on Arc Testnet; the
-eligible-fee policy is scheduled, not active until a separate transaction after
-2026-11-26 22:03:24 UTC. Legacy-pool compatibility is retained. Donor ledger values are not
+eligible-fee policy is active since November 27, 2026, 10:03:38 UTC (block 74359134). Legacy-pool compatibility is retained. Donor ledger values are not
 investor shares or a general withdrawal balance.
 
 Run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` before a PR/release. Type checking is enforced by Next; `ignoreBuildErrors` is no longer enabled. Graph AssemblyScript belongs to the separate subgraph build, not the browser TypeScript project. Runtime-decoding tests cover tuple/named RPC results without unsafe ID/weight conversion.

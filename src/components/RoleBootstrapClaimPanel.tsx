@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 import { FaCheckCircle, FaKey, FaShieldAlt, FaUsers } from "react-icons/fa";
 
 import { shortAddress } from "@/lib/dapp-onchain";

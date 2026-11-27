@@ -2,13 +2,13 @@ import Link from "next/link";
 import { FaArrowRight, FaBug, FaCircleCheck, FaShieldHalved, FaTriangleExclamation } from "react-icons/fa6";
 
 import { BugBountyReportForm } from "@/components/BugBountyReportForm";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 
 export default function BugBountyPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/bug-bounty">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-        <header className="flex items-center justify-between gap-4"><Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"><span className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />BERT</Link><Link href="/app" className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5">Open dApp</Link></header>
+
 
         <main className="mt-10 space-y-10">
           <section className="rounded-[34px] border border-cyan-300/25 bg-[radial-gradient(circle_at_12%_10%,rgba(34,211,238,0.22),transparent_34%),linear-gradient(135deg,#123946,#20232f_60%,#313443)] p-7 text-white sm:p-10"><p className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-200">Arc Testnet Responsible Disclosure</p><h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight sm:text-6xl">Find the problem before mainnet.</h1><p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-200">BERT&apos;s source is open by design. Review the protocol, V3 Community Layer, backend and frontend; report vulnerabilities privately and give us a chance to fix them before public disclosure.</p><div className="mt-6 flex flex-wrap gap-3"><a href="#report" className="inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-2.5 text-sm font-bold text-slate-950">Prepare a report <FaArrowRight /></a><Link href="/testnet-information" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white">Testnet guide <FaArrowRight /></Link></div></section>
@@ -21,9 +21,8 @@ export default function BugBountyPage() {
 
           <section id="report"><BugBountyReportForm /></section>
         </main>
-        <SiteFooter />
-      </div>
-    </div>
+        </div>
+    </SiteFrame>
   );
 }
 

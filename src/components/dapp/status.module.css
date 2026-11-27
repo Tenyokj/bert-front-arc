@@ -1,0 +1,9 @@
+.badge { --ink: #cbd5e9; --tint: #8797b3; display: inline-flex; align-items: center; max-width: 100%; flex: 0 1 auto; gap: .5rem; border: 1px solid color-mix(in srgb, var(--tint) 55%, transparent); border-radius: 999px; padding: .38rem .75rem; background: color-mix(in srgb, var(--tint) 13%, #0b1027); color: var(--ink); font-size: .875rem; font-weight: 650; line-height: 1.4; letter-spacing: 0; overflow-wrap: anywhere; }
+.badge::before { content: ""; width: .375rem; height: .375rem; flex: 0 0 .375rem; border-radius: 50%; background: var(--tint); box-shadow: 0 0 10px color-mix(in srgb, var(--tint) 50%, transparent); }
+.badge[data-status-tone="amber"] { --ink: #ffe0a4; --tint: #f5b94d; }
+.badge[data-status-tone="cyan"] { --ink: #a2f3ff; --tint: #4ddaf4; }
+.badge[data-status-tone="violet"] { --ink: #dec5ff; --tint: #b18aff; }
+.badge[data-status-tone="blue"] { --ink: #bfd7ff; --tint: #6a9cff; }
+.badge[data-status-tone="teal"] { --ink: #a0f2dd; --tint: #39d3b4; }
+.badge[data-status-tone="green"] { --ink: #b7f7c7; --tint: #65dd8b; }
+.badge[data-status-tone="rose"] { --ink: #ffc2d2; --tint: #ff789e; }

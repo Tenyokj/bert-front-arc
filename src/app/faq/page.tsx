@@ -1,16 +1,5 @@
-"use client";
-
-import Image from "next/image";
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import SiteFooter from "@/components/SiteFooter";
-import {
-  FaChevronDown,
-  FaQuestion,
-  FaSearch,
-  FaShieldAlt,
-  FaTerminal,
-} from "react-icons/fa";
+import { SiteFrame } from "@/components/site/SiteFrame";
+import { FaqExplorer } from "@/components/site/FaqExplorer";
 
 type FaqItem = {
   question: string;
@@ -149,7 +138,7 @@ const sections: FaqSection[] = [
       {
         question: "Is V2.4 protocol revenue already active?",
         answer:
-          "Not yet. V2.4 FundingPool and immutable Treasury are deployed on Arc Testnet; the clients and V2 Graph v0.4.0 are published. The 20% share of eligible earned success fees is scheduled, not active. A separate activation is required at or after November 26, 2026, 22:03:24 UTC. This is not 20% of pool funds. Existing rounds keep their original policy; a public revenue pilot remains pending.",
+          "Yes, on Arc Testnet. V2.4 FundingPool and immutable Treasury are deployed; the clients and V2 Graph v0.4.0 are published. The 20% share of eligible earned success fees was activated November 27, 2026, 10:03:38 UTC, at block 74359134. RPC and Graph/client proxies confirm it. This is not 20% of pool funds. Existing rounds keep their original policy; a public revenue pilot remains pending.",
       },
       {
         question: "Does a pool deposit give me ownership or interest?",
@@ -159,7 +148,7 @@ const sections: FaqSection[] = [
       {
         question: "Can the team redirect a RevenueTreasury payment?",
         answer:
-          "The candidate RevenueTreasury fixes its pool, token and beneficiaries at deployment. Anyone can relay a payment, but it goes only to the fixed payee. There is no owner rescue or recipient rotation; lost keys or issuer restrictions can strand funds. FundingPool itself remains upgradeable, so this is not a claim of fully trustless administration.",
+          "The deployed immutable RevenueTreasury fixes its pool, token and beneficiaries at deployment. Anyone can relay a payment, but it goes only to the fixed payee. There is no owner rescue or recipient rotation; lost keys or issuer restrictions can strand funds. FundingPool itself remains upgradeable, so this is not a claim of fully trustless administration.",
       },
       {
         question: "How are grants released?",
@@ -510,222 +499,5 @@ const sections: FaqSection[] = [
 ];
 
 export default function FaqPage() {
-  const [query, setQuery] = useState("");
-  const [activeSectionId, setActiveSectionId] = useState(sections[0].id);
-  const [openItem, setOpenItem] = useState<string>(`${sections[0].id}-0`);
-
-  const queryTrimmed = query.trim().toLowerCase();
-  const isGlobalSearch = queryTrimmed.length > 0;
-
-  const filteredSections = useMemo(() => {
-    if (!isGlobalSearch) {
-      const active = sections.find((s) => s.id === activeSectionId) ?? sections[0];
-      return [active];
-    }
-
-    return sections
-      .map((section) => {
-        const items = section.items.filter(
-          (item) =>
-            item.question.toLowerCase().includes(queryTrimmed) ||
-            item.answer.toLowerCase().includes(queryTrimmed) ||
-            section.title.toLowerCase().includes(queryTrimmed)
-        );
-        return { ...section, items };
-      })
-      .filter((section) => section.items.length > 0);
-  }, [activeSectionId, isGlobalSearch, queryTrimmed]);
-
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <div className="hero-ambient absolute inset-0" />
-
-      <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-4">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-                BERT
-              </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
-
-        <section className="mt-10 overflow-hidden rounded-[36px] border border-white/40 bg-white/20 backdrop-blur">
-          <div className="grid lg:grid-cols-[1.5fr_1fr]">
-            <div className="border-b border-white/30 p-8 sm:p-12 lg:border-b-0 lg:border-r">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600">Knowledge Base</p>
-              <h1 className="mt-4 font-[var(--font-display)] text-6xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-7xl lg:text-8xl">
-                BERT FAQ
-              </h1>
-              <p className="mt-4 max-w-2xl text-xl text-slate-600 dark:text-slate-300">
-                Practical answers for Arc, USDC, treasury execution, milestone release, and upgrade-safe operations.
-              </p>
-              <div className="mt-8">
-                <Image
-                  src="/illustrations/faq-signal.svg"
-                  alt="BERT FAQ signal graphic"
-                  width={560}
-                  height={360}
-                  className="w-full max-w-[560px]"
-                  priority
-                />
-              </div>
-            </div>
-
-            <div className="grid border-white/30 sm:grid-cols-2 lg:grid-cols-1">
-              <Link href="#" className="border-b border-l border-white/30 p-8 transition-colors hover:bg-white/20">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-rose-500">
-                  <FaQuestion />
-                </div>
-                <h2 className="mt-8 font-[var(--font-display)] text-3xl font-semibold text-slate-900 dark:text-slate-100">
-                  Help Center
-                </h2>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
-                  Straight answers for wallet setup, vote flow, and treasury behavior.
-                </p>
-              </Link>
-
-              <Link href="#" className="border-b border-l border-white/30 p-8 transition-colors hover:bg-white/20">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-blue-600">
-                  <FaTerminal />
-                </div>
-                <h2 className="mt-8 font-[var(--font-display)] text-3xl font-semibold text-slate-900 dark:text-slate-100">
-                  Runbook
-                </h2>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
-                  Deployment, localhost rehearsal, and Arc testnet rollout guidance.
-                </p>
-              </Link>
-
-              <Link href="#" className="border-l border-white/30 p-8 transition-colors hover:bg-white/20">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-teal-600">
-                  <FaShieldAlt />
-                </div>
-                <h2 className="mt-8 font-[var(--font-display)] text-3xl font-semibold text-slate-900 dark:text-slate-100">
-                  Security Notes
-                </h2>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
-                  Current trust boundaries, operator assumptions, and rollout cautions.
-                </p>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-12">
-          <label className="relative block max-w-2xl">
-            <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search all FAQ sections"
-              className="w-full rounded-full border border-white/50 bg-white/75 py-4 pl-12 pr-5 text-base font-medium text-slate-900 outline-none placeholder:text-slate-400 transition-colors duration-300 focus:border-slate-300"
-            />
-          </label>
-        </section>
-
-        <section className="mt-10 grid gap-12 lg:grid-cols-[0.32fr_0.68fr]">
-          <aside className="lg:sticky lg:top-6 lg:self-start">
-            <div className="relative overflow-hidden rounded-[28px] border border-white/40 bg-white/30 px-5 py-6 shadow-[0_20px_50px_rgba(15,23,42,0.1)] backdrop-blur">
-              <div className="pointer-events-none absolute -left-8 top-2 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.28),transparent_65%)] blur-xl" />
-              <div className="pointer-events-none absolute -right-10 bottom-4 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(244,63,94,0.22),transparent_68%)] blur-xl" />
-              <p className="mb-5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">FAQ Sections</p>
-              <nav className="flex flex-col gap-3 font-[var(--font-display)] text-[32px] font-normal text-slate-700 dark:text-slate-300 lg:text-[34px]">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveSectionId(section.id);
-                      setOpenItem(`${section.id}-0`);
-                    }}
-                    className={`group flex items-center justify-between rounded-2xl px-3 py-3 text-left transition-all duration-300 hover:bg-white/40 hover:pl-4 hover:text-slate-900 dark:hover:bg-white/10 dark:hover:text-white ${
-                      section.id === activeSectionId && !isGlobalSearch
-                        ? "bg-white/55 pl-4 text-slate-900 shadow-[0_10px_28px_rgba(15,23,42,0.1)] dark:bg-white/10 dark:text-slate-100"
-                        : ""
-                    }`}
-                  >
-                    <span>{section.title}</span>
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full bg-slate-300 transition-all duration-300 group-hover:bg-teal-500 ${
-                        section.id === activeSectionId && !isGlobalSearch
-                          ? "bg-teal-500 shadow-[0_0_12px_rgba(20,184,166,0.7)]"
-                          : ""
-                      }`}
-                    />
-                  </button>
-                ))}
-              </nav>
-            </div>
-          </aside>
-
-          <div className="space-y-14">
-            {filteredSections.map((section) => (
-              <section id={section.id} key={section.id} className="scroll-mt-10 transition-opacity duration-500">
-                <h3 className="font-[var(--font-display)] text-4xl font-normal tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-                  {section.title}
-                </h3>
-
-                <div className="mt-6 border-t border-white/40">
-                  {section.items.map((item, idx) => {
-                    const key = `${section.id}-${idx}`;
-                    const isOpen = openItem === key;
-                    return (
-                      <div key={item.question} className="border-b border-white/40 py-6">
-                        <button
-                          type="button"
-                          onClick={() => setOpenItem(isOpen ? "" : key)}
-                          className="flex w-full items-start justify-between gap-6 text-left"
-                        >
-                          <div>
-                            <p className="font-[var(--font-display)] text-2xl font-normal text-slate-900 dark:text-slate-100 sm:text-[30px]">
-                              {item.question}
-                            </p>
-                          </div>
-                          <span
-                            className={`mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/60 text-slate-500 transition-transform duration-300 ${
-                              isOpen ? "rotate-180" : ""
-                            }`}
-                          >
-                            <FaChevronDown />
-                          </span>
-                        </button>
-                        {isOpen && (
-                          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">
-                            {item.answer}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-        </section>
-
-        <SiteFooter />
-      </div>
-    </div>
-  );
+  return <SiteFrame route="/faq"><div><FaqExplorer sections={sections} /></div></SiteFrame>;
 }

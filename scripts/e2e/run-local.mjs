@@ -157,7 +157,8 @@ try {
   }
   // Separate output directory avoids contaminating the developer's regular .next build.
   const nextCommand = path.join(root, "node_modules/next/dist/bin/next");
-  await run("frontend-build", [nextCommand, "build"], { ...frontendEnv, BERT_E2E: "1" }, root);
+  // Preview worktrees can symlink node_modules outside Turbopack's filesystem root.
+  await run("frontend-build", [nextCommand, "build", "--webpack"], { ...frontendEnv, BERT_E2E: "1" }, root);
   const next = start("frontend", [nextCommand, "start", "--hostname", "127.0.0.1", "--port", "13000"], root, { ...frontendEnv, BERT_E2E: "1" });
   await waitFor(async () => (await fetch(`${baseURL}/v3/create`)).ok, next);
   console.log("[E2E] Local dApp ready; starting browser flows.");

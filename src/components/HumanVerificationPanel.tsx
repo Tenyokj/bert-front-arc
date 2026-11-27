@@ -17,6 +17,7 @@ import {
 } from "@/lib/contracts";
 import { formatDateTimeFromUnix, formatTokenAmount } from "@/lib/dapp-onchain";
 import { confirmWalletAction } from "@/lib/wallet-action";
+import { demoProofUrl } from "@/lib/testnet-demo-proxy";
 
 type VerificationPayload = {
   verifierAddress: Address;
@@ -85,6 +86,7 @@ export function HumanVerificationPanel() {
   const canUseDemoVerification =
     demoVerificationEnabled && effectiveChainId === arcTestnetChainId && Boolean(popBackendUrl);
   const showWorldIdFlow = worldEnvironment === "production";
+  const verificationUnavailable = !canUseDemoVerification && !showWorldIdFlow;
 
   const backendBaseUrl = useMemo(() => {
     if (!popBackendUrl) return null;
@@ -368,7 +370,7 @@ export function HumanVerificationPanel() {
     setStatusMessage("Preparing an Arc Testnet demo verification payload...");
 
     try {
-      const response = await fetch(`${backendBaseUrl}/api/pop/demo-proof`, {
+      const response = await fetch(demoProofUrl(backendBaseUrl, process.env.NODE_ENV, window.location.origin), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -410,12 +412,12 @@ export function HumanVerificationPanel() {
           <h2 className="mt-3 font-[var(--font-display)] text-2xl text-white sm:text-3xl">
             {canUseDemoVerification
               ? "Activate Arc Testnet demo access."
-              : "Voting access supports proof-of-personhood gating."}
+              : verificationUnavailable ? "Testnet verification needs configuration." : "Voting access supports proof-of-personhood gating."}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
             {canUseDemoVerification
               ? "Demo access lets each testnet wallet exercise the complete on-chain voting flow. It is not proof of personhood and is never available on mainnet."
-              : "This wallet can vote only after passing the World ID flow and finalizing the signed proof on-chain through the protocol verifier contract."}
+              : verificationUnavailable ? "No verification flow is currently available for this wallet and build. Connect on Arc Testnet and check the demo flag and backend configuration below." : "This wallet can vote only after passing the World ID flow and finalizing the signed proof on-chain through the protocol verifier contract."}
           </p>
         </div>
 
@@ -444,6 +446,8 @@ export function HumanVerificationPanel() {
               <p className="mt-2">Step 2. Confirm the signed payload in your wallet.</p>
               <p className="mt-2">Step 3. The real on-chain `PoPVerifierUpgradeable` records the demo credential.</p>
             </>
+          ) : verificationUnavailable ? (
+            <p>For the Arc Testnet demo, set <code>NEXT_PUBLIC_POP_DEMO_ENABLED=true</code> and configure a running PoP backend with demo access enabled. Reload the local build after changing its environment. Staging World ID values alone do not enable a verification button.</p>
           ) : (
             <>
               <p>Step 1. Open World ID and prove that this wallet belongs to a unique human.</p>

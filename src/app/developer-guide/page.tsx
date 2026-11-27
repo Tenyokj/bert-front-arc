@@ -1,37 +1,11 @@
 import Link from "next/link";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 
 export default function DeveloperGuidePage() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/developer-guide">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
+
 
         <div className="mt-9 grid gap-12 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-72px)] lg:overflow-y-auto">
@@ -60,6 +34,12 @@ export default function DeveloperGuidePage() {
           <main className="space-y-12 border-t border-white/12 pt-8">
             <section id="v2" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">What Changed In V2</h2>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                <strong>Current public testnet scope: V2.4 and Community Layer V3.2.1.</strong> V2.4 adds transparent
+                FundingPool accounting and an immutable ProtocolRevenueTreasury while retaining V2.3 grant rules.
+                Revenue-policy scheduling and activation are separate; existing rounds keep their snapshot.
+                Read the <a href="/docs/V2.4-CLIENT-INTEGRATION.md" className="underline">V2.4 client integration guide</a> before integrating revenue reads.
+              </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 <strong>BERT Protocol V2</strong> is not a full reset of the stack. It is a targeted upgrade of the modules
                 that shape execution quality after a vote. The main contract updates are <strong>IdeaRegistry</strong>,
@@ -122,7 +102,8 @@ npm run dev`}
                 Keep one deployment session per test cycle; restarting node invalidates old addresses.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Most common integration bug is network mismatch: wallet on one RPC, frontend on another. Confirm chain ID and RPC host alignment before debugging contract logic.
+                Check network configuration early: wallet and frontend must target the same chain. Different healthy
+                RPC providers on the same chain are valid; a stale or unreliable provider can still cause confusing transaction results.
               </p>
             </section>
 
@@ -154,8 +135,9 @@ npm run dev`}
             <section id="wallet" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Wallet & RPC Alignment</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Most transaction issues are not Solidity bugs. They are RPC mismatches between wallet, frontend transport, and node host.
-                Keep all three on the same chain ID (<code>31337</code> for local Hardhat) and same reachable RPC endpoint.
+                Distinguish contract reverts, wallet rejection and uncertain RPC broadcasts before suggesting a retry.
+                Keep wallet and frontend on the same chain ID (<code>31337</code> for local Hardhat, <code>5042002</code> for Arc Testnet).
+                The endpoint URLs need not be identical. After an uncertain broadcast, reconcile receipt and contract state before sending again.
               </p>
               <div className="rounded-2xl border border-white/15 bg-white/5 p-4">
                 <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
@@ -249,8 +231,7 @@ npm run dev`}
           </main>
         </div>
 
-                       <SiteFooter />
-      </div>
-    </div>
+                       </div>
+    </SiteFrame>
   );
 }

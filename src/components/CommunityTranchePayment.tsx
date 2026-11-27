@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAccount, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useReadContracts, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 import { communityHubAbi, communityMilestoneAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
 import { formatCommunityUsdc } from "@/lib/community";
 import { formatDateTimeFromUnix } from "@/lib/dapp-onchain";
 import { useCommunityClock } from "@/lib/use-community-clock";
+import { StatusBadge } from "@/components/dapp/StatusBadge";
+import { CommunityGuidance } from "@/components/dapp/CommunityGuidance";
 
 type Terms = { amount: bigint; readyAt: bigint; expiresAt: bigint; approvalThreshold: bigint; paid: boolean };
 
@@ -44,7 +47,9 @@ export function CommunityTranchePayment({ hub, manager, planId }: { hub: `0x${st
   if (!terms || stage === undefined) return <p className="mt-4 text-sm text-slate-300">Loading fixed tranche authorization...</p>;
 
   return <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/5 p-4 text-sm text-slate-300">
-    <h4 className="font-semibold text-amber-100">{stage === 0 ? "Initial 20%" : `Milestone ${stage} tranche`} · awaiting Administration payment</h4>
+    <StatusBadge tone={terms.paid ? "green" : expired ? "rose" : canExecute ? "cyan" : "amber"}>{terms.paid ? "Payment recorded" : expired ? "Authorization expired" : validityRead.isPending || validityRead.isError ? "Checking Admin quorum" : canExecute ? "Quorum reached; transfer pending" : "Awaiting Admin quorum"}</StatusBadge>
+    <h4 className="mt-3 font-semibold text-amber-100">{stage === 0 ? "Initial 20%" : `Milestone ${stage} tranche`} · {terms.paid ? "payment recorded" : "fixed payment authorization"}</h4>
+    <div className="mt-3"><CommunityGuidance title="Authorization is not a withdrawal"><p>1. Current Admins approve this fixed tranche. 2. A wallet executes the authorized transfer. 3. Confirm the receipt and released amount. No recipient or amount can be edited here.</p></CommunityGuidance></div>
     <p className="mt-2">Fixed amount: <strong className="text-white">{formatCommunityUsdc(terms.amount)} USDC</strong>. Valid current Admin approvals: <strong className="text-white">{validAdmins.length}/{terms.approvalThreshold.toString()}</strong>.</p>
     <p className="mt-2 break-all">Fixed recipient: <span className="select-all font-mono text-xs text-cyan-100">{recipientRead.data ?? "Loading..."}</span></p>
     <p className="mt-2">Payment deadline: {formatDateTimeFromUnix(terms.expiresAt)} (seven days of active Community time). {paused ? "The Community clock is paused." : expired ? "The authorization has expired." : "Capital is still protected inside Treasury."}</p>

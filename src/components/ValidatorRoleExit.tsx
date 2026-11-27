@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useReadContract, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { communityHubAbi, communityProposalModuleAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";

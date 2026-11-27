@@ -1,0 +1,9 @@
+.attractor { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #27245855, transparent 60%); }
+.visual, .canvas { position: absolute; inset: 0; }
+.canvas canvas { display: block; width: 100%; height: 100%; opacity: .95; }
+.canvas[data-attractor-state=fallback] > canvas { display: none; }
+.fallback { position: absolute; inset: 15% 5%; background: radial-gradient(ellipse at center, #10182f 0 14%, #899cf3 14.2% 14.5%, #5c43c84d 15%, transparent 36%), conic-gradient(from 30deg, transparent, #7077dd22, transparent, #a66be322, transparent); border-radius: 50%; transform: rotate(-15deg); }
+.legend { position: absolute; bottom: 16px; left: 22px; right: 22px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; z-index: 2; }
+.legend span { color: #9aadd3; font-size: 8px; letter-spacing: .13em; }
+.legend button { border: 1px solid #97a4e54a; background: #151c36c9; color: #b9c7ec; border-radius: 20px; padding: 7px 11px; cursor: pointer; font-size: 10px; }
+.legend button:focus-visible { outline: 2px solid #89dfff; outline-offset: 3px; }

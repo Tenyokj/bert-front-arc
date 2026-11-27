@@ -1,11 +1,13 @@
 "use client";
 
+import { RoundSummaryCard } from "@/components/dapp/ProtocolCards";
+import { CollectionFilter } from "@/components/dapp/CollectionFilter";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatUnits } from "viem";
-import { FaCheckCircle, FaClock } from "react-icons/fa";
-import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import { Pagination } from "@/components/Pagination";
@@ -26,14 +28,6 @@ type OnChainRound = {
   totalVotes: bigint;
   ideaIds: number[];
 };
-
-function formatDateFromUnix(ts: bigint) {
-  return new Intl.DateTimeFormat("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(Number(ts) * 1000));
-}
 
 function durationHours(startsAt: bigint, endsAt: bigint) {
   const diffSeconds = Number(endsAt - startsAt);
@@ -336,49 +330,9 @@ function RoundsPageContent() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
-          {visibleRounds.map((round) => {
-            const isFinalized = round.ended;
-            const isActive = !round.ended && round.active;
-            const label = isFinalized ? "Passed" : isActive ? "Live" : "Scheduled";
-            const badgeClass = isFinalized
-              ? "bg-teal-500/10 text-teal-300 border-teal-400/30"
-              : isActive
-                ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/30"
-                : "bg-sky-500/10 text-sky-300 border-sky-400/30";
-            const Icon = isFinalized ? FaCheckCircle : FaClock;
-
-            return (
-              <Link
-                key={round.id}
-                href={`/rounds/${round.id}`}
-                className="group rounded-[22px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badgeClass}`}>
-                    <Icon className="text-[10px]" />
-                    {label}
-                  </span>
-                  <span className="text-xs text-slate-400">{formatDateFromUnix(round.endsAt)}</span>
-                </div>
-
-                <h2 className="mt-4 text-xl font-semibold text-white sm:text-2xl">Round #{round.id}</h2>
-
-                <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
-                  <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Votes: {formatUsdc(round.totalVotes)} USDC</div>
-                  <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">Ideas: {round.ideaIds.length}</div>
-                  <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">{durationHours(round.startsAt, round.endsAt)}h window</div>
-                </div>
-
-                <div className="mt-4 h-1.5 rounded-full bg-[#3a3e4f]">
-                  <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" style={{ width: "100%" }} />
-                </div>
-
-                <p className="mt-3 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-cyan-200">Open round details</p>
-              </Link>
-            );
-          })}
-        </div>
+        <CollectionFilter key={currentPage} items={visibleRounds} getTitle={(round) => `Round #${round.id}`} getStatus={(round) => round.ended ? "Finalized" : round.active ? "Voting enabled" : "Inactive / scheduled"} renderItem={(round) => (
+          <RoundSummaryCard key={round.id} id={round.id} href={`/rounds/${round.id}`} startsAt={round.startsAt} endsAt={round.endsAt} active={round.active} ended={round.ended} votes={formatUsdc(round.totalVotes)} ideas={round.ideaIds.length}  extra={<div><dt>Voting window</dt><dd>{durationHours(round.startsAt, round.endsAt)} hours</dd></div>} />
+        )} />
       )}
 
       <Pagination basePath="/rounds" currentPage={currentPage} totalItems={totalRoundsCount} pageSize={pageSize} />

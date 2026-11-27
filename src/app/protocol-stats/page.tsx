@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { FiRefreshCw, FiDatabase } from "react-icons/fi";
 import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
 import {
@@ -13,7 +15,7 @@ import {
   votingSystemAbi,
 } from "@/lib/contracts";
 import { communityContracts, communityFactoryAbi } from "@/lib/community-contracts";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 import { fetchAllIdeasFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 
@@ -44,6 +46,9 @@ function formatSeconds(value?: bigint) {
 
 export default function ProtocolStatsPage() {
   const [subgraphIdeaCount, setSubgraphIdeaCount] = useState<bigint | null>(null);
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const [indexRefresh, setIndexRefresh] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,9 +71,9 @@ export default function ProtocolStatsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [indexRefresh]);
 
-  const { data: totalPoolBalance } = useReadContract({
+  const { data: totalPoolBalance, isPending: poolLoading, isError: poolReadFailed, dataUpdatedAt: poolReadAt } = useReadContract({
     address: contracts.fundingPool,
     abi: fundingPoolAbi,
     functionName: "totalPoolBalance",
@@ -217,55 +222,39 @@ export default function ProtocolStatsPage() {
   const currentRoundIdValue = currentRoundId as bigint | undefined;
   const totalIdeasValue =
     (totalIdeas as bigint | undefined) ?? subgraphIdeaCount ?? undefined;
-  const totalRounds = currentRoundIdValue !== undefined && currentRoundIdValue > 1n ? currentRoundIdValue - 1n : 0n;
+  const totalRounds = currentRoundIdValue === undefined ? undefined : currentRoundIdValue > 1n ? currentRoundIdValue - 1n : 0n;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/protocol-stats">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-            <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
 
-        <main className="mt-10 space-y-8">
+
+        <main className="mt-10 space-y-8" data-kind="metrics">
           <section>
             <p className="text-xs uppercase tracking-[0.28em] text-teal-600">Protocol Stats</p>
-            <h1 className="mt-3 text-4xl font-semibold text-slate-900 dark:text-slate-100">Live On-Chain Metrics</h1>
+            <h1 className="mt-3 text-4xl font-semibold text-slate-900 dark:text-slate-100">The protocol.<br />In actual numbers.</h1>
             <p className="mt-4 max-w-4xl text-base leading-relaxed text-slate-600 dark:text-slate-300">
               This page gives one operational view for protocol operators and contributors. It centralizes key read-only values from
               core contracts so you do not need to open each dApp screen to validate protocol state.
             </p>
             <p className="mt-2 max-w-4xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-              Data source model: direct on-chain RPC reads plus indexed queries on pages that use <code>NEXT_PUBLIC_SUBGRAPH_URL</code>.
+              Direct contract reads, with an indexed fallback for the idea count. Reads are independent, not one atomic
+              block snapshot. A dash means a value is not available; it never means zero. Community counts cover only the configured active Factory.
             </p>
+            <div className="metrics-toolbar">
+              <p role="status"><FiDatabase aria-hidden />{poolReadFailed ? "Pool read unavailable. Other reads may still succeed." : !contracts.fundingPool ? "Pool address not configured." : poolLoading ? "Reading the configured testnet contracts…" : `Pool read received ${new Date(poolReadAt).toLocaleTimeString("en-GB")}`}</p>
+              <button type="button" disabled={refreshing} onClick={async () => {
+                setRefreshing(true);
+                try { await queryClient.refetchQueries({ queryKey: ["readContract"], type: "active" }); setIndexRefresh((value) => value + 1); }
+                finally { setRefreshing(false); }
+              }}><FiRefreshCw aria-hidden />{refreshing ? "Refreshing…" : "Refresh reads"}</button>
+              <a href="https://bertdao-console.vercel.app" target="_blank" rel="noreferrer">Explore the full Console</a>
+            </div>
           </section>
 
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Pool Balance</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Recorded Pool Custody</p>
               <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(totalPoolBalance as bigint | undefined)} USDC</p>
               <p className="mt-1 text-xs text-slate-500">FundingPool.totalPoolBalance()</p>
             </article>
@@ -282,7 +271,7 @@ export default function ProtocolStatsPage() {
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Total Ideas</p>
               <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{formatInt(totalIdeasValue)}</p>
-              <p className="mt-1 text-xs text-slate-500">{totalIdeas ? "IdeaRegistry.totalIdeas()" : "Subgraph IdeaCreated index"}</p>
+              <p className="mt-1 text-xs text-slate-500">{totalIdeas !== undefined ? "IdeaRegistry.totalIdeas()" : subgraphIdeaCount !== null ? "Subgraph IdeaCreated index" : "No count available"}</p>
             </article>
           </section>
 
@@ -336,7 +325,7 @@ export default function ProtocolStatsPage() {
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mode</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerMilestonesEnabled === undefined ? "—" : backerMilestonesEnabled ? "Enabled" : "Disabled"}</p><p className="mt-1 text-xs text-slate-500">Winning pledgers validate proof</p></article>
-              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Release Rail</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerInitialPayout == null ? "—" : `${backerInitialPayout.toString()} / 40 / 40`}</p><p className="mt-1 text-xs text-slate-500">Gross winning pledge allocation</p></article>
+              <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Release Rail</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerInitialPayout == null ? "—" : `${backerInitialPayout.toString()} / 40 / 40`}</p><p className="mt-1 text-xs text-slate-500">Author net grant; fee accounted separately</p></article>
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Proof Quorum</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{backerMilestoneQuorumBps === undefined ? "—" : `${Number(backerMilestoneQuorumBps) / 100}%`}</p><p className="mt-1 text-xs text-slate-500">Of total winning pledge weight</p></article>
               <article className="rounded-xl border border-white/15 bg-slate-950/20 p-4"><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Approval Floor</p><p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">2/3 + {backerMinApproveBackers?.toString() ?? "—"}</p><p className="mt-1 text-xs text-slate-500">Participating weight + backers</p></article>
             </div>
@@ -369,7 +358,7 @@ export default function ProtocolStatsPage() {
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">USDC Total Supply</p>
               <p className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{formatUsdc(totalSupply as bigint | undefined)} USDC</p>
-              <p className="mt-1 text-xs text-slate-500">USDC.totalSupply()</p>
+              <p className="mt-1 text-xs text-slate-500">Network-wide USDC.totalSupply(), not BERT custody</p>
             </article>
             <article className="rounded-xl border border-white/15 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Settlement Asset</p>
@@ -415,8 +404,7 @@ export default function ProtocolStatsPage() {
           </section>
         </main>
 
-                       <SiteFooter />
-      </div>
-    </div>
+                       </div>
+    </SiteFrame>
   );
 }

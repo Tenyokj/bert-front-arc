@@ -1,0 +1,54 @@
+.shell {
+  --hive-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='126' height='72.746' viewBox='0 0 126 72.746'%3E%3Cpath d='M21 0H63L84 36.373 63 72.746H21L0 36.373Z M84 -36.373H126L147 0 126 36.373H84L63 0Z M84 36.373H126L147 72.746 126 109.119H84L63 72.746Z' fill='none' stroke='white' stroke-width='.8'/%3E%3C/svg%3E");
+  position: relative;
+  isolation: isolate;
+  background: #050817;
+  color-scheme: dark;
+}
+.shell > div:last-child { position: relative; z-index: 1; }
+.background { position: fixed; inset: 44px 0 0; z-index: 0; overflow: hidden; pointer-events: none; contain: strict; background: #050817; }
+.haze { position: absolute; inset: 0; background: radial-gradient(ellipse at 16% 20%, #17236955, transparent 58%), radial-gradient(ellipse at 87% 80%, #5215763d, transparent 58%); }
+.cells, .energy { position: absolute; inset: 0; mask-image: var(--hive-tile); mask-size: 126px 72.746px; mask-repeat: repeat; -webkit-mask-image: var(--hive-tile); -webkit-mask-size: 126px 72.746px; -webkit-mask-repeat: repeat; }
+.cells { background: #6970d4; opacity: .28; }
+.wave { position: absolute; inset: 0; background: linear-gradient(0deg, transparent 18%, #3b51ed22 31%, #7951ffad 43%, #23ddffc9 50%, #bd4aff80 56%, transparent 70%); animation: hiveWave 14s linear infinite; will-change: transform; }
+.pulse { position: absolute; inset: 0; background: radial-gradient(ellipse at 12% 35%, #5c67ff, transparent 37%), radial-gradient(ellipse at 86% 69%, #a340f9, transparent 33%); animation: hivePulse 9s ease-in-out infinite alternate; opacity: .15; }
+@keyframes hiveWave { from { transform: translateY(110%); } to { transform: translateY(-110%); } }
+@keyframes hivePulse { from { opacity: .1; } to { opacity: .4; } }
+
+/* Keep the original island geometry and all workflow markup; change paint only. */
+.shell header { background: linear-gradient(110deg, #111937f5, #1b1234f5); border-color: #7470f76b; box-shadow: 0 18px 45px #0007, 0 0 24px #6455ff21, inset 0 1px #adcaff14; }
+.shell header nav a { transition: color 180ms, background-color 180ms, box-shadow 180ms; }
+.shell header nav a:hover { color: #e8faff; background-color: #3d3f8e44; box-shadow: inset 0 -1px #64e5ff, 0 0 20px #7b47ff30; }
+.shell header [class*="bg-cyan-400"] { background-color: #5defff; box-shadow: 0 0 10px #46d9ff, 0 0 22px #9357ffb3; }
+.shell header [class*="border-cyan"] { border-color: #9a69ff80; background-color: #6545c321; color: #c1b5ff; }
+.shell header input { background: #090e25; border-color: #69559b66; color: #e5efff; }
+.shell header input:focus { border-color: #5ddfff; box-shadow: 0 0 18px #34bfff22; }
+.shell header button { border-color: #9680f75c; }
+.shell header button[class*="bg-[linear-gradient"] { background: linear-gradient(115deg, #245bec, #8053ea 65%, #b638cd); color: #fff; box-shadow: 0 0 25px #7754fa42, inset 0 1px #c5ddff40; }
+.shell header button[class*="bg-[linear-gradient"]:hover { box-shadow: 0 0 35px #8a54fa77, inset 0 1px #d0eaff66; }
+
+.shell main :is(section, article, div, a)[class*="rounded"][class*="border"] { border-color: #696ab73b; background-color: #10142ce8; box-shadow: inset 0 1px #a5bfff06, 0 8px 30px #0002; }
+.shell main :is(div, section)[class*="bg-[linear-gradient"] { background-image: linear-gradient(135deg, #142357f0, #15112fe8 55%, #2d1246e8); }
+.shell main :is(div, p)[class*="bg-[#313443]"], .shell main :is(div, p)[class*="bg-[#262938]"] { background-color: #161a36ed; }
+.shell main :is(p, span, svg, a)[class*="text-cyan"], .shell main [class*="text-teal"] { color: #6ce6ff; }
+.shell main :is(p, span, label)[class*="text-slate-400"] { color: #a5afd2; }
+.shell main :is(button, a)[class*="bg-cyan-300"], .shell main :is(button, a)[class*="bg-cyan-500"]:not([class*="bg-cyan-500/"]) { background: linear-gradient(110deg, #3baff7, #a17aff); color: #071021; border-color: #9be9ff66; box-shadow: 0 0 20px #6166ff32; }
+.shell main :is(button, a)[class*="bg-cyan"][class*="/10"], .shell main :is(button, a)[class*="bg-cyan"][class*="/12"] { background: #274b7633; color: #a3eaff; border-color: #5acbff57; }
+.shell main :is(button, a)[class~="bg-white"][class*="rounded"] { background-color: #e1dcff; color: #16112c; box-shadow: 0 0 20px #9b79ff26; }
+.shell main a[class*="group"][class*="border"]:hover { border-color: #ae81ff9c; box-shadow: 0 0 25px #8a4cfa26, inset 0 0 22px #683afa0a; }
+.shell main button:not(:disabled) { transition: box-shadow 180ms, border-color 180ms, background-color 180ms, transform 180ms; }
+.shell main button:not(:disabled):hover { box-shadow: 0 0 20px #7963fa42; }
+.shell main :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="range"]) { background-color: #090f26; border-color: #7261a75c; color: #edf1ff; }
+.shell main :is(input, textarea, select):focus-visible { outline: 2px solid #7bddff; outline-offset: 2px; box-shadow: 0 0 20px #7555ff33; }
+.shell :is(a, button, summary):focus-visible { outline: 2px solid #8cddff; outline-offset: 3px; }
+.shell main :is(input[type="checkbox"], input[type="radio"], input[type="range"]) { accent-color: #a184ff; }
+.shell main :is(p, div, section, article)[class*="border-rose"], .shell main :is(p, div, section, article)[class*="border-red"] { border-color: #ff6a9680; background-color: #3b122ce8; color: #ffd0dd; }
+.shell main :is(p, div, section, article)[class*="border-amber"] { border-color: #edb25975; background-color: #322418ed; color: #ffe0a6; }
+.shell main :is(p, div, section, article)[class*="border-emerald"] { border-color: #49d5bd60; background-color: #102e35ed; }
+.shell main :is(pre, [role="alert"]) { overflow-wrap: anywhere; }
+@media (max-width: 600px) { .cells, .energy { mask-size: 94.5px 54.56px; -webkit-mask-size: 94.5px 54.56px; } .wave { animation-duration: 18s; } }
+@media (prefers-reduced-motion: reduce) {
+  .wave { animation: none; transform: none; opacity: .25; will-change: auto; }
+  .pulse { animation: none; opacity: .12; }
+  .shell *, .shell *::before, .shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

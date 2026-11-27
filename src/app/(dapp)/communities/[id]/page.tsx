@@ -7,7 +7,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { FaArrowLeft, FaCoins, FaLock, FaShieldHalved, FaUsers } from "react-icons/fa6";
 import { parseUnits } from "viem";
-import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { AddressIdentity } from "@/components/AddressIdentity";
 import {

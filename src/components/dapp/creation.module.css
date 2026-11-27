@@ -1,0 +1,24 @@
+.wizard { border: 1px solid #727ce43d; border-radius: 24px; background: radial-gradient(ellipse at 100% 0%, #6745b01c, transparent 65%), #111b31b5; overflow: clip; min-width: 0; }
+.wizard nav { border-bottom: 1px solid #7188be33; padding: 18px; }
+.wizard ol { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; padding: 0; margin: 0; }
+.wizard nav button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; color: #bcc9e4; padding: 10px; font-size: 12px; border: 1px solid transparent; border-radius: 12px; transition: background .2s, border-color .2s; }
+.wizard nav button span { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #788cbd55; border-radius: 50%; flex: 0 0 28px; }
+.wizard nav button[aria-current] { background: #6279e51c; color: #dce6ff; border-color: #8493ff70; }
+.wizard nav button:disabled:not([aria-current]) { opacity: .45; }
+.panel { padding: clamp(18px, 3vw, 30px); scroll-margin-top: 210px; min-width: 0; }
+.panel:focus { outline: none; }
+.eyebrow { color: #85c7ff; font-size: 10px; font-weight: 700; letter-spacing: .16em; margin: 0 0 18px; }
+.actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 24px; }
+.actions button { display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid #8993ee55; border-radius: 12px; color: #d8def8; padding: 12px 16px; font-size: 12px; }
+.actions .primary { background: linear-gradient(115deg, #396de8, #8252cf); color: white; border-color: transparent; margin-left: auto; }
+.wizard button:focus-visible { outline: 2px solid #74d7ff; outline-offset: 3px; }
+.wizard button:disabled { cursor: not-allowed; opacity: .5; }
+.problems { border-left: 2px solid #d8a767; background: #d8a7670c; color: #e8c59b; padding: 12px 16px; margin-top: 18px; font-size: 12px; line-height: 1.7; }
+.problems ul { padding-left: 18px; margin: 6px 0 0; }
+.review { margin: 20px 0; border: 1px solid #7892c438; border-radius: 14px; overflow: hidden; }
+.review > div { display: grid; grid-template-columns: minmax(120px, .65fr) minmax(0, 1.35fr); gap: 16px; padding: 13px 16px; border-bottom: 1px solid #7892c422; }
+.review > div:last-child { border: 0; }
+.review dt { font-size: 12px; color: #9eb0d3; }
+.review dd { margin: 0; color: #e1e8ff; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .wizard ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wizard nav { padding: 10px; } .wizard nav button { font-size: 10px; padding: 8px 4px; gap: 6px; } .review > div { grid-template-columns: 1fr; gap: 4px; } .actions > button { width: 100%; } .panel { scroll-margin-top: 270px; } }
+@media (prefers-reduced-motion: reduce) { .wizard nav button { transition: none; } }
