@@ -12,6 +12,17 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    id: "frontend-redesign",
+    image: "/news-frontend-redesign.png",
+    alt: "BERT Experience: redesigned website and enhanced dApp on Arc Testnet, with a temporary winter theme. Interface mockups are illustrative, not live protocol metrics.",
+    href: "https://github.com/Tenyokj/bert-front-arc/releases/tag/frontend-redesign-2026-11-27",
+    aspectRatio: "16 / 6",
+    objectFit: "contain",
+    objectPosition: "center center",
+    backgroundClassName: "bg-[#020510]",
+    maxWidth: 1600,
+  },
+  {
     id: "v2-4-transparent-treasury",
     image: "/news-v-2-4.png",
     alt: "BERT V2.4 transparent treasury and earned protocol revenue on Arc Testnet; revenue activation scheduled, not active yet",

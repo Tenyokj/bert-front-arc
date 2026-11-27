@@ -11,8 +11,9 @@ const exports = {};
 new Function("exports", compiled)(exports);
 const { newsItems } = exports;
 
-test("V2.4 leads the news rail without cropping or excessive enlargement", () => {
-  const banner = newsItems[0];
+test("V2.4 remains in the news rail without cropping or excessive enlargement", () => {
+  const banner = newsItems.find((item) => item.id === "v2-4-transparent-treasury");
+  assert(banner);
   assert.equal(banner.image, "/news-v-2-4.png");
   assert.equal(banner.objectFit, "contain");
   assert.equal(banner.maxWidth, 1600);

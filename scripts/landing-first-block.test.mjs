@@ -6,11 +6,31 @@ import test from "node:test";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("production news implementation and banner data are preserved byte-for-byte", () => {
+test("production news implementation and previous banner data are preserved byte-for-byte", () => {
   for (const path of ["src/components/NewsCarousel.tsx", "src/lib/news.ts"]) {
     const committed = readPreRedesign(path);
-    assert.equal(read(path), committed);
+    const current = read(path);
+    const withoutNewBanner = path === "src/lib/news.ts"
+      ? current.replace(/  \{\n    id: "frontend-redesign",[\s\S]*?\n  \},\n/, "")
+      : current;
+    assert.equal(withoutNewBanner, committed);
   }
+});
+
+test("redesign banner leads the rail, links to its release and fits without cropping", () => {
+  const source = read("src/lib/news.ts");
+  const first = source.match(/export const newsItems: NewsItem\[\] = \[\s*\{([\s\S]*?)\n  \},/)[1];
+  assert.match(first, /id: "frontend-redesign"/);
+  assert.match(first, /image: "\/news-frontend-redesign\.png"/);
+  assert.match(first, /releases\/tag\/frontend-redesign-2026-11-27/);
+  assert.match(first, /objectFit: "contain"/);
+  assert.match(first, /aspectRatio: "16 \/ 6"/);
+  assert.match(first, /maxWidth: 1600/);
+  assert.match(first, /illustrative, not live protocol metrics/);
+  const png = readFileSync(new URL("../public/news-frontend-redesign.png", import.meta.url));
+  assert.equal(png.subarray(1, 4).toString(), "PNG");
+  assert.equal(png.readUInt32BE(16), 1672);
+  assert.equal(png.readUInt32BE(20), 941);
 });
 
 test("landing uses the production news rail immediately after the hero shell", () => {
