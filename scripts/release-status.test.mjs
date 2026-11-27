@@ -34,16 +34,17 @@ test("published release evidence and env distinguish new creation from retained 
   assert.match(read("public/docs/CURRENT-RELEASE.md"), /Community Layer V3\.2\.1, deployed/);
 });
 
-test("V2.4 public copy distinguishes installed contracts from scheduled activation and public pilot", () => {
+test("V2.4 public copy confirms activation while retaining the pending public pilot", () => {
   for (const path of ["src/app/faq/page.tsx", "src/app/treasury-policies/page.tsx"]) {
     const source = read(path);
-    assert.match(source, /scheduled/);
-    assert.match(source, /November 26, 2026, 22:03:24 UTC/);
+    assert.match(source, /activated November 27, 2026, 10:03:38 UTC/);
+    assert.match(source, /74359134/);
     assert.doesNotMatch(source, /V2\.4 is a locally prepared candidate|V2\.4: Unreleased Treasury Candidate/);
   }
   const release = read("public/docs/V2.4-ARC-TESTNET-RELEASE.md");
   assert.match(release, /0xeCF9D2fD1914D1aFa124498931fdAA976D4e143b/);
   assert.match(release, /Collect earned revenue to this Treasury/);
   assert.match(release, /Pay fixed beneficiary/);
-  assert.match(release, /public pilot remain pending/);
+  assert.match(release, /public pilot[\s\S]*recommended follow-up/);
+  assert.match(release, /Confirmed Activation - November 27/);
 });

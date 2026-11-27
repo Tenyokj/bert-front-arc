@@ -127,15 +127,15 @@ export default function TreasuryPoliciesPage() {
             </section>
 
             <section id="v2-4-candidate" className="space-y-4 rounded-2xl border border-amber-300/25 bg-amber-300/5 p-5">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">V2.4: Treasury Deployed, Revenue Activation Pending</h2>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">V2.4: Treasury Deployed, Revenue Policy Active</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                V2.4 FundingPool and immutable Treasury are deployed on Arc Testnet; V3.2.1 contracts are unchanged. The eligible-fee policy is scheduled for a separate activation at or after November 26, 2026, 22:03:24 UTC. Accounting separates actual and recorded custody, reserve, earned revenue, other funds and surplus or shortfall. The full pool balance is not team income, investor ownership or an interest-bearing deposit.
+                V2.4 FundingPool and immutable Treasury are deployed on Arc Testnet; V3.2.1 contracts are unchanged. The 2000-bps eligible-fee policy was activated November 27, 2026, 10:03:38 UTC, at block 74359134. RPC and V2 Graph/client proxies agree. Accounting separates actual and recorded custody, reserve, earned revenue, other funds and surplus or shortfall. The full pool balance is not team income, investor ownership or an interest-bearing deposit.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 The approved testnet plan assigns an immutable RevenueTreasury 20% of eligible earned fees; at a 5% round fee, full execution of 100 USDC in winning pledges yields 1 USDC to Treasury, 4 USDC retained in reserve and 95 USDC to the author. Existing rounds keep their policy. Reserve-funded top-ups, deposits, bonds, refunds and V3 inflows do not become the revenue base.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                This policy is not active. After a separately reviewed upgrade, scheduling and activation are separate operations with a 48-hour notice. Fixed beneficiaries cannot be rotated for old Treasury funds; USDC issuer restrictions and FundingPool upgrade authority remain risks.
+                This testnet policy is active. Future scheduling and activation remain separate operations with a 48-hour notice. Fixed beneficiaries cannot be rotated for old Treasury funds; USDC issuer restrictions and FundingPool upgrade authority remain risks.
               </p>
               <Link href="/docs/V2.4-ARC-TESTNET-RELEASE.md" className="text-sm font-semibold text-teal-600 underline">Read verified rollout status, payout instructions and remaining gates</Link>
             </section>
