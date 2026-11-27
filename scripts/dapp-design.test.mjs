@@ -20,6 +20,7 @@ test("only explicitly approved UX surfaces differ; wallet, contract and financia
   visual.add("src/app/(dapp)/v3/create/page.tsx");
   visual.add("src/lib/dapp-onchain.ts");
   visual.add("src/lib/subgraph.ts");
+  visual.add("src/lib/news.ts");
   visual.add("src/components/HumanVerificationPanel.tsx");
   for (const file of ["src/components/CommunityWorkspacePage.tsx", "src/components/CommunitySidebar.tsx", "src/components/CommunityDirectory.tsx", "src/components/BinaryProposalWorkspace.tsx", "src/components/SlateRoundWorkspace.tsx", "src/components/CommunityMilestonePanel.tsx", "src/components/CommunityTranchePayment.tsx", "src/app/(dapp)/v3/communities/[id]/page.tsx", "src/app/(dapp)/v3/communities/[id]/proposals/[proposalId]/page.tsx", "src/app/(dapp)/v3/communities/[id]/rounds/[roundId]/page.tsx"]) visual.add(file);
   for (const file of ["src/app/(dapp)/admin/page.tsx", "src/app/(dapp)/ideas/page.tsx", "src/app/(dapp)/rounds/page.tsx", "src/app/(dapp)/profile/page.tsx", "src/app/demo/ideas/page.tsx", "src/app/demo/rounds/page.tsx", "src/components/RevenueTreasuryPanel.tsx", "src/components/DappDashboardLiveStats.tsx"]) visual.add(file);
