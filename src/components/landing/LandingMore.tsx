@@ -59,4 +59,3 @@ export function ConsoleLaptop() {
     <div className={styles.laptop}><div className={styles.laptopScreen}><span className={styles.laptopCamera} aria-hidden /><Image src="/landing/console-snapshot.png" alt="Actual BERT Console overview showing protocol navigation, funding and community monitoring. Screenshot captured November 25, 2026; not a live embed." width={1440} height={1000} sizes="(max-width: 760px) 94vw, 1050px" /><div className={styles.screenAction}>Explore BERT Console <FiPlus aria-hidden /></div></div><div className={styles.laptopHinge} /><div className={styles.laptopBase}><span /></div><div className={styles.laptopShadow} /></div>
   </a>;
 }
-

@@ -109,8 +109,8 @@ export default function TreasuryPoliciesPage() {
                 The approved testnet plan assigns an immutable RevenueTreasury 20% of eligible earned fees; at a 5% round fee, full execution of 100 USDC in winning pledges yields 1 USDC to Treasury, 4 USDC retained in reserve and 95 USDC to the author. Existing rounds keep their policy. Reserve-funded top-ups, deposits, bonds, refunds and V3 inflows do not become the revenue base.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                The receipt-backed rollout record confirms activation after the 48-hour notice, not a public accrual/collection/payment pilot.
-                Check the live Pool view for current activation state rather than assuming it changed automatically.
+                This testnet policy is active, confirmed by the rollout receipt; a public accrual/collection/payment pilot is not yet confirmed.
+                Future scheduling and activation remain separate operations with a 48-hour notice.
                 Fixed beneficiaries cannot be rotated for old Treasury funds; USDC issuer restrictions and FundingPool upgrade authority remain risks.
               </p>
               <Link href="/docs/V2.4-ARC-TESTNET-RELEASE.md" className="text-sm font-semibold text-teal-600 underline">Read verified rollout status, payout instructions and remaining gates</Link>

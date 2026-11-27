@@ -2,6 +2,11 @@
 
 Status: local visual direction for review, November 25, 2026. Not published.
 
+November 27: the owner approved this direction and authorized publication
+preparation. Landing, informational pages and dApp are now one reviewed branch.
+See `DAPP-REDESIGN.md` for final acceptance and current publication gates.
+The isolation/preview records below describe the earlier design batches.
+
 ## Isolation
 
 - Worktree: `~/bert/bert-landing-preview`, branch `design/landing-local`.

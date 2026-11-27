@@ -3,6 +3,15 @@
 Date: 26 November 2026. Worktree: `~/bert/bert-landing-preview`,
 branch `design/landing-local`. Unpublished visual and UX work only.
 
+## Publication Preparation / 2026-11-27
+
+The owner authorized publication preparation after local acceptance. The design
+is committed on its isolated branch and synchronized with `arc-front-migration`,
+including the confirmed V2.4 activation status. A separate PR/preview is the next
+gate; do not merge or deploy to production until its checks and preview are reviewed.
+No secrets, environment files, QA output, dependencies, ABI or Solidity changes
+belong to this PR. Earlier no-commit statements below are historical snapshots.
+
 ## Final Local Acceptance And Winter Theme / 2026-11-27
 
 The temporary winter layer covers the main site's landing, informational, demo
