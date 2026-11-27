@@ -1,3 +1,4 @@
+import { readPreRedesign, preRedesignFiles } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -5,10 +6,10 @@ import { execFileSync } from "node:child_process";
 
 const root = new URL("../", import.meta.url);
 const read = (file) => readFileSync(new URL(file, root), "utf8");
-const committed = (file) => execFileSync("git", ["show", `HEAD:${file}`], { cwd: root, encoding: "utf8" });
+const committed = (file) => readPreRedesign(file);
 
 test("only explicitly approved UX surfaces differ; wallet, contract and financial flows stay unchanged", () => {
-  const files = execFileSync("git", ["ls-files", "src/app/(dapp)", "src/app/demo", "src/lib", "src/components", "package.json", "package-lock.json"], { cwd: root, encoding: "utf8" }).trim().split("\n");
+  const files = preRedesignFiles.filter((file) => /^(src\/(app\/\(dapp\)|app\/demo|lib|components)\/|package(?:-lock)?\.json$)/.test(file));
   const visual = new Set(["src/components/DappShell.tsx", "src/components/HeroLogo3D.tsx", "src/components/HeroLogo3DClient.tsx", "src/components/TestnetBanner.tsx"]);
   visual.add("src/app/(dapp)/app/page.tsx");
   visual.add("src/components/FundingPoolHero.tsx");

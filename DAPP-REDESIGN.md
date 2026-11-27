@@ -12,6 +12,11 @@ gate; do not merge or deploy to production until its checks and preview are revi
 No secrets, environment files, QA output, dependencies, ABI or Solidity changes
 belong to this PR. Earlier no-commit statements below are historical snapshots.
 
+Post-commit preservation tests now use `scripts/fixtures/pre-redesign.json.gz`
+(public source at commit `8961884`), not a moving HEAD. This preserves the same
+financial AST/layout/news/legal assertions after commit and in shallow CI clones.
+All 189 tests passed again against the fixed baseline.
+
 ## Final Local Acceptance And Winter Theme / 2026-11-27
 
 The temporary winter layer covers the main site's landing, informational, demo

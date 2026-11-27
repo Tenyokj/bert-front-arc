@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -49,7 +50,7 @@ test("every V3 financial call retains its original arguments and signing targets
     const visit = (node) => { if (ts.isCallExpression(node) && /(writeContract|sendTransaction|send[A-Z]\w*)$/.test(node.expression.getText(file))) result.push(node.getText(file)); ts.forEachChild(node, visit); }; visit(file); return result;
   };
   for (const path of paths) {
-    const original = execFileSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
+    const original = readPreRedesign(path);
     assert(calls(path, original).length > 0, path);
     assert.deepEqual(calls(path, read(path)), calls(path, original), path);
   }

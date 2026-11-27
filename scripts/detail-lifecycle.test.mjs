@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -50,7 +51,7 @@ test("deadlines are explicit UTC and missing dates do not become epoch dates", (
 });
 test("every pre-existing idea/round financial write retains identical call arguments and gas", () => {
   for (const path of ["src/app/(dapp)/ideas/[id]/page.tsx", "src/app/(dapp)/rounds/[id]/page.tsx"]) {
-    const before = execFileSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
+    const before = readPreRedesign(path);
     const writes = (source) => {
       const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX), calls = [];
       const walk = (node) => { if (ts.isCallExpression(node) && /^send[A-Z]/.test(node.expression.getText(file))) calls.push(node.getText(file)); ts.forEachChild(node, walk); }; walk(file); return calls;

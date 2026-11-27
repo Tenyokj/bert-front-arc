@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -71,7 +72,7 @@ test("demo URL uses the local relay only for loopback development; production ke
 });
 test("missing demo setup is explained and the Arc-only guard and financial send path are retained", () => {
   const path = "src/components/HumanVerificationPanel.tsx", current = read(path);
-  const before = execFileSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
+  const before = readPreRedesign(path);
   const submit = (source) => source.slice(source.indexOf("  async function submitPendingPayload"), source.indexOf("  async function startVerification"));
   assert(submit(before).length > 100); assert.equal(submit(current), submit(before));
   assert.match(current, /demoVerificationEnabled && effectiveChainId === arcTestnetChainId/);

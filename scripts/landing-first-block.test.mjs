@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -7,7 +8,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 
 test("production news implementation and banner data are preserved byte-for-byte", () => {
   for (const path of ["src/components/NewsCarousel.tsx", "src/lib/news.ts"]) {
-    const committed = execFileSync("git", ["show", `HEAD:${path}`], { cwd: new URL("../", import.meta.url), encoding: "utf8" });
+    const committed = readPreRedesign(path);
     assert.equal(read(path), committed);
   }
 });

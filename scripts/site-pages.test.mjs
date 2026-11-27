@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
@@ -5,7 +6,7 @@ import { execFileSync } from "node:child_process";
 
 const root = new URL("../", import.meta.url);
 const read = (file) => readFileSync(new URL(file, root), "utf8");
-const committed = (file) => execFileSync("git", ["show", `HEAD:${file}`], { cwd: root, encoding: "utf8" });
+const committed = (file) => readPreRedesign(file);
 const routes = ["protocol-stats", "faq", "how-it-works", "developer-guide", "bug-bounty", "governance-stack", "on-chain-votes", "policy-docs", "privacy-notice", "security-roadmap", "terms-of-use", "testnet-information", "treasury-policies"];
 
 test("all informational routes share the new frame with no duplicate old chrome", () => {
@@ -32,8 +33,9 @@ test("legal content and dates remain unchanged", () => {
 });
 
 test("demo fixtures, wallet configuration and shared legacy footer are untouched", () => {
-  const changed = execFileSync("git", ["diff", "--name-only", "HEAD", "--", "src/lib/dapp-demo.ts", "src/lib/contracts.ts", "src/lib/web3.ts", "src/lib/community-contracts.ts", "src/components/SiteFooter.tsx", "src/components/WalletConnectButton.tsx", "src/components/Web3Providers.tsx"], { cwd: root, encoding: "utf8" });
-  assert.equal(changed.trim(), "");
+  for (const file of ["src/lib/dapp-demo.ts", "src/lib/contracts.ts", "src/lib/web3.ts", "src/lib/community-contracts.ts", "src/components/SiteFooter.tsx", "src/components/WalletConnectButton.tsx", "src/components/Web3Providers.tsx"]) {
+    assert.equal(read(file), readPreRedesign(file), file);
+  }
 });
 
 test("metrics retain actual contract reads and do not turn missing round data into zero", () => {

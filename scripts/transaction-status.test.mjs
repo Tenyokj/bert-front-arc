@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -94,7 +95,7 @@ test("all 26 receipt workflows use shared adapter without changing financial cal
   const files = execFileSync("rg", ["-l", "useProtocolReceipt as useWaitForTransactionReceipt", "src"], { cwd: root, encoding: "utf8" }).trim().split("\n");
   assert.equal(files.length, 26);
   for (const path of files) {
-    const previous = execFileSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
+    const previous = readPreRedesign(path);
     const writes = (source) => {
       const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX), calls = [];
       const visit = (node) => { if (ts.isCallExpression(node) && /(?:writeContract(?:Async)?|deployContract(?:Async)?|sendTransaction|send[A-Z]\w*)$/.test(node.expression.getText(file))) calls.push(node.getText(file)); ts.forEachChild(node, visit); }; visit(file); return calls;

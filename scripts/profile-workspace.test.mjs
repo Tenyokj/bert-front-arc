@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -118,7 +119,7 @@ test("no created rounds does not scan ID zero; unknown rounds stay errors", asyn
 });
 test("pool approval/contribution controller and exact financial writes are unchanged", () => {
   const path = "src/components/FundingPoolHero.tsx";
-  const original = execFileSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" });
+  const original = readPreRedesign(path);
   const current = read(path);
   const controller = (source) => source.slice(source.indexOf("  const { address, isConnected }"), source.indexOf("  const formatUsdc ="));
   assert.equal(controller(current), controller(original));

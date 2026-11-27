@@ -1,3 +1,4 @@
+import { readPreRedesign } from "./pre-redesign-baseline.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -60,13 +61,13 @@ function extract(file, predicate) {
 }
 test("both creation flows keep original write calldata, spenders and gas unchanged", () => {
   for (const path of [ideaPath, communityPath]) {
-    const before = ast(path, execFileSync("git", ["show", `HEAD:${path}`], { cwd: root, encoding: "utf8" })), after = ast(path, read(path));
+    const before = ast(path, readPreRedesign(path)), after = ast(path, read(path));
     const writes = (file) => extract(file, (node) => ts.isCallExpression(node) && /^(sendApprove|sendWrite|reserve\.writeContractAsync|deploy\.deployContractAsync|activate\.writeContractAsync)$/.test(node.expression.getText(file)));
     assert(writes(before).length >= 2); assert.deepEqual(writes(after), writes(before));
   }
 });
 test("Community build, receipt recovery, Hub linking, activation and status refresh retain their exact controllers", () => {
-  const before = ast(communityPath, execFileSync("git", ["show", `HEAD:${communityPath}`], { cwd: root, encoding: "utf8" })), after = ast(communityPath, read(communityPath));
+  const before = ast(communityPath, readPreRedesign(communityPath)), after = ast(communityPath, read(communityPath));
   for (const name of ["reservedForm", "linkCommunityHubBytecode", "build", "recoverTreasury", "deployHub", "activateHub", "refreshSetup", "syncSetup"]) {
     const select = (file) => extract(file, (node) => (ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node)) && node.name?.getText(file) === name);
     assert.equal(select(before).length, 1, name); assert.deepEqual(select(after), select(before), name);
