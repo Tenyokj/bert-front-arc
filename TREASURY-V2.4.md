@@ -1,10 +1,10 @@
 # Treasury UI and V2.4 Rollout
 
 Status: **V2.4 contracts installed, clients and V2 Graph v0.4.0 published and
-verified; revenue policy scheduled, not active**. Updated 2026-11-24.
+verified; revenue policy active**. Updated 2026-11-27.
 The proxy address is unchanged and legacy-pool compatibility is retained.
-Treasury: `0xeCF9D2fD1914D1aFa124498931fdAA976D4e143b`. A separate activation
-is required at/after 2026-11-26 22:03:24 UTC. A public revenue pilot is recommended
+Treasury: `0xeCF9D2fD1914D1aFa124498931fdAA976D4e143b`. Activation confirmed
+at block74359134 on 2026-11-27 10:03:38 UTC; RPC and Graph/client proxies agree. A public revenue pilot is recommended
 follow-up, not a technical prerequisite for activation or this testnet release.
 See core `docs/V2.4-ARC-TESTNET-RELEASE.md` for receipts and payout instructions.
 

@@ -13,12 +13,13 @@ checks do not constitute the pending public financial pilot or an audit.
 On 2026-11-24 the existing public V2 pool was upgraded to
 implementation `0x06a6497C174f80Cb5D1E49BB5bD2519D520E7643`, immutable Treasury
 `0xeCF9D2fD1914D1aFa124498931fdAA976D4e143b` was deployed, and V2 reopened.
-Revenue is still inactive. A policy was subsequently scheduled in transaction
+Historical schedule: the policy was announced in transaction
 `0x7d50e5bfb5fec55ff80a5618c6c6edeb3e11d0701e083993a62c9801d56b41ba` at
 block73935171: reviewed Treasury, 2000bps, readyAt1795730604
 (2026-11-26 22:03:24 UTC). Graph block73935281 agrees with RPC, discovers the
 immutable receiver/payee correctly and has no indexing errors. Active policy
-remains zero; activation is a separate future transaction. See core
+was zero at that historical check. Activation subsequently completed at block74359134
+on 2026-11-27 10:03:38 UTC; currentShareBps=2000 and scheduled=false. See core
 `docs/V2.4-ARC-TESTNET-RELEASE.md` for receipt-backed status. Neither contract nor
 Graph deployment activates the future 2000-bps policy.
 
@@ -193,12 +194,11 @@ The owner published the reviewed **V2** subgraph to the existing Studio project
 as v0.4.0 and reports Synced. Both client proxies confirm its hash/schema and no
 indexing errors. The first scheduled policy and immutable receiver/payee have
 now been compared with the canonical scheduling receipt and RPC getters. Compare
-the future activation and financial receipts separately; those remain pending.
+the activation and financial receipts separately. Activation is confirmed; the public financial pilot remains pending.
 Do not create a V3 Factory or call revenue active merely because
 indexing is live. Testnet terms are selected in core's
 `release-config/arc-testnet-v2.4.json`: 20% of eligible earned fees to Treasury,
 100% of Treasury receipts to the recorded single beneficiary, and 48-hour notice.
-The Treasury is now deployed, but that configuration is not an active policy.
-Public Graph synchronization is verified. Policy activation remains a separate
-operational step; the public pilot is recommended follow-up, not completed evidence. Follow
+The Treasury is deployed and its 2000-bps policy is now active.
+Public Graph and both client proxies confirm PolicyActivated at block74359134; the public pilot is recommended follow-up, not completed evidence. Follow
 core's `docs/V2.4-RELEASE-CONFIGURATION.md` before any public operation.

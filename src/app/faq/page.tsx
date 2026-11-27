@@ -149,7 +149,7 @@ const sections: FaqSection[] = [
       {
         question: "Is V2.4 protocol revenue already active?",
         answer:
-          "Not yet. V2.4 FundingPool and immutable Treasury are deployed on Arc Testnet; the clients and V2 Graph v0.4.0 are published. The 20% share of eligible earned success fees is scheduled, not active. A separate activation is required at or after November 26, 2026, 22:03:24 UTC. This is not 20% of pool funds. Existing rounds keep their original policy; a public revenue pilot remains pending.",
+          "Yes, on Arc Testnet. V2.4 FundingPool and immutable Treasury are deployed; the clients and V2 Graph v0.4.0 are published. The 20% share of eligible earned success fees was activated November 27, 2026, 10:03:38 UTC, at block 74359134. RPC and Graph/client proxies confirm it. This is not 20% of pool funds. Existing rounds keep their original policy; a public revenue pilot remains pending.",
       },
       {
         question: "Does a pool deposit give me ownership or interest?",
