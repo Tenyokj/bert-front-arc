@@ -11,7 +11,7 @@ import {
 } from "@/lib/contracts";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 
 function formatUsdc(value?: bigint) {
   if (value === undefined) return "—";
@@ -84,35 +84,9 @@ export default function PolicyDocsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/policy-docs">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-     <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
+
 
         <div className="mt-9 grid gap-12 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-72px)] lg:overflow-y-auto">
@@ -231,8 +205,7 @@ export default function PolicyDocsPage() {
             </section>
           </main>
         </div>
-                        <SiteFooter />
-      </div>
-    </div>
+                        </div>
+    </SiteFrame>
   );
 }

@@ -84,8 +84,11 @@ test("V2 funding browser: legacy isolation, revenue, 20/40/40 and refunds", asyn
     const page = await pageFor(index, "/ideas/new");
     await page.getByLabel("Title", { exact: true }).fill(title);
     await page.getByLabel("Description", { exact: true }).fill("Local V2.3 browser test: deliver an implementation with two reviewable evidence packages.");
+    await page.getByRole("button", { name: "Continue to budget", exact: true }).click();
     await page.getByPlaceholder("50", { exact: true }).fill("50");
     await page.getByPlaceholder("1000", { exact: true }).fill(String(minimum));
+    await page.getByRole("button", { name: "Continue to review & sign", exact: true }).click();
+    await page.getByRole("checkbox", { name: /^I reviewed/ }).check();
     await transaction(page, page.getByRole("button", { name: "Approve author bond", exact: true }));
     await transaction(page, page.getByRole("button", { name: "Submit funding proposal", exact: true }));
     const ideaId = await registry.totalIdeas();
@@ -143,7 +146,7 @@ test("V2 funding browser: legacy isolation, revenue, 20/40/40 and refunds", asyn
     await transaction(page, milestone(page, stage).getByRole("button", { name: "Finalize after review window", exact: true }));
   }
   async function policy(enabled, cancellationProbe = false) {
-    const page = await pageFor(0, "/pool");
+    const page = await pageFor(0, "/admin?tab=treasury");
     const destination = enabled ? revenue.treasury : `0x${"0".repeat(40)}`;
     await page.getByLabel("Revenue Treasury address", { exact: true }).fill(destination);
     await page.getByLabel("Revenue share basis points", { exact: true }).fill(enabled ? String(share) : "0");
@@ -168,7 +171,7 @@ test("V2 funding browser: legacy isolation, revenue, 20/40/40 and refunds", asyn
       await transaction(page, page.getByRole("button", { name: "Schedule settings", exact: true }));
     }
     await advanceTo(await pool.revenuePolicyReadyAt());
-    const relayer = await pageFor(2, "/pool");
+    const relayer = await pageFor(2, "/admin?tab=treasury");
     await expect(relayer.getByRole("button", { name: "Schedule settings", exact: true })).toBeDisabled();
     await transaction(relayer, relayer.getByRole("button", { name: "Activate announced settings", exact: true }));
     expect(await pool.revenueShareBps()).toBe(enabled ? share : 0n);
@@ -178,7 +181,7 @@ test("V2 funding browser: legacy isolation, revenue, 20/40/40 and refunds", asyn
     expect(pending).toBeGreaterThan(0n);
     const payeeBefore = await token.balanceOf(revenue.payee);
     const callerBefore = await token.balanceOf(fixture.accounts[2]);
-    const page = await pageFor(2, "/pool");
+    const page = await pageFor(2, "/admin?tab=treasury");
     await page.getByLabel("Revenue round ID", { exact: true }).fill(String(roundId));
     await page.getByRole("button", { name: "Inspect round snapshot", exact: true }).click();
     await expect(page.getByRole("heading", { name: `Round #${roundId} snapshot`, exact: true })).toBeVisible();

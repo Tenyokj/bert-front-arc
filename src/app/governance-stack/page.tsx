@@ -1,37 +1,11 @@
 import Link from "next/link";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 
 export default function GovernanceStackPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/governance-stack">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
+
 
         <div className="mt-9 grid gap-12 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-72px)] lg:overflow-y-auto">
@@ -77,6 +51,11 @@ export default function GovernanceStackPage() {
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Each core contract has clear scope to reduce hidden side effects and simplify reasoning about failures.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                V2.4 adds <strong>ProtocolRevenueTreasury</strong> as a separate immutable recipient of eligible earned fees.
+                It does not hold user pledge escrow or create investor shares. Its fixed beneficiaries cannot be changed;
+                the FundingPool proxy remains upgradeable. A round&apos;s revenue terms are snapshotted, not retroactively applied.
               </p>
               <div className="rounded-2xl border border-white/15 bg-white/5 p-5">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">V2 contract focus</p>
@@ -169,8 +148,7 @@ export default function GovernanceStackPage() {
             </section>
           </main>
         </div>
-                       <SiteFooter />
-      </div>
-    </div>
+                       </div>
+    </SiteFrame>
   );
 }

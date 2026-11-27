@@ -1,0 +1,22 @@
+.center { margin-top: 18px; border: 1px solid #758ce24a; border-radius: 18px; background: linear-gradient(110deg, #162444eb, #211535e8); }
+.center > details > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; cursor: pointer; padding: 16px 20px; font-size: 14px; font-weight: 600; color: #d4e1ff; }
+.center summary span { border: 1px solid #8b9be866; border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center; }
+.center small { color: #a9b8d8; font-size: 11px; font-weight: 400; margin-left: auto; }
+.note { padding: 0 20px 16px; color: #a9b8d8; font-size: 12px; line-height: 1.7; }
+.list { display: grid; gap: 12px; padding: 0 16px 16px; }
+.row { border: 1px solid #8197d038; border-left: 3px solid #85bbef; border-radius: 12px; background: #0b1529bb; padding: 16px; min-width: 0; }
+.heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: #e2eaff; font-size: 13px; }
+.heading > span { font-size: 11px; color: #acd6ff; }
+.row[data-transaction-phase="confirmed"] { border-left-color: #68dab8; }
+.row[data-transaction-phase="reverted"] { border-left-color: #fb8caa; }
+.row[data-transaction-phase="unknown"] { border-left-color: #e6b76c; }
+.row p { color: #aebdd8; font-size: 12px; margin-top: 10px; overflow-wrap: anywhere; }
+.row code { display: block; color: #c4d8ff; font-size: 12px; margin-top: 10px; overflow-wrap: anywhere; user-select: text; }
+.row details { margin-top: 12px; color: #b9c7df; font-size: 12px; }
+.row pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; padding-top: 10px; user-select: text; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; font-size: 11px; }
+.actions button, .actions a { color: #d8ddff; border: 1px solid #9f9ce54f; border-radius: 9px; padding: 8px 11px; }
+.actions button:disabled { opacity: .5; cursor: wait; }
+.actions span { color: #a6d5e8; }
+.center :is(button, a, summary):focus-visible { outline: 2px solid #7cd9ff; outline-offset: 3px; }
+@media (max-width: 640px) { .center small { margin-left: 0; width: 100%; } .row { padding: 12px; } }

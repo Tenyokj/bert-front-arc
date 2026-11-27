@@ -10,6 +10,7 @@ export const IDEA_STATUS_LABELS = [
   "Rejected",
   "Completed",
   "InProcess",
+  "Cancelled",
 ] as const;
 
 export const MILESTONE_STAGE_LABELS: Record<number, string> = {

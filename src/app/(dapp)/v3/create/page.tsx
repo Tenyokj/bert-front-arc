@@ -7,6 +7,9 @@ import { assertNoPendingSetupTransaction, findSubmittedReservation, isUncertainB
 import { communityCreationContext, assertCommunityCreator, matchesCommunityCreator, type CommunityCreationContext } from "@/lib/community-creation";
 
 import Link from "next/link";
+import { CreationSteps, CreationReview } from "@/components/dapp/CreationSteps";
+import { communityStepProblems, effectiveCommunityAdmins, reviewIdentity } from "@/lib/creation-form";
+import { defaultChain } from "@/lib/web3";
 import { useEffect, useRef, useState } from "react";
 import { FaArrowRight, FaCircleInfo, FaRocket } from "react-icons/fa6";
 import { formatUnits, isAddress, parseEventLogs, parseUnits, type Address, type Hash } from "viem";
@@ -15,9 +18,9 @@ import {
   useDeployContract,
   usePublicClient,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import communityHubArtifact from "@/abi/v3/CommunityHub.json";
 import {
@@ -163,6 +166,8 @@ export default function CreateCommunityPage() {
     query: { enabled: Boolean(address && contracts.popVerifier) },
   });
   const [form, setForm] = useState<Form>(defaults);
+  const [wizardStep, setWizardStep] = useState(0);
+  const [acceptedReview, setAcceptedReview] = useState<string | null>(null);
   const [timingPreset, setTimingPreset] = useState<TimingPreset>("production");
   const [admins, setAdmins] = useState<Address[]>([]);
   const [validators, setValidators] = useState<Address[]>([]);
@@ -342,7 +347,7 @@ export default function CreateCommunityPage() {
     return state;
   };
   const reserveTreasury = async () => {
-    if (actionLock.current || busy || reservation || alreadyKnown || uncertainStep) return;
+    if (actionLock.current || busy || reservation || alreadyKnown || uncertainStep || !canReserveReview) return;
     actionLock.current = true;
     setCheckingSetup(true);
     try {
@@ -501,6 +506,15 @@ export default function CreateCommunityPage() {
     } catch (reason) { setError(setupFailureMessage(reason)); }
     finally { actionLock.current = false; setCheckingSetup(false); }
   };
+  const currentStep = reservation || uncertainStep ? 3 : wizardStep;
+  const formLocked = Boolean(reservation) || busy || Boolean(uncertainStep);
+  const problems = communityStepProblems(currentStep, form, address, admins, validators);
+  const allProblems = [0, 1, 2].flatMap((step) => communityStepProblems(step, form, address, admins, validators));
+  const reviewKey = reviewIdentity({ form, admins, validators, address, chainId, factory: communityContracts.factory, library: communityContracts.adminActionsLibrary, usdc: contracts.usdc, reserve: contracts.fundingPool });
+  const reviewAccepted = acceptedReview === reviewKey;
+  const canReserveReview = currentStep === 3 && reviewAccepted && allProblems.length === 0 && isConnected && chainId === defaultChain.id;
+  const initialAdminPreview = effectiveCommunityAdmins(address, admins);
+
   if (!communityContracts.factory || !communityContracts.adminActionsLibrary)
     return (
       <p className="rounded-2xl border border-amber-300/30 bg-amber-400/10 p-5 text-sm text-amber-100">
@@ -516,64 +530,92 @@ export default function CreateCommunityPage() {
           Community Creator
         </p>
         <h1 className="mt-4 text-4xl font-semibold text-white sm:text-5xl">
-          Launch an on-chain room in three verified steps.
+          Give your Community clear rules.
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
-          Reserve Treasury, deploy the matching Hub from your wallet, then
-          activate Factory verification.
+          Prepare its identity, role holders and funding rules. Review every setting before the first transaction; deployment still uses Reserve Treasury, Deploy Hub and Activate.
         </p>
       </div>
-      {!isConnected ? (
+      {!isConnected && (
         <p className="rounded-2xl border border-white/10 bg-[#313443] p-5 text-sm text-slate-300">
-          Connect the creator wallet first.
+          You can prepare a draft without a wallet. Connect the creator before reviewing and signing. Nothing is automatically saved after a reload.
         </p>
-      ) : (
+      )}
         <>
-          <fieldset disabled={Boolean(reservation) || busy} className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-                Identity & roles
-              </p>
-              <Field
+          <CreationSteps labels={["Identity", "People", "Rules", "Review & deploy"]} step={currentStep} onStep={setWizardStep} problems={problems} busy={busy} locked={Boolean(reservation) || Boolean(uncertainStep)}>
+            <div hidden={currentStep !== 0}>
+              <h2 className="text-2xl font-semibold text-white">Name the Community and its recipient.</h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">The recipient is not the Treasury. Funds stay in the Community Treasury until an authorized release. The draft remains only in this tab.</p>
+              <fieldset disabled={formLocked || currentStep !== 0} className="min-w-0">
+                <Field
                 label="Community name"
                 value={form.name}
                 set={(v) => field("name", v)}
                 placeholder="Minecraft Governance"
               />
-              <Field
+                <Field
                 label="Metadata URI"
                 value={form.metadataURI}
                 set={(v) => field("metadataURI", v)}
                 placeholder="ipfs://... (optional)"
               />
-              <AddressField
+                <AddressField
                 label="Administration execution wallet"
                 value={form.executionRecipient}
                 set={(v) => field("executionRecipient", v)}
                 helper="This is not the Community Treasury. The Treasury keeps all Community funds; it releases only an approved winner's 20% / 40% / 40% execution budget to this Admin-team wallet or multisig. This address is immutable after deployment."
               />
-              <AddressChips
+              </fieldset>
+            </div>
+            <div hidden={currentStep !== 1}>
+              <h2 className="text-2xl font-semibold text-white">Who governs and who validates?</h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">The connected creator is always included as an admin. Add each wallet explicitly; text still in the input is not an added role holder. Admin and validator roles cannot overlap.</p>
+              <fieldset disabled={formLocked || currentStep !== 1} className="grid min-w-0 gap-4 md:grid-cols-2">
+                <div><AddressChips
                 label="Additional admins"
                 addresses={admins}
                 set={setAdmins}
                 helper="Creator is automatically included."
-              />
-              <AddressChips
+              /><Field
+                  label="Admin quorum"
+                  value={form.adminThreshold}
+                  set={(v) => field("adminThreshold", v)}
+                /></div>
+                <div><AddressChips
                 label="Validators"
                 addresses={validators}
                 set={setValidators}
                 helper="Add each validator wallet separately."
-              />
-              <p className="mt-4 text-xs text-cyan-100">
-                <FaCircleInfo className="mr-2 inline" />
-                Admin and validator roles cannot overlap.
-              </p>
+              /><Field
+                  label="Validator approvals"
+                  value={form.validatorThreshold}
+                  set={(v) => field("validatorThreshold", v)}
+                /></div>
+              </fieldset>
             </div>
-            <div className="rounded-[28px] border border-white/10 bg-[#2a2d3b] p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-                Economics & local timing
-              </p>
-              <p className="mt-2 text-xs text-amber-100">
+            <div hidden={currentStep !== 2}>
+              <h2 className="text-2xl font-semibold text-white">Funding, voting and delivery rules.</h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">These are real deployment settings, not a simulation. Read the defaults; advanced fields remain available and all values appear in the final review.</p>
+              <fieldset disabled={formLocked || currentStep !== 2} className="min-w-0">
+                <div className="grid gap-4 sm:grid-cols-3"><Field
+                  label="Entry stake"
+                  value={form.entryStake}
+                  set={(v) => field("entryStake", v)}
+                  suffix="USDC"
+                />
+<Field
+                  label="Proposal bond"
+                  value={form.proposalBond}
+                  set={(v) => field("proposalBond", v)}
+                  suffix="USDC"
+                />
+<Field
+                  label="Min vote"
+                  value={form.voteMinStake}
+                  set={(v) => field("voteMinStake", v)}
+                  suffix="USDC"
+                /></div>
+                              <p className="mt-2 text-xs text-amber-100">
                 Timing is immutable after Treasury reservation. Choose a
                 production Community or an accelerated demo Community before
                 deployment.
@@ -611,85 +653,60 @@ export default function CreateCommunityPage() {
                     ? "Demo: local proposal timings are 5 minutes. Milestone review stays at its enforced one-day minimum; local E2E can advance the Hardhat clock without weakening contract rules."
                     : "Custom: timing values were edited manually. Review them carefully before reserving the Treasury."}
               </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="Entry stake"
-                  value={form.entryStake}
-                  set={(v) => field("entryStake", v)}
-                  suffix="USDC"
-                />
-                <Field
-                  label="Proposal bond"
-                  value={form.proposalBond}
-                  set={(v) => field("proposalBond", v)}
-                  suffix="USDC"
-                />
-                <Field
-                  label="Min vote"
-                  value={form.voteMinStake}
-                  set={(v) => field("voteMinStake", v)}
-                  suffix="USDC"
-                />
-                <Field
+
+                <details className="mt-5 rounded-2xl border border-white/10 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Advanced governance & timing / 11 settings</summary>
+                  <p className="mt-3 text-xs leading-relaxed text-slate-300">Fees and activity ratios use basis points: 100 bps = 1%. Milestone review remains 1-14 whole days even in the accelerated preset. Changes become Custom timing where applicable.</p>
+                  <div className="grid gap-3 sm:grid-cols-2"><Field
                   label="Exit cooldown"
                   value={form.exitCooldownMinutes}
                   set={(v) => field("exitCooldownMinutes", v)}
                   suffix="min"
                 />
-                <Field
-                  label="Validator approvals"
-                  value={form.validatorThreshold}
-                  set={(v) => field("validatorThreshold", v)}
-                />
-                <Field
+<Field
                   label="Validator points"
                   value={form.validatorPointsThreshold}
                   set={(v) => field("validatorPointsThreshold", v)}
                   suffix="pts"
                 />
-                <Field
-                  label="Admin quorum"
-                  value={form.adminThreshold}
-                  set={(v) => field("adminThreshold", v)}
-                />
-                <Field
+<Field
                   label="NO fee (max 10%)"
                   value={form.rejectionFeeBps}
                   set={(v) => field("rejectionFeeBps", v)}
                   suffix="bps"
                   max={1000}
                 />
-                <Field
+<Field
                   label="Validator reward"
                   value={form.validatorRewardBps}
                   set={(v) => field("validatorRewardBps", v)}
                   suffix="bps"
                 />
-                <Field
+<Field
                   label="Validation"
                   value={form.validationMinutes}
                   set={(v) => field("validationMinutes", v)}
                   suffix="min"
                 />
-                <Field
+<Field
                   label="Binary voting"
                   value={form.binaryVotingMinutes}
                   set={(v) => field("binaryVotingMinutes", v)}
                   suffix="min"
                 />
-                <Field
+<Field
                   label="Slate voting"
                   value={form.roundVotingMinutes}
                   set={(v) => field("roundVotingMinutes", v)}
                   suffix="min"
                 />
-                <Field
+<Field
                   label="Reward epoch"
                   value={form.rewardEpochMinutes}
                   set={(v) => field("rewardEpochMinutes", v)}
                   suffix="min"
                 />
-                <Field
+<Field
                   label="Milestone review"
                   value={form.milestoneReviewDays}
                   set={(v) => field("milestoneReviewDays", v)}
@@ -697,21 +714,64 @@ export default function CreateCommunityPage() {
                   min={1}
                   max={14}
                 />
-                <Field
+<Field
                   label="Milestone proof deadline"
                   value={form.milestoneProofMinutes}
                   set={(v) => field("milestoneProofMinutes", v)}
                   suffix="min"
                 />
-                <Field
+<Field
                   label="Validator activity"
                   value={form.validatorActivityBps}
                   set={(v) => field("validatorActivityBps", v)}
                   suffix="bps"
-                />
-              </div>
+                /></div>
+                </details>
+              </fieldset>
             </div>
-          </fieldset>
+            <div hidden={currentStep !== 3}>
+              <h2 className="text-2xl font-semibold text-white">Review the complete deployment.</h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">Reservation fixes the configuration. Initial admins, validators, time windows and the execution recipient must match when deploying the Hub. This review does not send anything.</p>
+              <CreationReview rows={[
+                { label: "Network", value: defaultChain.name },
+                { label: "Creator", value: address || "Connect before signing" },
+                { label: "Initial admins", value: initialAdminPreview.join("\n") || "The connected creator will be included" },
+                { label: "Initial validators", value: validators.join("\n") || "None added" },
+                { label: "Community name", value: form.name },
+              { label: "Metadata URI", value: form.metadataURI },
+              { label: "Execution recipient", value: form.executionRecipient },
+              { label: "Entry stake", value: form.entryStake + " USDC" },
+              { label: "Proposal bond", value: form.proposalBond + " USDC" },
+              { label: "Min vote", value: form.voteMinStake + " USDC" },
+              { label: "Exit cooldown", value: form.exitCooldownMinutes + " min" },
+              { label: "Validator approvals", value: form.validatorThreshold },
+              { label: "Validator points", value: form.validatorPointsThreshold + " pts" },
+              { label: "Admin quorum", value: form.adminThreshold },
+              { label: "NO fee (max 10%)", value: /^\d+$/.test(form.rejectionFeeBps) ? `${form.rejectionFeeBps} bps (${Number(form.rejectionFeeBps) / 100}%)` : form.rejectionFeeBps },
+              { label: "Validator reward", value: /^\d+$/.test(form.validatorRewardBps) ? `${form.validatorRewardBps} bps (${Number(form.validatorRewardBps) / 100}%)` : form.validatorRewardBps },
+              { label: "Validation", value: form.validationMinutes + " min" },
+              { label: "Binary voting", value: form.binaryVotingMinutes + " min" },
+              { label: "Slate voting", value: form.roundVotingMinutes + " min" },
+              { label: "Reward epoch", value: form.rewardEpochMinutes + " min" },
+              { label: "Milestone review", value: form.milestoneReviewDays + " days" },
+              { label: "Milestone proof deadline", value: form.milestoneProofMinutes + " min" },
+              { label: "Validator activity", value: /^\d+$/.test(form.validatorActivityBps) ? `${form.validatorActivityBps} bps (${Number(form.validatorActivityBps) / 100}%)` : form.validatorActivityBps },
+                { label: "USDC contract", value: contracts.usdc || "Not configured" },
+                { label: "Global reserve", value: contracts.fundingPool || "Not configured" },
+                { label: "Factory", value: communityContracts.factory || "Not configured" },
+                { label: "Admin-actions library", value: communityContracts.adminActionsLibrary || "Not configured" },
+              ]} />
+              {!reservation && <label className="flex items-start gap-3 rounded-xl border border-violet-300/25 p-4 text-sm text-slate-200">
+                <input type="checkbox" checked={reviewAccepted} disabled={busy || !isConnected || chainId !== defaultChain.id || allProblems.length > 0} onChange={(event) => setAcceptedReview(event.target.checked ? reviewKey : null)} className="mt-1 h-4 w-4 shrink-0" />
+                <span>I reviewed the exact recipient, role holders, funding and timing settings. I understand deployment uses three separate wallet transactions and these settings are locked after reservation.</span>
+              </label>}
+              {allProblems.length > 0 && !reservation && <div className="mt-4 rounded-xl border border-amber-300/25 p-4 text-sm text-amber-100"><p>Resolve the following before a new reservation:</p><ul className="mt-2 list-disc pl-5">{allProblems.map((problem) => <li key={problem}>{problem}</li>)}</ul></div>}
+              {!isConnected && <p className="mt-4 text-sm text-amber-100">Connect the creator wallet using the existing wallet menu before signing.</p>}
+              {isConnected && chainId !== defaultChain.id && <p className="mt-4 text-sm text-amber-100">Switch to {defaultChain.name}. Signing a new reservation on the current network is disabled.</p>}
+              {reservation && <p className="mt-4 text-sm text-cyan-100">Original reservation is confirmed. Its configuration is locked; use the verified deployment and recovery controls below.</p>}
+            </div>
+          </CreationSteps>
+          <div hidden={currentStep !== 3}>
           <div className="rounded-[28px] border border-cyan-300/18 bg-[linear-gradient(145deg,rgba(8,47,73,0.45),rgba(42,45,59,0.96))] p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200">
               Deploy
@@ -726,7 +786,7 @@ export default function CreateCommunityPage() {
                     : "Creates isolated Treasury."
                 }
                 run={reserveTreasury}
-                disabled={busy || Boolean(reservation) || alreadyKnown || Boolean(uncertainStep) || !isVerifiedHuman}
+                disabled={busy || Boolean(reservation) || alreadyKnown || Boolean(uncertainStep) || !isVerifiedHuman || !canReserveReview}
               />
               <Action
                 label="2. Deploy Hub"
@@ -753,14 +813,6 @@ export default function CreateCommunityPage() {
               <button type="button" disabled={busy || !creatorMatches} onClick={refreshSetup} className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{checkingSetup ? "Checking chain state..." : "Refresh on-chain setup status (read-only)"}</button>
               <details className="text-sm text-slate-300"><summary className="cursor-pointer">Hub deployed earlier? Use its address</summary><input aria-label="Existing Hub address" value={existingHubAddress} onChange={(event) => setExistingHubAddress(event.target.value)} placeholder="0x..." className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 font-mono" /><p className="mt-2 text-xs text-slate-400">Then refresh status. Creator, Treasury and original configuration must all match.</p></details>
             </div> : null}
-            {!reservation && isConnected ? <details open={alreadyKnown || undefined} className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-              <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Continue an unfinished Community setup</summary>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">Paste the confirmed Reserve Treasury transaction hash from wallet activity. We will load its original settings and verify the Treasury. No need to fill the form again, connect another wallet or send another reservation.</p>
-              <div className="mt-3 flex flex-wrap items-end gap-3">
-                <label className="min-w-0 flex-1 text-sm text-slate-300">Reservation transaction hash<input aria-label="Reservation transaction hash" value={resumeHash} onChange={(event) => setResumeHash(event.target.value)} placeholder="0x..." className="mt-1 block w-full min-w-48 rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 font-mono text-white" /></label>
-                <button type="button" disabled={busy || !creatorMatches || !resumeHash.trim()} onClick={recoverTreasury} className="rounded-xl border border-cyan-300/30 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{recovering ? "Loading original setup..." : "Load original setup (read-only)"}</button>
-              </div>
-            </details> : null}
             {alreadyKnown ? <p role="status" className="mt-4 text-sm text-amber-100">The RPC reports that this transaction is already known. It may already be confirmed; this is not proof of a contract revert. Check wallet activity and recover its reservation instead of sending another transaction.</p> : null}
             {recoveryNotice ? <p role="status" className="mt-4 text-sm text-cyan-100">{recoveryNotice}</p> : null}
             {activated && reservation ? (
@@ -772,8 +824,17 @@ export default function CreateCommunityPage() {
               </Link>
             ) : null}
           </div>
+          </div>
+          {!reservation && isConnected ? <details open={alreadyKnown || undefined} className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Continue an unfinished Community setup</summary>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">Paste the confirmed Reserve Treasury transaction hash from wallet activity. We will load its original settings and verify the Treasury. No need to fill the form again, connect another wallet or send another reservation.</p>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <label className="min-w-0 flex-1 text-sm text-slate-300">Reservation transaction hash<input aria-label="Reservation transaction hash" value={resumeHash} onChange={(event) => setResumeHash(event.target.value)} placeholder="0x..." className="mt-1 block w-full min-w-48 rounded-xl border border-white/15 bg-slate-950/40 px-3 py-2 font-mono text-white" /></label>
+                <button type="button" disabled={busy || !creatorMatches || !resumeHash.trim()} onClick={recoverTreasury} className="rounded-xl border border-cyan-300/30 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40">{recovering ? "Loading original setup..." : "Load original setup (read-only)"}</button>
+              </div>
+            </details> : null}
+
         </>
-            )}
             {!isVerifiedHuman && (
               <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm text-amber-100">
                 Complete <Link href="/profile" className="font-semibold underline">human verification</Link> before reserving a Community.
@@ -816,9 +877,10 @@ function Field({
       <div className="relative mt-2">
         <input
           value={value}
+          aria-label={label}
           onChange={(e) => set(e.target.value)}
           placeholder={placeholder}
-          inputMode="numeric"
+          inputMode={suffix === "USDC" ? "decimal" : label === "Community name" ? "text" : label === "Metadata URI" ? "url" : "numeric"}
           min={min}
           max={max}
           className="w-full rounded-xl border border-white/10 bg-slate-950/35 px-3 py-3 pr-14 text-sm font-normal normal-case tracking-normal text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/50"
@@ -850,6 +912,7 @@ function AddressField({
       {label}
       <input
         value={value}
+        aria-label={label}
         onChange={(event) => set(event.target.value)}
         placeholder="0x..."
         spellCheck={false}
@@ -921,6 +984,7 @@ function AddressChips({
       <p className="mt-1 text-xs text-slate-500">{helper}</p>
       <div className="mt-2 flex gap-2">
         <input
+          aria-label={`${label} wallet address`}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -935,6 +999,7 @@ function AddressChips({
         <button
           type="button"
           onClick={add}
+          aria-label={`Add ${label.toLowerCase()} address`}
           className="rounded-xl bg-cyan-300 px-4 text-lg font-bold text-slate-950"
         >
           +
@@ -950,6 +1015,7 @@ function AddressChips({
             {shortAddress(a)}
             <button
               type="button"
+              aria-label={`Remove ${label.toLowerCase()} ${a}`}
               onClick={() =>
                 set(
                   addresses.filter(

@@ -12,6 +12,7 @@ import { fetchIndexedCommunities } from "@/lib/community-v3-subgraph";
 
 import { communityRouteKey, getCommunityFactories } from "@/lib/community-reference";
 import type { Address } from "viem";
+import { ClientPagination } from "@/components/ClientPagination";
 
 type CommunityRow = {
   factory: Address;
@@ -32,6 +33,7 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [usesSubgraph, setUsesSubgraph] = useState(false);
+  const [page, setPage] = useState(1);
   const normalizedQuery = query.trim().toLowerCase();
   const requestedId = normalizedQuery.replace(/^#/, "");
   const isExactIdSearch = /^\d+$/.test(requestedId) && Number(requestedId) > 0;
@@ -41,6 +43,8 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
     const queryVariants = normalizedQuery.startsWith("#") ? [normalizedQuery, normalizedQuery.slice(1)] : [normalizedQuery];
     return queryVariants.some((candidate) => [community.id.toString(), community.name, community.metadataURI, community.creator, community.factory, community.hub, community.treasury].some((value) => value.toLowerCase().includes(candidate)));
   }), [communities, isExactIdSearch, normalizedQuery, requestedId]);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(filteredCommunities.length / 8)));
+  const visibleCommunities = filteredCommunities.slice((currentPage - 1) * 8, currentPage * 8);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,9 +156,9 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-200">{usesSubgraph ? "RPC verified · indexed metadata" : "RPC verified · metadata may be unavailable"}</p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        {filteredCommunities.map((community) => {
+        {visibleCommunities.map((community) => {
           const activated = community.hub !== "0x0000000000000000000000000000000000000000";
-          const status = community.status === 2 ? "Archived" : community.status === 1 ? "Paused" : activated ? "Active" : "Pending activation";
+          const status = !activated ? "Pending activation" : community.status === 2 ? "Archived" : community.status === 1 ? "Paused" : community.status === 0 ? "Active" : "Status unavailable";
           const statusClassName = status === "Archived"
             ? "border-slate-300/25 bg-slate-400/10 text-slate-200"
             : status === "Paused"
@@ -190,7 +194,8 @@ export function CommunityDirectory({ query = "", basePath = "/v3/communities", l
         })}
       </div>
       {communities.length > 0 && filteredCommunities.length === 0 ? <p className="rounded-2xl border border-white/10 bg-[#313443] px-5 py-4 text-sm text-slate-300">No community matches “{query}”. Search by name, ID, creator, Hub, or Treasury address.</p> : null}
-      {(totalCount ?? 0n) > BigInt(limit) ? <p className="text-center text-sm text-slate-500">Showing the latest {limit} communities.</p> : null}
+      <ClientPagination currentPage={currentPage} totalItems={filteredCommunities.length} pageSize={8} onPageChange={setPage} />
+      {(totalCount ?? 0n) > BigInt(limit) ? <p className="text-center text-sm text-slate-500">Browsing the latest {limit} communities; name searches cover only this loaded sample. Search by exact ID to check older registrations.</p> : null}
     </div>
   );
 }

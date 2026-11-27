@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { CreationSteps, CreationReview } from "@/components/dapp/CreationSteps";
+import { ideaStepProblems, parseCreationUsdc, reviewIdentity } from "@/lib/creation-form";
+import { defaultChain } from "@/lib/web3";
 import { useEffect, useMemo, useState } from "react";
 import { useSyncExternalStore } from "react";
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits } from "viem";
 import { FaArrowLeft } from "react-icons/fa";
 import {
   useAccount,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import {
   contracts,
@@ -19,16 +22,6 @@ import {
   usdcAbi,
 } from "@/lib/contracts";
 import { formatTokenAmount, USDC_DECIMALS } from "@/lib/dapp-onchain";
-
-function safeParseAmount(value: string) {
-  const input = value.trim();
-  if (!input) return 0n;
-  try {
-    return parseUnits(input, USDC_DECIMALS);
-  } catch {
-    return -1n;
-  }
-}
 
 function formatPlainAmount(value: bigint | undefined) {
   if (value === undefined) return "";
@@ -83,7 +76,9 @@ export default function NewIdeaPage() {
     () => true,
     () => false
   );
-  const { address, isConnected } = useAccount();
+  const { address, chainId, isConnected } = useAccount();
+  const [step, setStep] = useState(0);
+  const [acceptedReview, setAcceptedReview] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -100,7 +95,8 @@ export default function NewIdeaPage() {
     writeContract: writeApprove,
   } = useWriteContract();
   const sendApprove = writeApprove as unknown as (variables: Record<string, unknown>) => void;
-  const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
+  const { data: approveReceipt, error: approveReceiptError, refetch: refreshApprovalReceipt, isLoading: isApproveConfirming, isSuccess: isApproveReceiptLoaded } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: approveTxHash,
   });
 
@@ -111,11 +107,16 @@ export default function NewIdeaPage() {
     writeContract,
   } = useWriteContract();
   const sendWrite = writeContract as unknown as (variables: Record<string, unknown>) => void;
-  const { isLoading: isCreateConfirming, isSuccess: isCreateSuccess } = useWaitForTransactionReceipt({
+  const { data: createReceipt, error: createReceiptError, refetch: refreshCreationReceipt, isLoading: isCreateConfirming, isSuccess: isCreateReceiptLoaded } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: createTxHash,
   });
+  const isApproveSuccess = isApproveReceiptLoaded && approveReceipt?.status === "success";
+  const isCreateSuccess = isCreateReceiptLoaded && createReceipt?.status === "success";
+  const receiptUnresolved = Boolean(approveTxHash && (approveReceipt?.transactionHash !== approveTxHash || !["success", "reverted"].includes(approveReceipt?.status ?? ""))) || Boolean(createTxHash && (createReceipt?.transactionHash !== createTxHash || !["success", "reverted"].includes(createReceipt?.status ?? "")));
 
   const { data: authorMinStake } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.ideaRegistry,
     abi: ideaRegistryAbi,
     functionName: "authorMinStake",
@@ -123,6 +124,7 @@ export default function NewIdeaPage() {
   });
 
   const { data: registryFundingPool } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.ideaRegistry,
     abi: ideaRegistryAbi,
     functionName: "fundingPool",
@@ -130,6 +132,7 @@ export default function NewIdeaPage() {
   });
 
   const { data: humanOnlyIdeaCreation } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.ideaRegistry,
     abi: ideaRegistryAbi,
     functionName: "humanOnlyIdeaCreation",
@@ -137,6 +140,7 @@ export default function NewIdeaPage() {
   });
 
   const { data: isVerifiedHuman } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.popVerifier,
     abi: popVerifierAbi,
     functionName: "isVerifiedHuman",
@@ -145,6 +149,7 @@ export default function NewIdeaPage() {
   });
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "allowance",
@@ -153,6 +158,7 @@ export default function NewIdeaPage() {
   });
 
   const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "balanceOf",
@@ -201,9 +207,9 @@ export default function NewIdeaPage() {
     if (!normalizedAddress || tokenBalanceValue === undefined) return;
     setBalanceOwner(normalizedAddress);
   }, [normalizedAddress, tokenBalanceValue]);
-  const parsedAuthorBond = useMemo(() => safeParseAmount(authorBond), [authorBond]);
+  const parsedAuthorBond = useMemo(() => parseCreationUsdc(authorBond), [authorBond]);
   const parsedMinimumNetFunding = useMemo(
-    () => safeParseAmount(minimumNetFunding),
+    () => parseCreationUsdc(minimumNetFunding),
     [minimumNetFunding]
   );
   const invalidAuthorBond = parsedAuthorBond <= 0n;
@@ -216,7 +222,7 @@ export default function NewIdeaPage() {
   const effectiveBalance = balanceReady ? tokenBalanceValue : undefined;
   const insufficientBalance = (effectiveBalance ?? 0n) < parsedAuthorBond;
   const needsApproval = parsedAuthorBond > 0n && (effectiveAllowance ?? 0n) < parsedAuthorBond;
-  const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
+  const accountDataReady = !!normalizedAddress && allowanceReady && balanceReady && effectiveAllowance !== undefined && effectiveBalance !== undefined;
   const writeBusy = isApprovePending || isApproveConfirming || isCreatePending || isCreateConfirming;
   const expectedFundingPool = contracts.fundingPool;
   const hasFundingPoolMismatch =
@@ -225,12 +231,22 @@ export default function NewIdeaPage() {
   const hasInvalidMinStake = minStakeValue !== undefined && minStakeValue <= 0n;
   const isRegistryWiringBroken = hasFundingPoolMismatch || hasInvalidMinStake;
   const requiresHumanVerification = Boolean(humanOnlyIdeaCreation);
-  const verificationReady = !requiresHumanVerification || isVerifiedHuman === true;
+  const verificationReady = humanOnlyIdeaCreation === false || (humanOnlyIdeaCreation === true && isVerifiedHuman === true);
+  const draft = { title, description, link, authorBond, minimumNetFunding };
+  const problems = ideaStepProblems(step, draft, minStakeValue);
+  const allProblems = [...ideaStepProblems(0, draft), ...ideaStepProblems(1, draft, minStakeValue)];
+  const reviewKey = reviewIdentity({ draft, address, chainId, registry: contracts.ideaRegistry, pool: expectedFundingPool, wiredPool: registryFundingPoolValue, minimum: minStakeValue?.toString() });
+  const reviewAccepted = step === 2 && acceptedReview === reviewKey && allProblems.length === 0;
+  const chainReady = chainId === defaultChain.id;
+  const deploymentReady = minStakeValue !== undefined && registryFundingPoolValue !== undefined && humanOnlyIdeaCreation !== undefined;
 
   const canApprove =
     hydrated &&
+    reviewAccepted && chainReady && deploymentReady &&
     isConnected &&
     Boolean(contracts.usdc && contracts.fundingPool) &&
+    !isCreateSuccess &&
+    !receiptUnresolved &&
     accountDataReady &&
     parsedAuthorBond > 0n &&
     !insufficientBalance &&
@@ -239,8 +255,11 @@ export default function NewIdeaPage() {
 
   const canSubmit =
     hydrated &&
+    reviewAccepted && chainReady && deploymentReady &&
     isConnected &&
     Boolean(contracts.ideaRegistry) &&
+    !isCreateSuccess &&
+    !receiptUnresolved &&
     title.trim().length > 0 &&
     description.trim().length > 0 &&
     accountDataReady &&
@@ -255,7 +274,7 @@ export default function NewIdeaPage() {
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit || !contracts.ideaRegistry) return;
+    if (!canSubmit || !reviewAccepted || !contracts.ideaRegistry) return;
 
     sendWrite({
       address: contracts.ideaRegistry,
@@ -297,27 +316,6 @@ export default function NewIdeaPage() {
           </p>
         )}
 
-        <div className="mt-6 grid gap-3 xl:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">1. Describe the proposal</p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
-              Add a clear title, explain the problem, and include a reference link so reviewers can validate the idea fast.
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">2. Set a viable funding target</p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
-              State the minimum net grant required to execute responsibly. Voter pledges remain refundable if a proposal loses or no proposal clears its target.
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">3. Commit a V2.3 milestone plan</p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
-              After creation, open the proposal page and permanently commit a public plan URI and content hash. V2.3 rounds accept only ideas with this plan.
-            </p>
-          </div>
-        </div>
-
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-[#313443] p-4">
             <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Minimum author bond</p>
@@ -353,10 +351,16 @@ export default function NewIdeaPage() {
         )}
 
         <form onSubmit={onSubmit} className="mt-6 grid gap-4">
+          <CreationSteps labels={["Describe", "Budget", "Review & sign"]} step={step} onStep={setStep} problems={problems} busy={writeBusy}>
+          <div hidden={step !== 0}>
+          <h2 className="mb-2 text-2xl font-semibold text-white">What will you build?</h2>
+          <p className="mb-5 text-sm leading-relaxed text-slate-300">Explain the outcome, who benefits and what delivery looks like. These fields will be public onchain. Your draft stays in this tab; it is not automatically saved after a reload.</p>
+          <fieldset disabled={writeBusy || step !== 0} className="grid min-w-0 gap-4">
           <label className="grid gap-2">
             <span className="text-sm font-semibold text-slate-200">Title</span>
             <input
               value={title}
+              aria-label="Title"
               onChange={(event) => setTitle(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
               placeholder="AI healthcare coordination network"
@@ -367,6 +371,7 @@ export default function NewIdeaPage() {
             <span className="text-sm font-semibold text-slate-200">Description</span>
             <textarea
               value={description}
+              aria-label="Description"
               onChange={(event) => setDescription(event.target.value)}
               className="min-h-32 rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50 sm:min-h-36"
               placeholder="Explain the problem, who benefits, what you want to build, and how the grant would be used."
@@ -377,18 +382,26 @@ export default function NewIdeaPage() {
             <span className="text-sm font-semibold text-slate-200">Reference link</span>
             <input
               value={link}
+              aria-label="Reference link"
               onChange={(event) => setLink(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
               placeholder="https://..."
             />
           </label>
 
+          </fieldset></div>
+          <div hidden={step !== 1}>
+          <h2 className="mb-2 text-2xl font-semibold text-white">A bond is not your funding target.</h2>
+          <p className="mb-5 text-sm leading-relaxed text-slate-300">The author bond is locked when publishing. The net funding target is the minimum grant needed after round fees, not a withdrawal or a guaranteed award.</p>
+          <fieldset disabled={writeBusy || step !== 1} className="grid min-w-0 gap-4">
           <label className="grid gap-2">
             <span className="text-sm font-semibold text-slate-200">Author bond</span>
             <input
               value={authorBond}
+              aria-label="Author bond"
               onChange={(event) => setAuthorBond(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
+              inputMode="decimal"
               placeholder="50"
             />
             <p className="text-xs text-slate-400">
@@ -400,8 +413,10 @@ export default function NewIdeaPage() {
             <span className="text-sm font-semibold text-slate-200">Minimum net funding target</span>
             <input
               value={minimumNetFunding}
+              aria-label="Minimum net funding target"
               onChange={(event) => setMinimumNetFunding(event.target.value)}
               className="rounded-xl border border-white/10 bg-[#313443] px-4 py-3 text-slate-100 outline-none focus:border-cyan-400/50"
+              inputMode="decimal"
               placeholder="1000"
             />
             <p className="text-xs text-slate-400">
@@ -409,7 +424,31 @@ export default function NewIdeaPage() {
             </p>
           </label>
 
-          <div className="rounded-2xl border border-white/10 bg-[#313443] p-4">
+          </fieldset></div>
+          <div hidden={step !== 2}>
+          <h2 className="text-2xl font-semibold text-white">Check the exact proposal.</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-300">First approve the author bond if needed, then submit a separate proposal transaction. A wallet connection or token approval does not publish the idea.</p>
+          <CreationReview rows={[
+            { label: "Network", value: defaultChain.name },
+            { label: "Author", value: address || "Connect your wallet before signing" },
+            { label: "Title", value: title.trim() }, { label: "Description", value: description.trim() },
+            { label: "Reference", value: link.trim() || "None supplied" },
+            { label: "Author bond", value: `${authorBond.trim()} USDC` },
+            { label: "Minimum net funding", value: `${minimumNetFunding.trim()} USDC (after round fees)` },
+            { label: "Registry", value: contracts.ideaRegistry || "Not configured" },
+            { label: "Approval spender", value: contracts.fundingPool || "Not configured" },
+            { label: "Milestone plan", value: "Separate commitment after creation: public URL + 32-byte content hash. Required before a backer-governed round." },
+          ]} />
+          <label className="my-4 flex items-start gap-3 rounded-xl border border-violet-300/25 p-4 text-sm text-slate-200">
+            <input type="checkbox" checked={reviewAccepted} disabled={writeBusy || !isConnected || !chainReady || allProblems.length > 0} onChange={(event) => setAcceptedReview(event.target.checked ? reviewKey : null)} className="mt-1 h-4 w-4 shrink-0" />
+            <span>I reviewed this proposal, the bond and the net target. I understand a milestone plan still needs to be committed after publication.</span>
+          </label>
+          {allProblems.length > 0 && <p role="status" className="mb-4 text-sm text-amber-100">Return to the previous steps and resolve their validation messages before signing.</p>}
+          {!isConnected && <p className="mb-4 text-sm text-amber-100">Connect through the existing wallet menu to confirm this review and publish.</p>}
+          {isConnected && !chainReady && <p role="status" className="mb-4 text-sm text-amber-100">Switch to {defaultChain.name} through the wallet menu. No write is available on the current wallet network.</p>}
+          {isConnected && !deploymentReady && <p role="status" className="mb-4 text-sm text-amber-100">Waiting for contract minimum, FundingPool wiring and verification policy. Missing reads do not mean approval to submit.</p>}
+          <details className="rounded-2xl border border-white/10 bg-[#313443] p-4"><summary className="cursor-pointer text-sm font-semibold text-white">Publishing checklist and milestone plan</summary>
+          <div>
             <p className="text-sm font-semibold text-white">Before you submit</p>
             <div className="mt-3 grid gap-2 text-sm text-slate-300">
               <p>Use a title that explains the outcome, not just the category.</p>
@@ -421,6 +460,7 @@ export default function NewIdeaPage() {
             </div>
           </div>
 
+          </details>
           {requiresHumanVerification && !isVerifiedHuman && (
             <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm text-amber-100">
               Complete <Link href="/profile" className="font-semibold underline">human verification</Link> before submitting an idea.
@@ -432,7 +472,7 @@ export default function NewIdeaPage() {
               type="button"
               disabled={!canApprove || !needsApproval}
               onClick={() => {
-                if (!contracts.usdc || !contracts.fundingPool || parsedAuthorBond <= 0n) return;
+                if (!canApprove || !needsApproval || !contracts.usdc || !contracts.fundingPool || parsedAuthorBond <= 0n) return;
                 sendApprove({
                   address: contracts.usdc,
                   abi: usdcAbi,
@@ -459,6 +499,8 @@ export default function NewIdeaPage() {
               {isCreatePending ? "Awaiting signature..." : isCreateConfirming ? "Confirming..." : "Submit funding proposal"}
             </button>
           </div>
+          </div>
+          </CreationSteps>
         </form>
 
         {hydrated && !isConnected && (
@@ -475,7 +517,7 @@ export default function NewIdeaPage() {
             The author bond is below the current minimum of {formatTokenAmount(minStakeValue)} USDC.
           </p>
         )}
-        {insufficientBalance && (
+        {isConnected && effectiveBalance !== undefined && insufficientBalance && (
           <p className="mt-3 text-sm text-rose-300">Your wallet balance is too low for this author bond.</p>
         )}
         {needsApproval && parsedAuthorBond > 0n && !insufficientBalance && (
@@ -489,15 +531,24 @@ export default function NewIdeaPage() {
           </p>
         )}
         {approveError && <p className="mt-3 break-words text-sm text-rose-300">{prettyCreateIdeaError(approveError.message)}</p>}
+        {receiptUnresolved && <div role="status" className="mt-3 rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">
+          <p>A submitted transaction is awaiting a confirmed outcome. New approval and publication are blocked; do not send a duplicate.</p>
+          <button type="button" disabled={writeBusy} onClick={() => { if (approveTxHash) void refreshApprovalReceipt(); if (createTxHash) void refreshCreationReceipt(); }} className="mt-3 rounded-lg border border-amber-200/30 px-3 py-2 disabled:opacity-50">Refresh transaction receipts (read-only)</button>
+        </div>}
+        {approveReceiptError && <p role="alert" className="mt-3 break-words text-sm text-amber-100">Approval receipt could not be confirmed. Check the transaction reference before sending again: {approveReceiptError.message}</p>}
+        {approveReceipt?.status === "reverted" && <p role="alert" className="mt-3 text-sm text-rose-300">The approval was mined but reverted. It did not grant a new allowance.</p>}
         {approveTxHash && <p className="mt-3 break-all text-xs text-slate-300">Approval transaction reference: {approveTxHash}</p>}
         {isApproveSuccess && !needsApproval && (
           <p className="mt-3 text-sm font-semibold text-emerald-300">USDC deposit approval confirmed.</p>
         )}
         {createError && <p className="mt-3 break-words text-sm text-rose-300">{prettyCreateIdeaError(createError.message)}</p>}
+        {createReceiptError && <p role="alert" className="mt-3 break-words text-sm text-amber-100">Submission receipt could not be confirmed. Check the transaction reference before sending again: {createReceiptError.message}</p>}
+        {createReceipt?.status === "reverted" && <p role="alert" className="mt-3 text-sm text-rose-300">The submission was mined but reverted. This transaction did not create a proposal.</p>}
         {createTxHash && <p className="mt-3 break-all text-xs text-slate-300">Submission transaction reference: {createTxHash}</p>}
         {isCreateSuccess && (
           <p className="mt-3 text-sm font-semibold text-emerald-300">
             Funding proposal created successfully. Its author bond is locked on-chain; open the new proposal from the ideas list and commit its milestone plan before it enters a V2.3 round.
+            {" "}<Link href="/ideas" className="underline">Open ideas</Link>
           </p>
         )}
       </div>

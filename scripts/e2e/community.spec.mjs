@@ -61,8 +61,18 @@ test("local browser: four lanes, partial refunds, correction, admin quorum, paus
       predicate: (frame) => frame === page.mainFrame(), timeout: 20_000,
     }).then(() => true, () => false) : null;
     await button.click();
-    await expect.poll(() => page.evaluate(() => window.__e2eTransactions.length)).toBeGreaterThan(count);
-    const hash = await page.evaluate(() => window.__e2eTransactions.at(-1));
+    let hash;
+    await expect.poll(async () => {
+      try {
+        const transactions = await page.evaluate(() => window.__e2eTransactions);
+        hash = transactions.at(-1);
+        return transactions.length;
+      } catch (error) {
+        // Fast successful writes can reload before the browser observer samples the log.
+        if (/Execution context was destroyed|Cannot find context/.test(error.message)) return count;
+        throw error;
+      }
+    }).toBeGreaterThan(count);
     const receipt = await provider.waitForTransaction(hash, 1, 25_000);
     expect(receipt.status, `Receipt ${hash}`).toBe(1);
     receipts.push({ hash, blockNumber: receipt.blockNumber, status: receipt.status });
@@ -77,7 +87,9 @@ test("local browser: four lanes, partial refunds, correction, admin quorum, paus
   }
   async function section(index, label) {
     const page = await pageFor(index);
-    await page.locator("aside").getByRole("button", { name: label, exact: true }).click();
+    const task = page.getByRole("navigation", { name: "Community workspace", exact: true }).getByRole("button", { name: label, exact: true });
+    await task.click();
+    await expect(task).toHaveAttribute("aria-pressed", "true");
     return page;
   }
   async function advance(seconds) {
@@ -86,6 +98,13 @@ test("local browser: four lanes, partial refunds, correction, admin quorum, paus
   async function planCard(index, id) {
     const page = await section(index, "Execution Plans");
     const card = page.locator("article").filter({ hasText: `Plan #${id} ·` });
+    await expect.poll(() => page.locator("#community-content article").count()).toBeGreaterThan(0);
+    for (let attempt = 0; attempt < 20 && await card.count() === 0; attempt++) {
+      await expect(page.getByRole("heading", { name: "Execution plans", exact: true })).toBeVisible();
+      const next = page.locator("#community-content").getByRole("button", { name: "Next", exact: true });
+      if (!await next.count() || await next.isDisabled()) break;
+      await next.click();
+    }
     await expect(card).toBeVisible();
     return { page, card };
   }
@@ -209,14 +228,18 @@ test("local browser: four lanes, partial refunds, correction, admin quorum, paus
       console.log("[E2E] Creating Community via browser");
       const page = await pageFor(0, "/v3/create");
       await page.getByLabel("Community name", { exact: true }).fill("Browser E2E V3.2");
-      await page.getByRole("button", { name: "Hackathon demo", exact: true }).click();
-      await page.getByLabel("Validator approvals", { exact: true }).fill("1");
-      await page.getByLabel("Admin quorum", { exact: true }).fill("2");
+      await page.getByRole("button", { name: "Continue to people", exact: true }).click();
       for (const [label, account] of [["Additional admins", fixture.accounts[1]], ["Validators", fixture.accounts[2]]]) {
         const input = page.getByText(label, { exact: true }).locator("..").getByPlaceholder("0x...", { exact: true });
         await input.fill(account);
         await input.press("Enter");
       }
+      await page.getByLabel("Validator approvals", { exact: true }).fill("1");
+      await page.getByLabel("Admin quorum", { exact: true }).fill("2");
+      await page.getByRole("button", { name: "Continue to rules", exact: true }).click();
+      await page.getByRole("button", { name: "Hackathon demo", exact: true }).click();
+      await page.getByRole("button", { name: "Continue to review & deploy", exact: true }).click();
+      await page.getByRole("checkbox", { name: /^I reviewed the exact recipient/ }).check();
       for (const label of ["1. Reserve Treasury", "2. Deploy Hub", "3. Activate"]) {
         await transaction(page, page.getByText(label, { exact: true }).locator("..").getByRole("button", { name: "Continue", exact: true }));
       }

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatUnits } from "viem";
-import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { popVerifierAbi, usdcAbi } from "@/lib/contracts";
 import { communityHubAbi, communityMembershipModuleAbi, communityTreasuryAbi, communityVotingModuleAbi } from "@/lib/community-contracts";

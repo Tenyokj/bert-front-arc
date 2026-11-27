@@ -1,0 +1,30 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import ts from "typescript";
+const root = new URL("../", import.meta.url);
+const read = (path) => readFileSync(new URL(path, root), "utf8");
+const api = {};
+new Function("exports", ts.transpileModule(read("src/lib/seasonal-theme.ts"), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(api);
+test("winter theme has an explicit end and never silently repeats next year", () => {
+  const { startsAt, endsAt } = api.WINTER_THEME;
+  assert.equal(api.winterSeasonActive(startsAt - 1), false);
+  assert.equal(api.winterSeasonActive(startsAt), true);
+  assert.equal(api.winterSeasonActive(endsAt - 1), true);
+  assert.equal(api.winterSeasonActive(endsAt), false);
+  assert.equal(api.winterSeasonActive(Date.parse("2027-12-01")), false);
+  assert.equal(api.winterSeasonActive(NaN), false);
+});
+test("decoration is deterministic, bounded and isolated from wallet/network code", () => {
+  assert.equal(api.SNOWFLAKES.length, 12);
+  assert(api.SNOWFLAKES.every((flake) => flake.lane >= 8 && flake.lane <= 84 && flake.duration >= 14 && flake.size <= 6));
+  const component = read("src/components/seasonal/WinterTheme.tsx");
+  assert.match(component, /aria-hidden="true"/);
+  assert.match(component, /aria-pressed=\{enabled\}/);
+  assert.match(component, /localStorage/);
+  assert.match(component, /visibilitychange/);
+  assert.doesNotMatch(component, /wagmi|viem|fetch\(|requestAnimationFrame|<canvas|Math.random/);
+  const css = read("src/components/seasonal/winter.module.css");
+  for (const rule of ["pointer-events: none", "prefers-reduced-motion", "animation-play-state: paused", "@media print", "width: 18px", "z-index: 40"]) assert(css.includes(rule));
+  assert.match(read("src/app/layout.tsx"), /<WinterTheme \/>/);
+});

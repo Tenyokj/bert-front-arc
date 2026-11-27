@@ -25,6 +25,9 @@ import {
 } from "@/lib/community-v3";
 
 import { resolveCommunityReference } from "@/lib/community-reference";
+import { StatusBadge } from "@/components/dapp/StatusBadge";
+import { CommunityGuidance } from "@/components/dapp/CommunityGuidance";
+import { proposalGuidance, proposalStatusTone } from "@/lib/protocol-status";
 
 export default function CommunityProposalPage() {
   const params = useParams<{ id: string; proposalId: string }>();
@@ -83,7 +86,9 @@ export default function CommunityProposalPage() {
   const isBinary = proposal.mode === 0;
   const result = proposal.settled
     ? proposal.accepted ? "YES accepted" : "NO / tie won"
-    : proposal.yesVotes > proposal.noVotes ? "YES currently leads" : "NO currently leads";
+    : proposal.status !== 4 ? "Voting is not open"
+      : proposal.yesVotes === proposal.noVotes ? "Equal recorded voting weight"
+        : proposal.yesVotes > proposal.noVotes ? "YES currently leads" : "NO currently leads";
   const metadataHref = communityReferenceHref(proposal.metadataURI);
 
   return <section className="space-y-6">
@@ -92,11 +97,15 @@ export default function CommunityProposalPage() {
     <div className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#243d48,#20232f_55%,#313443)] p-7 sm:p-9">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div><p className="text-xs font-bold uppercase tracking-[0.26em] text-cyan-200">Proposal #{proposal.id.toString()} · {formatProposalOrigin(proposal.origin)}</p><h1 className="mt-3 text-4xl font-semibold text-white sm:text-5xl">{proposal.title}</h1></div>
-        <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1.5 text-sm font-semibold text-cyan-100">{formatProposalStatus(proposal.status)}</span>
+        <StatusBadge tone={proposalStatusTone(proposal.status)}>{formatProposalStatus(proposal.status)}</StatusBadge>
       </div>
       <p className="mt-5 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{proposal.description}</p>
       {metadataHref ? <a href={metadataHref} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm font-semibold text-cyan-200 underline decoration-cyan-300/40 underline-offset-4 hover:text-cyan-100">Open proposal metadata</a> : proposal.metadataURI ? <p className="mt-4 break-all text-xs text-slate-400">Metadata: {proposal.metadataURI}</p> : null}
     </div>
+
+    <CommunityGuidance href={`/v3/communities/${reference.key}?section=milestones`}><p>{proposalGuidance(proposal.status)}</p><p>Proposal selection, supporter review and payment authorization are separate stages.</p></CommunityGuidance>
+
+    {!isBinary && proposal.assignedRoundId > 0n && <Link className="inline-flex text-sm font-semibold text-cyan-200" href={`/v3/communities/${reference.key}/rounds/${proposal.assignedRoundId}`}>Open assigned Slate round #{proposal.assignedRoundId.toString()}</Link>}
 
     <div className="grid gap-4 md:grid-cols-4">
       <Metric label="Proposal type" value={formatProposalOrigin(proposal.origin).toUpperCase()} />

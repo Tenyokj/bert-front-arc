@@ -29,7 +29,7 @@ const roleAbi = parseAbi([
 ]);
 const adminRole = `0x${"0".repeat(64)}` as const;
 
-export function RevenueTreasuryPanel() {
+export function RevenueTreasuryPanel({ mode = "public" }: { mode?: "public" | "operator" }) {
   const config = useConfig();
   const account = useAccount();
   const client = usePublicClient({ chainId: defaultChain.id });
@@ -66,7 +66,7 @@ export function RevenueTreasuryPanel() {
       snapshot?.roles,
       account.address,
     ],
-    enabled: !!client && !!snapshot && !!account.address,
+    enabled: mode === "operator" && !!client && !!snapshot && !!account.address,
     queryFn: () =>
       client!.readContract({
         address: snapshot!.roles,
@@ -94,6 +94,7 @@ export function RevenueTreasuryPanel() {
   ) {
     if (
       actionLock.current ||
+      mode !== "operator" ||
       disabled ||
       !client ||
       !pool ||
@@ -246,17 +247,17 @@ export function RevenueTreasuryPanel() {
         <TreasuryReadout
           snapshot={snapshot}
           busy={disabled}
-          onCollect={(receiver) =>
+          onCollect={mode === "operator" ? (receiver) =>
             void act(receiver.address, revenueTreasuryAbi, "collect", [
               BigInt(receiver.pending),
             ])
-          }
-          onRelease={(receiver, payee) =>
+          : undefined}
+          onRelease={mode === "operator" ? (receiver, payee) =>
             void act(receiver.address, revenueTreasuryAbi, "release", [payee])
-          }
+          : undefined}
         />
       )}
-      {snapshot?.mode === "v2.4" && !query.error && (
+      {mode === "operator" && snapshot?.mode === "v2.4" && !query.error && (
         <section className="revenue-panel">
           <h2>Manage future-round revenue settings</h2>
           <p>
@@ -348,7 +349,7 @@ export function RevenueTreasuryPanel() {
         </section>
       )}
       <p className="text-sm text-slate-300">
-        {!account.address
+        {mode === "public" ? "Public accounting is read-only. Operator forms and fixed-beneficiary payment relays are in the Control Center; these figures remain publicly visible." : !account.address
           ? "Connect a wallet to relay transactions."
           : account.chainId !== defaultChain.id
             ? `Switch the wallet to ${defaultChain.name} before using actions.`

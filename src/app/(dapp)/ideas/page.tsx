@@ -1,5 +1,7 @@
 "use client";
 
+import { IdeaSummaryCard, utcDate } from "@/components/dapp/ProtocolCards";
+import { CollectionFilter } from "@/components/dapp/CollectionFilter";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -10,6 +12,7 @@ import { AddressIdentity } from "@/components/AddressIdentity";
 import { contracts, ideaRegistryAbi } from "@/lib/contracts";
 import { formatTokenAmount, mapIdeaStatus } from "@/lib/dapp-onchain";
 import { fetchIdeasPageFromSubgraph, hasSubgraphConfigured } from "@/lib/subgraph";
+import { defaultChain } from "@/lib/web3";
 
 type OnChainIdea = {
   id: number;
@@ -23,13 +26,14 @@ type OnChainIdea = {
 };
 
 function IdeasPageContent() {
-  const client = usePublicClient();
+  const client = usePublicClient({ chainId: defaultChain.id });
   const searchParams = useSearchParams();
   const [ideas, setIdeas] = useState<OnChainIdea[]>([]);
   const [totalIdeasCount, setTotalIdeasCount] = useState(0);
   const [reviewedIdeas, setReviewedIdeas] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [dataWarning, setDataWarning] = useState<string | null>(null);
   const pageSize = 15;
   const requestedPage = Number(searchParams.get("page") ?? "1");
   const safeRequestedPage = Number.isFinite(requestedPage) ? Math.max(Math.floor(requestedPage), 1) : 1;
@@ -49,6 +53,7 @@ function IdeasPageContent() {
 
       setIsLoading(true);
       setLoadError(null);
+      setDataWarning(null);
 
       try {
         const totalPromise = readContract({
@@ -85,13 +90,8 @@ function IdeasPageContent() {
             return;
           } catch (error) {
             if (!cancelled) {
-              setLoadError(
-                error instanceof Error ? error.message : "Failed to load ideas from subgraph"
-              );
-              setIdeas([]);
-              setIsLoading(false);
+              setDataWarning(`Indexer unavailable. Loading this page directly from the configured chain RPC. ${error instanceof Error ? error.message : "Subgraph request failed."}`);
             }
-            return;
           }
         }
 
@@ -214,6 +214,7 @@ function IdeasPageContent() {
         </div>
       </div>
 
+      {dataWarning && <p role="status" className="rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">{dataWarning}</p>}
       {!contracts.ideaRegistry ? (
         <p className="rounded-xl border border-amber-300/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
           Set <code>NEXT_PUBLIC_IDEA_REGISTRY_ADDRESS</code> in `.env` to load on-chain ideas.
@@ -244,40 +245,9 @@ function IdeasPageContent() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
-          {visibleIdeas.map((idea) => (
-            <Link
-              key={idea.id}
-              href={`/ideas/${idea.id}`}
-              className="rounded-2xl border border-white/10 bg-[#313443] p-4 sm:p-5 transition-colors duration-300 hover:border-cyan-400/40"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-slate-300">Idea #{idea.id}</p>
-                <div className="flex items-center gap-1.5">
-                  {reviewedIdeas[idea.id] && (
-                    <span className="rounded-full border border-emerald-300/45 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">
-                      Reviewed
-                    </span>
-                  )}
-                  <span className="rounded-full bg-cyan-500/15 px-2.5 py-1 text-xs font-semibold text-cyan-300">
-                    {mapIdeaStatus(idea.statusCode)}
-                  </span>
-                </div>
-              </div>
-              <h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">{idea.title}</h2>
-              <p className="mt-2 line-clamp-2 text-sm text-slate-300">{idea.description}</p>
-              <div className="mt-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
-                <p className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">
-                  Total votes: {formatTokenAmount(idea.totalVotes)} USDC
-                </p>
-                <div className="rounded-lg border border-white/10 bg-[#262938] px-2.5 py-2">
-                  <p className="mb-1 text-slate-300">Author:</p>
-                  <AddressIdentity address={idea.author} />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <CollectionFilter key={currentPage} items={visibleIdeas} getTitle={(idea) => idea.title} getStatus={(idea) => mapIdeaStatus(idea.statusCode)} renderItem={(idea) => (
+          <IdeaSummaryCard key={idea.id} id={idea.id} href={`/ideas/${idea.id}`} title={idea.title} description={idea.description} status={mapIdeaStatus(idea.statusCode)} votes={formatTokenAmount(idea.totalVotes)} reviewed={reviewedIdeas[idea.id]} details={<><div><dt>Author</dt><dd><AddressIdentity address={idea.author} /></dd></div><div><dt>Created</dt><dd>{utcDate(idea.createdAt)}</dd></div></>} />
+        )} />
       )}
 
       <Pagination basePath="/ideas" currentPage={currentPage} totalItems={totalIdeasCount} pageSize={pageSize} />

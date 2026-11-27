@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { usdcAbi } from "@/lib/contracts";
 import { communityHubAbi, communityProposalModuleAbi, communityTreasuryAbi } from "@/lib/community-contracts";

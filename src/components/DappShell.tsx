@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { FaFlask, FaSearch } from "react-icons/fa";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { HoneycombBackground } from "@/components/dapp/HoneycombBackground";
+import { TransactionCenter } from "@/components/dapp/TransactionCenter";
+import styles from "./dapp/cyber.module.css";
 
 type NavItem = {
   href: string;
@@ -29,7 +32,8 @@ export function DappShell({
   const accentNavItems = navItems.filter((item) => item.variant === "demo");
 
   return (
-    <div className="min-h-screen bg-[#20232f] text-slate-100">
+    <div data-dapp-theme="cyber-hive" className={`${styles.shell} min-h-screen bg-[#20232f] text-slate-100`}>
+      <HoneycombBackground />
       <div className="mx-auto min-h-screen max-w-[1480px] px-3 pb-10 pt-3 sm:px-4 sm:pb-12 sm:pt-4 md:px-6 xl:px-8">
         <header className="sticky top-14 z-30 rounded-2xl border border-white/10 bg-[#2a2d3b]/95 px-3 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur sm:px-4 md:px-5">
           <div className="flex items-center gap-3">
@@ -127,6 +131,7 @@ export function DappShell({
           </div>
         </header>
 
+        <TransactionCenter />
         <main className="mt-5 sm:mt-7 md:mt-8">{children}</main>
       </div>
     </div>

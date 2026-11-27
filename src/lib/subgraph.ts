@@ -1,3 +1,5 @@
+import { graphqlData } from "./graphql-response";
+
 export type SubgraphRound = {
   id: string;
   startTime: string;
@@ -39,11 +41,6 @@ export type SubgraphProtocolStats = {
   totalIdeas: string;
   totalRounds: string;
   activeRounds: string;
-};
-
-type GraphQLResponse<T> = {
-  data?: T;
-  errors?: Array<{ message: string }>;
 };
 
 const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
@@ -115,21 +112,14 @@ export async function fetchGraphQL<T>(query: string, variables?: Record<string, 
     throw new Error(`Subgraph request failed: ${res.status}${text ? ` ${text}` : ""}`);
   }
 
-  const payload = (await res.json()) as GraphQLResponse<T>;
-  if (payload.errors?.length) {
-    throw new Error(payload.errors.map((entry) => entry.message).join("; "));
-  }
-
-  if (!payload.data) {
-    throw new Error("Subgraph response has no data");
-  }
+  const data = graphqlData<T>(await res.json());
 
   subgraphCache.set(cacheKey, {
     expiresAt: now + SUBGRAPH_CACHE_TTL_MS,
-    data: payload.data,
+    data,
   });
 
-  return payload.data;
+  return data;
 }
 
 const ROUNDS_QUERY = `

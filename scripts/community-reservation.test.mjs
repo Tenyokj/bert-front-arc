@@ -78,7 +78,8 @@ test("creation UI loads confirmed calldata, locks original settings and blocks d
   assert.match(page, /Load original setup \(read-only\)/);
   assert.match(page, /setConfig\(result.config\)/);
   assert.match(page, /setForm\(reservedForm\(result.config\)\)/);
-  assert.match(page, /fieldset disabled=\{Boolean\(reservation\) \|\| busy\}/);
+  assert.match(page, /const formLocked = Boolean\(reservation\) \|\| busy \|\| Boolean\(uncertainStep\)/);
+  for (const step of [0, 1, 2]) assert(page.includes(`fieldset disabled={formLocked || currentStep !== ${step}}`));
   assert.match(page, /<details open=\{alreadyKnown \|\| undefined\}/);
 });
 

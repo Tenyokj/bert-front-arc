@@ -8,7 +8,7 @@ import {
   fundingPoolAbi,
   usdcAbi,
 } from "@/lib/contracts";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 import { USDC_DECIMALS } from "@/lib/dapp-onchain";
 
 function formatUsdc(value?: bigint) {
@@ -48,35 +48,9 @@ export default function TreasuryPoliciesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/treasury-policies">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
- <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
+
 
         <div className="mt-9 grid gap-12 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-72px)] lg:overflow-y-auto">
@@ -135,7 +109,9 @@ export default function TreasuryPoliciesPage() {
                 The approved testnet plan assigns an immutable RevenueTreasury 20% of eligible earned fees; at a 5% round fee, full execution of 100 USDC in winning pledges yields 1 USDC to Treasury, 4 USDC retained in reserve and 95 USDC to the author. Existing rounds keep their policy. Reserve-funded top-ups, deposits, bonds, refunds and V3 inflows do not become the revenue base.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                This testnet policy is active. Future scheduling and activation remain separate operations with a 48-hour notice. Fixed beneficiaries cannot be rotated for old Treasury funds; USDC issuer restrictions and FundingPool upgrade authority remain risks.
+                This testnet policy is active, confirmed by the rollout receipt; a public accrual/collection/payment pilot is not yet confirmed.
+                Future scheduling and activation remain separate operations with a 48-hour notice.
+                Fixed beneficiaries cannot be rotated for old Treasury funds; USDC issuer restrictions and FundingPool upgrade authority remain risks.
               </p>
               <Link href="/docs/V2.4-ARC-TESTNET-RELEASE.md" className="text-sm font-semibold text-teal-600 underline">Read verified rollout status, payout instructions and remaining gates</Link>
             </section>
@@ -143,7 +119,7 @@ export default function TreasuryPoliciesPage() {
             <section id="sources" className="space-y-4">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Treasury Sources</h2>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
-                Primary treasury state is represented in <strong>Funding Pool</strong>. V2 separates direct contributions from per-round pledge escrow: a direct deposit is not automatically protocol reserve or team revenue. Author bonds deter spam, losing pledges remain refundable, and the deployed V2.3 fees vest to protocol reserve as author tranches are paid.
+                Primary treasury state is represented in <strong>Funding Pool</strong>. V2 separates direct contributions from per-round pledge escrow: a direct deposit is not automatically protocol reserve or team revenue. Author bonds deter spam and losing pledges remain refundable. Fees vest as author tranches are paid; V2.4 can allocate an opted-in round&apos;s eligible earned fee between reserve and its snapshotted RevenueTreasury.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 Any source that changes effective pool balance should be traceable by event history and consistent with on-chain balances.
@@ -234,8 +210,7 @@ export default function TreasuryPoliciesPage() {
           </main>
         </div>
 
-                       <SiteFooter />
-      </div>
-    </div>
+                       </div>
+    </SiteFrame>
   );
 }

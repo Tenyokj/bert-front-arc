@@ -1,23 +1,15 @@
 import Link from "next/link";
 import { FaArrowRight, FaBug, FaCircleCheck, FaFlask, FaGithub, FaShieldHalved, FaTriangleExclamation } from "react-icons/fa6";
 
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 
 const advisoryUrl = "https://github.com/Tenyokj/bert-core-arc/security/advisories/new";
 
 export default function TestnetInformationPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/testnet-information">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-        <header className="flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
-            <span className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            BERT
-          </Link>
-          <Link href="/app" className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5">
-            Open dApp
-          </Link>
-        </header>
+
 
         <main className="mt-10 grid gap-12 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-72px)]">
@@ -81,9 +73,8 @@ export default function TestnetInformationPage() {
             </section>
           </section>
         </main>
-        <SiteFooter />
-      </div>
-    </div>
+        </div>
+    </SiteFrame>
   );
 }
 

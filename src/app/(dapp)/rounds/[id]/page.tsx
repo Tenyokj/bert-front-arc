@@ -5,8 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { formatUnits, parseUnits } from "viem";
 import { FaArrowLeft } from "react-icons/fa";
-import { useAccount, useBlock, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useBlock, usePublicClient, useReadContract, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
+import { LifecyclePanel } from "@/components/dapp/LifecyclePanel";
+import { milestoneMode, roundJourney, roundPhase, utcDeadline, voteReadiness } from "@/lib/detail-lifecycle";
+import { defaultChain } from "@/lib/web3";
 import { AddressIdentity } from "@/components/AddressIdentity";
 import { HumanVerificationPanel } from "@/components/HumanVerificationPanel";
 import { fundingRoundCanSettle } from "@/lib/funding-round-clock";
@@ -18,7 +22,7 @@ import {
   usdcAbi,
   votingSystemAbi,
 } from "@/lib/contracts";
-import { formatDateTimeFromUnix, mapIdeaStatus, shortAddress, USDC_DECIMALS } from "@/lib/dapp-onchain";
+import { mapIdeaStatus, shortAddress, USDC_DECIMALS } from "@/lib/dapp-onchain";
 import {
   fetchIdeasByIdsFromSubgraph,
   fetchRoundByIdFromSubgraph,
@@ -79,7 +83,7 @@ function safeParseAmount(value: string) {
 }
 
 function formatUsdc(value: bigint | number | undefined) {
-  if (value === undefined) return "-";
+  if (value === undefined) return "Unavailable";
   const raw = typeof value === "bigint" ? value : BigInt(value);
   const asNumber = Number(formatUnits(raw, USDC_DECIMALS));
   if (!Number.isFinite(asNumber)) return `${formatUnits(raw, USDC_DECIMALS)} USDC`;
@@ -108,19 +112,20 @@ function prettyRoundError(message?: string) {
 
 export default function RoundDetailsPage() {
   const params = useParams<{ id: string }>();
-  const client = usePublicClient();
+  const client = usePublicClient({ chainId: defaultChain.id });
   const { address, chainId, isConnected } = useAccount();
 
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [ideas, setIdeas] = useState<RoundIdea[]>([]);
   const [voters, setVoters] = useState<Array<{ address: string; ideaId: number }>>([]);
   const [voteAmountByIdea, setVoteAmountByIdea] = useState<Record<number, string>>({});
+  const [voterPage, setVoterPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [allowanceOwner, setAllowanceOwner] = useState<string | null>(null);
   const [balanceOwner, setBalanceOwner] = useState<string | null>(null);
   const { data: latestBlock } = useBlock({
-    chainId,
+    chainId: defaultChain.id,
     query: { enabled: Boolean(round?.active && !round.ended), refetchInterval: 5_000 },
   });
 
@@ -132,6 +137,7 @@ export default function RoundDetailsPage() {
   } = useWriteContract();
   const sendApprove = writeApprove as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: approveTxHash,
   });
 
@@ -143,6 +149,7 @@ export default function RoundDetailsPage() {
   } = useWriteContract();
   const sendEndRound = writeEndRound as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isEndConfirming, isSuccess: isEndConfirmed } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: endTxHash,
   });
 
@@ -154,6 +161,7 @@ export default function RoundDetailsPage() {
   } = useWriteContract();
   const sendVote = writeVote as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isVoteConfirming, isSuccess: isVoteConfirmed } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: voteTxHash,
   });
 
@@ -165,6 +173,7 @@ export default function RoundDetailsPage() {
   } = useWriteContract();
   const sendClaim = writeClaim as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isClaimConfirming, isSuccess: isClaimConfirmed } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: claimTxHash,
   });
 
@@ -176,6 +185,7 @@ export default function RoundDetailsPage() {
   } = useWriteContract();
   const sendRefund = writeRefund as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isRefundConfirming, isSuccess: isRefundConfirmed } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: refundTxHash,
   });
   const {
@@ -186,12 +196,14 @@ export default function RoundDetailsPage() {
   } = useWriteContract();
   const sendParticipation = writeParticipation as unknown as (variables: Record<string, unknown>) => void;
   const { isLoading: isParticipationConfirming, isSuccess: isParticipationConfirmed } = useWaitForTransactionReceipt({
+    chainId: defaultChain.id,
     hash: participationTxHash,
   });
 
   const roundId = Number(params?.id);
 
   const { data: minStake } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.votingSystem,
     abi: votingSystemAbi,
     functionName: "minStake",
@@ -201,6 +213,7 @@ export default function RoundDetailsPage() {
   });
 
   const { data: maxVoteAmount } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.votingSystem,
     abi: votingSystemAbi,
     functionName: "maxVoteAmount",
@@ -210,6 +223,7 @@ export default function RoundDetailsPage() {
   });
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "allowance",
@@ -221,6 +235,7 @@ export default function RoundDetailsPage() {
   });
 
   const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.usdc,
     abi: usdcAbi,
     functionName: "balanceOf",
@@ -231,6 +246,7 @@ export default function RoundDetailsPage() {
   });
 
   const { data: userHasVoted } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.votingSystem,
     abi: votingSystemAbi,
     functionName: "hasVoted",
@@ -241,6 +257,7 @@ export default function RoundDetailsPage() {
   });
 
   const { data: canClaimGrantRaw } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.grantManager,
     abi: grantManagerAbi,
     functionName: "canClaimGrant",
@@ -250,6 +267,7 @@ export default function RoundDetailsPage() {
     },
   });
   const { data: pledgeRaw, refetch: refetchPledge } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.fundingPool,
     abi: fundingPoolAbi,
     functionName: "getPledge",
@@ -257,6 +275,7 @@ export default function RoundDetailsPage() {
     query: { enabled: Boolean(contracts.fundingPool && address && Number.isFinite(roundId)) },
   });
   const { data: fundingRoundSettlementRaw } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.fundingPool,
     abi: fundingPoolAbi,
     functionName: "getFundingRoundSettlement",
@@ -264,6 +283,7 @@ export default function RoundDetailsPage() {
     query: { enabled: Boolean(contracts.fundingPool && Number.isFinite(roundId)) },
   });
   const { data: grantRefundActiveRaw } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.fundingPool,
     abi: fundingPoolAbi,
     functionName: "grantRefundActive",
@@ -271,6 +291,7 @@ export default function RoundDetailsPage() {
     query: { enabled: Boolean(contracts.fundingPool && Number.isFinite(roundId)) },
   });
   const { data: isBackerMilestoneRoundRaw } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.votingSystem,
     abi: votingSystemAbi,
     functionName: "isBackerMilestoneRound",
@@ -278,6 +299,7 @@ export default function RoundDetailsPage() {
     query: { enabled: Boolean(contracts.votingSystem && Number.isFinite(roundId)) },
   });
   const { data: winningParticipationClaimedRaw, refetch: refetchWinningParticipation } = useReadContract({
+    chainId: defaultChain.id,
     address: contracts.votingSystem,
     abi: votingSystemAbi,
     functionName: "winningParticipationClaimed",
@@ -297,9 +319,7 @@ export default function RoundDetailsPage() {
         winningIdeaId: BigInt(fundingRoundSettlementRaw[2] ?? 0),
       }
     : { opened: false, settled: false, winningIdeaId: 0n };
-  const grantRefundActive = Boolean(grantRefundActiveRaw);
   const isBackerMilestoneRound = Boolean(isBackerMilestoneRoundRaw);
-  const winningParticipationClaimed = Boolean(winningParticipationClaimedRaw);
   const normalizedAddress = address?.toLowerCase() ?? null;
 
   const canClaimGrant = Array.isArray(canClaimGrantRaw) ? Boolean(canClaimGrantRaw[0]) : false;
@@ -316,8 +336,8 @@ export default function RoundDetailsPage() {
     fundingRoundSettlement.settled &&
     hasPledge &&
     !pledge.refundClaimed &&
-    (fundingRoundSettlement.winningIdeaId === 0n || !pledgeWon || grantRefundActive);
-  const canClaimWinningParticipation = Boolean(round?.ended && pledgeWon && !grantRefundActive && !winningParticipationClaimed);
+    (fundingRoundSettlement.winningIdeaId === 0n || !pledgeWon || grantRefundActiveRaw === true);
+  const canClaimWinningParticipation = Boolean(round?.ended && pledgeWon && grantRefundActiveRaw === false && winningParticipationClaimedRaw === false);
 
   useEffect(() => {
     if (!isApproveConfirmed) return;
@@ -577,7 +597,9 @@ export default function RoundDetailsPage() {
     };
   }, [client, roundId, isVoteConfirmed, isClaimConfirmed, isApproveConfirmed, isEndConfirmed]);
 
-  const votersPreview = useMemo(() => voters.slice(0, 12), [voters]);
+  const voterPages = Math.max(1, Math.ceil(voters.length / 12));
+  const currentVoterPage = Math.min(voterPage, voterPages);
+  const votersPreview = useMemo(() => voters.slice((currentVoterPage - 1) * 12, currentVoterPage * 12), [voters, currentVoterPage]);
 
   if (!contracts.votingSystem || !contracts.ideaRegistry) {
     return (
@@ -595,7 +617,9 @@ export default function RoundDetailsPage() {
     return <p className="rounded-xl border border-rose-300/35 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{loadError || "Round not found"}</p>;
   }
 
-  const canVote = isConnected && round.active && !round.ended && !Boolean(userHasVotedValue);
+  const voteBlocker = voteReadiness({ connected: isConnected, correctChain: chainId === defaultChain.id, round, timestamp: latestBlock?.timestamp, hasVoted: userHasVotedValue });
+  const canVote = voteBlocker === null;
+  const payoutModeKnown = typeof isBackerMilestoneRoundRaw === "boolean";
   // The contract uses block.timestamp, not the visitor's potentially skewed computer clock.
   const canEndRound = fundingRoundCanSettle(round, latestBlock?.timestamp);
   const shouldShowEndRoundButton = round.active && !round.ended;
@@ -608,45 +632,30 @@ export default function RoundDetailsPage() {
         Back to rounds
       </Link>
 
-      <div className="rounded-3xl border border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.10),rgba(15,23,42,0.82))] p-5 md:p-6">
-        <p className="text-xs uppercase tracking-[0.28em] text-amber-300">Voting Policy</p>
-        <h2 className="mt-3 font-[var(--font-display)] text-2xl text-white sm:text-3xl">
-          Live rounds require human verification and cap one-wallet influence.
-        </h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
-          To vote in this round, a wallet must complete human verification first. Each wallet is also capped
-          at 10,000 USDC per idea vote.
-        </p>
-      </div>
-
-      <HumanVerificationPanel />
-
+      <fieldset disabled={isConnected && chainId !== defaultChain.id} className="min-w-0 space-y-6">
       <article className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.3)] sm:p-5 md:p-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h1 className="font-[var(--font-display)] text-3xl text-white sm:text-4xl md:text-5xl">Round #{round.id}</h1>
             <span className="rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-300">
-              {round.ended ? "Ended" : round.active ? "Live" : "Scheduled"}
+              {roundPhase(round, latestBlock?.timestamp)}
             </span>
           </div>
         </div>
 
         <p className="mt-2 text-sm text-slate-400">
-          Voting window: {formatDateTimeFromUnix(round.startTime)} - {formatDateTimeFromUnix(round.endTime)}
+          Voting window: {utcDeadline(round.startTime)} - {utcDeadline(round.endTime)}
         </p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
-            1. Inspect the ideas competing in this round.
-          </div>
-          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
-            2. If the round is live, make one USDC pledge to the proposal you want to fund.
-          </div>
-          <div className="rounded-xl border border-white/10 bg-[#2a2d3a] px-4 py-3 text-sm text-slate-200">
-            3. After settlement, losing pledges are refundable and a viable winner moves into staged grant release.
-          </div>
+        <div className="mt-6">
+          <LifecyclePanel title="From pledge to grant" steps={roundJourney(round, latestBlock?.timestamp)} mode={milestoneMode(isBackerMilestoneRoundRaw)}
+            deadlines={[{ label: "Voting opens", value: utcDeadline(round.startTime) }, { label: "Voting closes", value: utcDeadline(round.endTime) }, { label: "Latest chain time", value: utcDeadline(latestBlock?.timestamp) }]}
+            next={round.ended ? round.winningIdeaId > 0n ? "The selected author checks their claim. Other pledgers inspect refunds; winning pledgers follow the idea's milestone reviews." : "Pledgers check their refund controls below. This round has no selected grant." : canEndRound ? "Any connected wallet can request settlement. A transaction is still required; inspect its result below." : voteBlocker ?? "Choose a proposal below. Check the amount, approve USDC if needed, then submit the separate pledge transaction."}
+            href={round.ended && round.winningIdeaId > 0n ? `/ideas/${round.winningIdeaId}` : "#round-ideas"}
+            linkLabel={round.ended && round.winningIdeaId > 0n ? "Open selected idea" : "Inspect proposals"} />
         </div>
 
+        <p className="mt-4 text-xs text-slate-300">Before pledging: <a href="#round-verification" className="text-cyan-200 underline underline-offset-4">inspect verification and voting policy below</a>. Contract checks still apply even when the voting window is open.</p>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <p className="text-sm text-slate-200">Total votes: {formatUsdc(round.totalVotes)}</p>
           {fundingRoundSettlement.settled && fundingRoundSettlement.winningIdeaId === 0n && (
@@ -690,7 +699,7 @@ export default function RoundDetailsPage() {
               }}
               className="rounded-lg bg-emerald-500/90 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isClaimPending ? "Awaiting signature..." : isClaimConfirming ? "Claiming..." : `Claim Initial ${isBackerMilestoneRound ? "20" : "30"}%`}
+              {isClaimPending ? "Awaiting signature..." : isClaimConfirming ? "Claiming..." : payoutModeKnown ? `Claim Initial ${isBackerMilestoneRound ? "20" : "30"}%` : "Claim initial tranche"}
             </button>
           ) : null}
           {canClaimWinningParticipation ? (
@@ -706,7 +715,7 @@ export default function RoundDetailsPage() {
 
         {round.active && (
           <p className="mt-2 text-xs text-slate-300">
-            {userHasVotedValue ? "Your wallet already voted in this round." : "You can vote once in this round."}
+            {voteBlocker ?? "One pledge is allowed; verification, balance, allowance and contract checks still apply."}
           </p>
         )}
         {!canEndRound && round.active && !round.ended && (
@@ -730,14 +739,14 @@ export default function RoundDetailsPage() {
         )}
         {round.winningIdeaId > 0n && (
           <p className="mt-2 text-xs text-slate-300">
-            {isBackerMilestoneRound
-              ? "V2.3 flow: the winner claims 20%, then winning pledgers review two 40% milestones on the idea page."
+            {!payoutModeKnown ? "The round's review mode could not be read. No payout schedule is assumed." : isBackerMilestoneRound
+              ? "Backer-governed V2 flow: the winner claims 20%, then winning pledgers review two 40% milestones on the idea page."
               : "Legacy flow: claim 30% here, then submit and review milestone proofs on the winning idea page for the 40% in-process and final 30% release."}
           </p>
         )}
         {contracts.usdc && contracts.fundingPool && (
           <p className="mt-2 text-xs text-slate-300">
-            Wallet pledge context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum pledge {formatUsdc(minStakeValue)} | max pledge {formatUsdc(maxVoteAmountValue)}
+            Wallet pledge context: balance {formatUsdc(tokenBalanceValue)} | approved for FundingPool {formatUsdc(allowanceValue)} | minimum pledge {formatUsdc(minStakeValue)} | max pledge {maxVoteAmountValue === 0n ? "Cap disabled" : formatUsdc(maxVoteAmountValue)}
           </p>
         )}
 
@@ -749,7 +758,7 @@ export default function RoundDetailsPage() {
                 <p className="mt-1 text-xs text-slate-300">
                   {hasPledge
                     ? `${formatUsdc(pledge.amount)} pledged to Idea #${pledge.ideaId.toString()}.`
-                    : "This wallet has not pledged in this round."}
+                    : pledgeRaw === undefined ? "Pledge data unavailable. No empty-wallet state is assumed." : "This wallet has not pledged in this round."}
                   {pledge.refundClaimed ? " Refund already claimed." : ""}
                 </p>
               </div>
@@ -773,7 +782,7 @@ export default function RoundDetailsPage() {
                 </button>
               )}
             </div>
-            {hasPledge && fundingRoundSettlement.settled && !canClaimPledgeRefund && !pledge.refundClaimed && pledgeWon && !grantRefundActive && (
+            {hasPledge && fundingRoundSettlement.settled && !canClaimPledgeRefund && !pledge.refundClaimed && pledgeWon && grantRefundActiveRaw === false && (
               <p className="mt-2 text-xs text-slate-300">Your pledge backs the selected winner and is held as grant escrow until the grant completes, expires, or is cancelled.</p>
             )}
           </div>
@@ -810,10 +819,31 @@ export default function RoundDetailsPage() {
             </tbody>
           </table>
           </div>
+          <nav aria-label="Round voter pages" className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-xs text-slate-300">
+            <span>{voters.length} loaded voters / 12 per page / Page {currentVoterPage} of {voterPages}</span>
+            <div className="flex gap-3"><button type="button" disabled={currentVoterPage <= 1} onClick={() => setVoterPage(currentVoterPage - 1)} className="rounded-lg border border-white/15 px-3 py-2 disabled:opacity-40">Previous voters</button><button type="button" disabled={currentVoterPage >= voterPages} onClick={() => setVoterPage(currentVoterPage + 1)} className="rounded-lg border border-white/15 px-3 py-2 disabled:opacity-40">Next voters</button></div>
+          </nav>
         </div>
       </article>
 
-      <section className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.28)] sm:p-5 md:p-7">
+      <details id="round-verification" className="rounded-2xl border border-cyan-300/20 bg-slate-950/40 p-4 sm:p-5">
+        <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Verification &amp; voting policy / expand to inspect wallet access</summary>
+        <div className="mt-4 space-y-4">
+      <div className="rounded-3xl border border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.10),rgba(15,23,42,0.82))] p-5 md:p-6">
+        <p className="text-xs uppercase tracking-[0.28em] text-amber-300">Voting Policy</p>
+        <h2 className="mt-3 font-[var(--font-display)] text-2xl text-white sm:text-3xl">
+          A pledge funds a proposal. Approval only sets a spending limit.
+        </h2>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
+          Check your verification status below, inspect each proposal, then enter your pledge. The loaded minimum is {formatUsdc(minStakeValue)}; wallet cap: {maxVoteAmountValue === 0n ? "disabled" : formatUsdc(maxVoteAmountValue)}. The contract enforces the policy attached to this round; testnet demo verification is not proof of personhood.
+        </p>
+      </div>
+
+      <HumanVerificationPanel />
+        </div>
+      </details>
+
+      <section id="round-ideas" className="rounded-[28px] border border-white/10 bg-[#313443] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.28)] sm:p-5 md:p-7">
         <h2 className="font-[var(--font-display)] text-2xl text-white sm:text-3xl md:text-4xl">Ideas in this round</h2>
         <p className="mt-2 text-sm text-slate-300">On-chain `ideaIds`: {round.ideaIds.join(", ") || "-"}</p>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
@@ -836,7 +866,8 @@ export default function RoundDetailsPage() {
             const invalidVoteAmount = parsedAmount <= 0n || insufficientBalance || belowMinStake || aboveMaxVoteAmount;
             const votingBusy = isVotePending || isVoteConfirming || isApprovePending || isApproveConfirming;
             const isOwnIdea = Boolean(address) && idea.author.toLowerCase() === address!.toLowerCase();
-            const accountDataReady = !isConnected || (!normalizedAddress ? true : allowanceReady && balanceReady);
+            const accountDataReady = !!normalizedAddress && allowanceReady && balanceReady && effectiveAllowance !== undefined && effectiveBalance !== undefined && minStakeValue !== undefined && maxVoteAmountValue !== undefined;
+            const amountHelp = voteBlocker ?? (isOwnIdea ? "Authors cannot pledge to their own idea." : !accountDataReady ? "Reading wallet balance, allowance and pledge limits. Please wait before signing." : parsedAmount <= 0n ? "Enter an amount in USDC. It is not sent until you confirm a pledge." : needApprove ? "Step 1 of 2: approve this amount. Then return here to submit the pledge." : "Step 2 of 2: allowance is sufficient. Submit your pledge; approval alone has not funded this idea.");
 
             return (
               <div
@@ -890,12 +921,14 @@ export default function RoundDetailsPage() {
                       }));
                     }}
                     className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#232632] px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400/60"
+                    aria-label={`Pledge amount for idea #${idea.id} (USDC)`}
+                    aria-describedby={`pledge-help-${idea.id}`}
                     placeholder="How much USDC do you want to pledge?"
                   />
                   {needApprove ? (
                     <button
                       type="button"
-                      disabled={!isConnected || !accountDataReady || parsedAmount <= 0n || isApprovePending || isApproveConfirming || !contracts.usdc || !contracts.fundingPool || isOwnIdea}
+                      disabled={!canVote || !accountDataReady || invalidVoteAmount || isApprovePending || isApproveConfirming || !contracts.usdc || !contracts.fundingPool || isOwnIdea}
                       onClick={() => {
                         if (!contracts.usdc || !contracts.fundingPool || parsedAmount <= 0n) return;
                         sendApprove({
@@ -930,6 +963,7 @@ export default function RoundDetailsPage() {
                   </button>
                   )}
                 </div>
+                <p id={`pledge-help-${idea.id}`} className="mt-3 text-xs leading-relaxed text-slate-300">{amountHelp}</p>
                 {insufficientBalance && <p className="mt-2 text-xs text-rose-300">Insufficient USDC balance for this pledge.</p>}
                 {belowMinStake && <p className="mt-2 text-xs text-rose-300">Pledge is below `minStake`.</p>}
                 {aboveMaxVoteAmount && <p className="mt-2 text-xs text-rose-300">Pledge is above the `maxVoteAmount` cap.</p>}
@@ -945,6 +979,7 @@ export default function RoundDetailsPage() {
         {voteError?.message && <p className="mt-4 max-w-full overflow-hidden break-words text-sm text-rose-300">{prettyRoundError(voteError.message)}</p>}
         {voteTxHash && <p className="mt-2 break-all text-xs text-slate-300">Vote transaction reference: {voteTxHash}</p>}
       </section>
+      </fieldset>
     </section>
   );
 }

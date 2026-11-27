@@ -1,46 +1,20 @@
 import Link from "next/link";
-import SiteFooter from "@/components/SiteFooter";
+import { SiteFrame } from "@/components/site/SiteFrame";
 
-const UPDATED_AT = "February 15, 2026";
+const UPDATED_AT = "November 25, 2026";
 
 export default function SecurityRoadmapPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <SiteFrame route="/security-roadmap">
       <div className="mx-auto max-w-[1450px] px-6 py-8 md:px-10 lg:px-14">
-    <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 shadow-[0_8px_24px_rgba(37,99,235,0.35)]" />
-            <span className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-600">
-              <Link href="/" className="transition-colors hover:text-slate-900">
-              BERT
-            </Link>
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm text-slate-600 md:flex">
-            <Link href="/how-it-works" className="transition-colors hover:text-slate-900">
-              How it works
-            </Link>
-            <Link href="/rounds" className="transition-colors hover:text-slate-900">
-              Active rounds
-            </Link>
-            <a href="https://bertdao-docs.vercel.app/" className="transition-colors hover:text-slate-900">
-              Docs
-            </a>
-          </nav>
-          <Link
-            href="/rounds"
-            className="rounded-full border border-white/60 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur transition hover:-translate-y-0.5"
-          >
-            Launch App
-          </Link>
-        </header>
+
 
         <main className="mt-10 grid gap-12 lg:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-72px)] lg:overflow-y-auto">
             <p className="text-xs uppercase tracking-[0.28em] text-teal-600">Security</p>
             <h1 className="mt-3 text-4xl font-semibold text-slate-900 dark:text-slate-100">Security Roadmap</h1>
             <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              Planned hardening milestones for contracts, operations, and incident response.
+              Current trust boundaries, documented findings and the work still required before mainnet.
             </p>
             <p className="mt-4 text-xs uppercase tracking-[0.15em] text-slate-500">Last updated: {UPDATED_AT}</p>
             <div className="mt-7 space-y-2 border-l border-white/20 pl-4 text-sm text-slate-600 dark:text-slate-300">
@@ -60,6 +34,12 @@ export default function SecurityRoadmapPage() {
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 External audits are <strong>planned</strong> but not completed yet. Current security posture is based on
                 internal testing, role-gated access controls, pause/unpause safety controls, and manual operational checks.
+              </p>
+              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                Public testnet scope: V2.4 FundingPool and immutable RevenueTreasury, with retained V2.3 grant rules,
+                and V3.2.1 Community infrastructure. Existing Communities keep their deployed generation.
+                Static-analysis and dependency findings remain documented; passing tests are not an independent audit.
+                <a href="/docs/V2.4-REVENUE-SECURITY-REVIEW.md" className="underline"> Read the V2.4 security review</a>.
               </p>
               <p className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
                 A <strong>testnet responsible-disclosure program is active</strong>. It covers the open BERT core,
@@ -139,8 +119,7 @@ export default function SecurityRoadmapPage() {
           </section>
         </main>
 
-                       <SiteFooter />
-      </div>
-    </div>
+                       </div>
+    </SiteFrame>
   );
 }

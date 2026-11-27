@@ -28,14 +28,14 @@ type DashboardStats = {
 };
 
 function formatUsdc(value?: bigint) {
-  if (value === undefined) return "...";
+  if (value === undefined) return "Unavailable";
   const asNumber = Number(formatUnits(value, USDC_DECIMALS));
   if (!Number.isFinite(asNumber)) return `${formatUnits(value, USDC_DECIMALS)} USDC`;
   return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: asNumber >= 1000 ? 0 : 2 }).format(asNumber)}`;
 }
 
 function formatCount(value?: bigint | number) {
-  if (value === undefined) return "...";
+  if (value === undefined) return "Unavailable";
   return new Intl.NumberFormat("en-US").format(Number(value));
 }
 
@@ -85,9 +85,9 @@ export function DappDashboardLiveStats() {
             try {
               const stats = await fetchProtocolStatsFromSubgraph();
               if (stats) {
-                next.totalTreasury = BigInt(stats.totalTreasury || "0");
-                next.successfulProjects = BigInt(stats.distributionCount || "0");
-                next.grantsDistributed = BigInt(stats.totalDistributed || "0");
+                if (stats.totalTreasury != null) next.totalTreasury = BigInt(stats.totalTreasury);
+                if (stats.distributionCount != null) next.successfulProjects = BigInt(stats.distributionCount);
+                if (stats.totalDistributed != null) next.grantsDistributed = BigInt(stats.totalDistributed);
                 hasFreshData = true;
                 return;
               }
@@ -127,7 +127,7 @@ export function DappDashboardLiveStats() {
             try {
               const stats = await fetchProtocolStatsFromSubgraph();
               if (stats) {
-                next.activeRounds = Number(stats.activeRounds || "0");
+                if (stats.activeRounds != null) next.activeRounds = Number(stats.activeRounds);
                 hasFreshData = true;
                 return;
               }
@@ -174,7 +174,7 @@ export function DappDashboardLiveStats() {
             try {
               const stats = await fetchProtocolStatsFromSubgraph();
               if (stats) {
-                next.totalIdeas = BigInt(stats.totalIdeas || "0");
+                if (stats.totalIdeas != null) next.totalIdeas = BigInt(stats.totalIdeas);
                 hasFreshData = true;
                 return;
               }
@@ -209,7 +209,7 @@ export function DappDashboardLiveStats() {
         setStats((prev) => ({ ...prev, ...next }));
       }
 
-      if (contracts.fundingPool && distributionCountValue && distributionCountValue > 0n) {
+      if (contracts.fundingPool && distributionCountValue && distributionCountValue > 0n && distributionCountValue <= 200n) {
         try {
           const distributions = await Promise.all(
             Array.from({ length: Number(distributionCountValue) }, (_, i) =>
@@ -222,7 +222,9 @@ export function DappDashboardLiveStats() {
             )
           );
 
-          const paidOut = distributions.reduce<bigint>((sum, distribution) => sum + (distributionAmount(distribution) ?? 0n), 0n);
+          const amounts = distributions.map(distributionAmount);
+          if (amounts.some((amount) => amount == null)) return;
+          const paidOut = amounts.reduce<bigint>((sum, amount) => sum + amount!, 0n);
 
           if (!cancelled) {
             setStats((prev) => ({ ...prev, grantsDistributed: paidOut }));
@@ -247,24 +249,24 @@ export function DappDashboardLiveStats() {
 
   const cards = [
     {
-      label: "Total Treasury",
+      label: "Recorded pool custody",
       value: formatUsdc(stats.totalTreasury),
-      helper: "Current live funding capacity",
+      helper: "Accounting balance, not free funding capacity",
     },
     {
-      label: "Active Ideas",
+      label: "Registered ideas",
       value: formatCount(stats.totalIdeas),
       helper: "Ideas tracked on-chain or via subgraph",
     },
     {
-      label: "Grants Distributed",
+      label: "Recorded distributions",
       value: formatUsdc(stats.grantsDistributed),
-      helper: "Released through funding distributions",
+      helper: "Distribution amounts, not proof of completed delivery",
     },
     {
-      label: "Successful Projects",
+      label: "Distribution records",
       value: formatCount(stats.successfulProjects),
-      helper: `${formatCount(stats.activeRounds)} live rounds right now`,
+      helper: "Count of distribution records, not completed projects",
     },
   ];
 

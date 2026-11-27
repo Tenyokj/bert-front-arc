@@ -1,0 +1,38 @@
+.navigator { border: 1px solid #7377bc4f; border-radius: 30px; overflow: hidden; background: radial-gradient(ellipse at 90% 40%, #5131a42c, transparent 60%), linear-gradient(135deg, #152440eb, #11172beb 60%, #251333c9); color: #ecf0ff; }
+.intro { padding: clamp(24px, 4vw, 52px) clamp(24px, 4vw, 52px) 30px; }
+.eyebrow { font-size: 10px; letter-spacing: .2em; color: #9abfff; margin-bottom: 24px; }
+.intro h1 { font-size: clamp(40px, 5.6vw, 79px); line-height: 1.02; letter-spacing: -.05em; font-weight: 550; }
+.intro h1 span { background: linear-gradient(100deg, #8dc7ff, #b492ff 60%, #e8a1c5); background-clip: text; color: transparent; }
+.intro > p:last-child { font-size: 15px; line-height: 1.85; color: #aabbd8; max-width: 620px; margin-top: 23px; }
+.tabs { display: flex; gap: 5px; flex-wrap: wrap; padding: 8px clamp(16px, 3vw, 42px); border-block: 1px solid #7989b82b; background: #0b14276b; }
+.tabs button { flex: 1 1 180px; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 16px 12px; border-radius: 12px; font-size: 13px; color: #a5b6d7; cursor: pointer; border: 1px solid transparent; }
+.tabs button[aria-selected=true] { color: #e6e6ff; background: linear-gradient(110deg, #3c569c60, #65448b44); border-color: #8584d956; box-shadow: inset 0 1px #a8c5ff13; }
+.body { display: grid; grid-template-columns: 1fr 1fr; align-items: center; min-width: 0; }
+.path { padding: clamp(24px, 4vw, 48px); min-width: 0; animation: pathReveal .35s ease both; }
+.counter { color: #a5b1d1; font-size: 10px; letter-spacing: .17em; }
+.path h2 { font-size: clamp(25px, 3vw, 39px); font-weight: 550; letter-spacing: -.025em; line-height: 1.17; margin: 18px 0; text-wrap: balance; }
+.path p { font-size: 13px; color: #b1bfda; line-height: 1.85; }
+.path ol { display: grid; gap: 13px; margin: 26px 0; }
+.path li { display: flex; align-items: baseline; gap: 13px; font-size: 13px; color: #d1dbf0; }
+.path li > span { color: #8e9bd0; font-size: 10px; }
+.links { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-size: 12px; color: #c2b3f7; }
+.primary { display: inline-flex; align-items: center; gap: 18px; padding: 14px 18px; border-radius: 13px; background: linear-gradient(100deg, #456aee, #8059d5); color: white; border: 1px solid #9b9bfb70; }
+.path .note { font-size: 11px; margin-top: 23px; color: #92a5c8; }
+.diagram { position: relative; aspect-ratio: 600/520; width: 100%; max-width: 650px; min-width: 0; background: radial-gradient(ellipse at center, #5554db26, transparent 65%); }
+.diagram svg { width: 100%; height: 100%; opacity: .6; }
+.diagram svg ellipse { opacity: .4; }
+.signal { stroke-width: 2; stroke-dasharray: 70 900; animation: dashFlow 13s linear infinite; }
+.orbit { transform-origin: 300px 260px; animation: compassOrbit 35s linear infinite; }
+.core { position: absolute; inset: 34% 34%; border: 1px solid #a39cef60; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; border-radius: 30%; background: radial-gradient(circle at 35% 25%, #7889e147, #121830e6 75%); box-shadow: 0 0 55px #6e56ea30, inset 0 1px #b2c6ff2e; }
+.core > span { font-size: clamp(50px, 6vw, 80px); line-height: 1; font-weight: 600; background: linear-gradient(#f1f1ff, #7d8ddd); background-clip: text; color: transparent; }
+.core small { color: #a3afe3; font-size: 7px; letter-spacing: .14em; }
+.node { position: absolute; border: 1px solid #7787bc4d; border-radius: 30px; padding: 10px 14px; background: #17203bf0; font-size: 9px; letter-spacing: .09em; color: #a8b5d5; transition: color .3s, border-color .3s, box-shadow .3s; }
+.node[data-active=true] { border-color: #ac9dfb; color: #ded8ff; box-shadow: 0 0 25px #9b67df28; }
+.nodeA { left: 10%; top: 22%; } .nodeB { right: 8%; top: 23%; } .nodeC { right: 5%; bottom: 26%; } .nodeD { left: 9%; bottom: 25%; }
+.diagramCaption { position: absolute; bottom: 5%; left: 12%; right: 12%; text-align: center; font-size: 9px; color: #8599bd; }
+.navigator :is(button,a,[tabindex]):focus-visible { outline: 2px solid #85dcff; outline-offset: 3px; }
+@keyframes dashFlow { to { stroke-dashoffset: -1940; } }
+@keyframes compassOrbit { to { transform: rotate(360deg); } }
+@keyframes pathReveal { from { opacity: .6; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@media (max-width: 760px) { .body { grid-template-columns: minmax(0, 1fr); } .diagram { max-width: 500px; margin: -20px auto 10px; } .tabs button { flex-basis: 42%; font-size: 11px; padding-inline: 5px; } .core > span { font-size: 62px; } .node { padding: 8px; font-size: 8px; } }
+@media (prefers-reduced-motion: reduce) { .signal, .orbit, .path { animation: none; } }

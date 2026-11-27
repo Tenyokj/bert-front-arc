@@ -1,0 +1,200 @@
+{
+  "source": "https://world.org/find-orb",
+  "checkedAt": "2026-11-25",
+  "scope": "Locations embedded in the public locator page, not guaranteed complete global coverage",
+  "htmlSha256": "ce34cbe6782d0e62851dec1632adb97371806bedd5b5646baef43b9ff9cb0b01",
+  "locationCount": 114,
+  "countries": [
+    {
+      "code": "DE",
+      "name": "Germany",
+      "locations": 1,
+      "cities": [
+        {
+          "name": "Munich",
+          "locations": 1
+        }
+      ]
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "locations": 76,
+      "cities": [
+        {
+          "name": "Chiba",
+          "locations": 1
+        },
+        {
+          "name": "Chigasaki",
+          "locations": 1
+        },
+        {
+          "name": "Fujisawa",
+          "locations": 2
+        },
+        {
+          "name": "Fukuoka",
+          "locations": 2
+        },
+        {
+          "name": "Funabashi",
+          "locations": 1
+        },
+        {
+          "name": "Hiratsuka",
+          "locations": 1
+        },
+        {
+          "name": "Hiroshima",
+          "locations": 1
+        },
+        {
+          "name": "Honjo",
+          "locations": 1
+        },
+        {
+          "name": "Izumi",
+          "locations": 1
+        },
+        {
+          "name": "Kamagaya-shi",
+          "locations": 1
+        },
+        {
+          "name": "Kawagoe",
+          "locations": 1
+        },
+        {
+          "name": "Kawasaki",
+          "locations": 4
+        },
+        {
+          "name": "Kita",
+          "locations": 1
+        },
+        {
+          "name": "Kobe",
+          "locations": 2
+        },
+        {
+          "name": "Koshigaya",
+          "locations": 1
+        },
+        {
+          "name": "Kyoto",
+          "locations": 1
+        },
+        {
+          "name": "Machida",
+          "locations": 1
+        },
+        {
+          "name": "Musashino",
+          "locations": 1
+        },
+        {
+          "name": "Nagareyama",
+          "locations": 1
+        },
+        {
+          "name": "Nagoya-shi",
+          "locations": 4
+        },
+        {
+          "name": "Osaka",
+          "locations": 4
+        },
+        {
+          "name": "Ota",
+          "locations": 1
+        },
+        {
+          "name": "Sagamihara Shi",
+          "locations": 1
+        },
+        {
+          "name": "Saitama",
+          "locations": 2
+        },
+        {
+          "name": "Tokorozawa",
+          "locations": 1
+        },
+        {
+          "name": "Tokyo",
+          "locations": 30
+        },
+        {
+          "name": "Yachiyo",
+          "locations": 1
+        },
+        {
+          "name": "Yokohama",
+          "locations": 6
+        },
+        {
+          "name": "Yokosuka",
+          "locations": 1
+        }
+      ]
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "locations": 1,
+      "cities": [
+        {
+          "name": "Singapore",
+          "locations": 1
+        }
+      ]
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "locations": 2,
+      "cities": [
+        {
+          "name": "Seoul",
+          "locations": 2
+        }
+      ]
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "locations": 34,
+      "cities": [
+        {
+          "name": "Berkeley",
+          "locations": 1
+        },
+        {
+          "name": "Brooklyn",
+          "locations": 2
+        },
+        {
+          "name": "New York",
+          "locations": 11
+        },
+        {
+          "name": "Palo Alto",
+          "locations": 1
+        },
+        {
+          "name": "San Francisco",
+          "locations": 16
+        },
+        {
+          "name": "San Jose",
+          "locations": 2
+        },
+        {
+          "name": "Sunnyvale",
+          "locations": 1
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FaCheckDouble, FaCircleInfo, FaFileShield, FaRotate } from "react-icons/fa6";
-import { useAccount, usePublicClient, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useReadContracts, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { formatCommunityUsdc } from "@/lib/community";
 import { communityErrorMessage, communityTechnicalError } from "@/lib/community-errors";
@@ -11,6 +12,10 @@ import { communityHubAbi, communityMilestoneAbi } from "@/lib/community-contract
 import { formatDateTimeFromUnix } from "@/lib/dapp-onchain";
 import { useCommunityClock } from "@/lib/use-community-clock";
 import { CommunityTranchePayment } from "@/components/CommunityTranchePayment";
+import { ClientPagination } from "@/components/ClientPagination";
+import { StatusBadge } from "@/components/dapp/StatusBadge";
+import { CommunityGuidance } from "@/components/dapp/CommunityGuidance";
+import { executionGuidance, executionStatusTone } from "@/lib/protocol-status";
 
 type Plan = {
   proposalId: bigint;
@@ -43,6 +48,7 @@ const planStatus = ["No execution plan", "Awaiting proof", "Reviewing proof", "C
  * milestone module; this component only exposes the correct contract actions.
  */
 export function CommunityMilestonePanel({ hub, proposalIds }: { hub: `0x${string}`; proposalIds: bigint[] }) {
+  const [page, setPage] = useState(1);
   const { chainId } = useAccount();
   const managerRead = useReadContract({ address: hub, abi: communityHubAbi, functionName: "milestones", chainId });
   const manager = managerRead.data as `0x${string}` | undefined;
@@ -54,16 +60,20 @@ export function CommunityMilestonePanel({ hub, proposalIds }: { hub: `0x${string
   const plans = (planReads.data ?? [])
     .map((item) => item.result as Plan | undefined)
     .filter((plan): plan is Plan => Boolean(plan && plan.totalBudget > 0n));
+  const failedReads = (planReads.data ?? []).filter((item) => item.status === "failure").length;
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(plans.length / 6)));
 
   if (managerRead.isLoading || planReads.isLoading) return <PanelShell title="Execution plans"><p className="text-sm text-slate-300">Loading milestone plans...</p></PanelShell>;
   if (managerRead.error || planReads.error || !manager) return <PanelShell title="Execution plans"><p className="text-sm text-amber-100">Milestone module could not be read from this CommunityHub.</p></PanelShell>;
-  if (!plans.length) return <PanelShell title="Execution plans"><p className="max-w-3xl text-sm leading-relaxed text-slate-300">A Community execution plan appears after a binary YES or Slate winner settles. New quorum-enabled Managers reserve the budget and require Admin authorization for every 20/40/40 transfer; supporters additionally review each 40% stage. Original deployed Managers retain automatic transfers. Check the Community&apos;s Manager release.</p></PanelShell>;
+  if (!plans.length) return <PanelShell title="Execution plans"><p className="max-w-3xl text-sm leading-relaxed text-slate-300">{failedReads ? "Some execution plans could not be read. This is not a confirmed empty result; refresh before relying on it." : "No execution plans found among the proposals loaded in this workspace. A plan appears after an accepted binary proposal or a Slate winner settles."} Quorum-enabled Managers require Admin authorization for every 20/40/40 transfer. Older Managers retain their original behavior.</p></PanelShell>;
 
   return <PanelShell title="Execution plans">
+    {failedReads > 0 && <p role="alert" className="mb-4 text-sm text-amber-200">{failedReads} plan reads failed. Showing partial results, not a complete execution history.</p>}
     <p className="max-w-3xl text-sm leading-relaxed text-slate-300">Only winning supporters can review proof; authors cannot vote for their own proposal. Patched milestone managers exclude the execution recipient from review weight and reviewer count, while preserving its financial refund rights. Review needs 40% eligible-weight quorum, 66.67% participating-weight approval, and at least max(3, ceil(3% of eligible reviewers)) approving wallets. Check the manager status on each plan; older Communities are not automatically patched.</p>
     <div className="mt-5 grid gap-4">
-      {plans.map((plan) => <MilestonePlanCard key={plan.proposalId.toString()} hub={hub} manager={manager} plan={plan} />)}
+      {plans.slice((currentPage - 1) * 6, currentPage * 6).map((plan) => <MilestonePlanCard key={plan.proposalId.toString()} hub={hub} manager={manager} plan={plan} />)}
     </div>
+    <ClientPagination currentPage={currentPage} totalItems={plans.length} pageSize={6} onPageChange={setPage} />
   </PanelShell>;
 }
 
@@ -134,7 +144,8 @@ function MilestonePlanCard({ hub, manager, plan }: { hub: `0x${string}`; manager
   const technical = communityTechnicalError(write.error);
 
   return <article className="rounded-2xl border border-white/10 bg-slate-950/20 p-5">
-    <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-200">Plan #{plan.proposalId.toString()} · Milestone {plan.currentMilestone || "-"}/2</p><h3 className="mt-2 text-xl font-semibold text-white">{status}</h3></div><span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-100">20 / 40 / 40 rail</span></div>
+    <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-200">Plan #{plan.proposalId.toString()} · Milestone {plan.currentMilestone || "-"}/2</p><h3 className="mt-2 text-xl font-semibold text-white">Execution & delivery</h3></div><StatusBadge tone={executionStatusTone(plan.status)}>{status}</StatusBadge></div>
+    <div className="mt-4"><CommunityGuidance><p>{executionGuidance(plan.status)}</p><p>20% start, 40% in progress, 40% completion. Review approval alone is not proof that a transfer occurred.</p></CommunityGuidance></div>
     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Budget" value={`${formatCommunityUsdc(plan.totalBudget)} USDC`} /><Metric label="Released" value={`${formatCommunityUsdc(plan.releasedAmount)} USDC`} /><Metric label={hasSeparatedElectorate ? "Review-eligible support" : "Recorded winning support"} value={`${formatCommunityUsdc(plan.eligibleSupportWeight)} USDC`} /><Metric label="Total financial support" value={`${formatCommunityUsdc(totalSupport ?? plan.eligibleSupportWeight)} USDC`} /></div>
     {hasSeparatedElectorate ? <p className="mt-3 text-xs leading-relaxed text-cyan-100">Separated review/refund accounting detected: {reviewerCount.toString()} eligible reviewers. The execution recipient cannot review, but keeps any winning-support refund entitlement.</p> : <p className="mt-3 text-xs leading-relaxed text-amber-200">{electorateRead.isPending ? "Checking self-review protection..." : "Self-review protection could not be confirmed. Original V3.1 managers do not independently exclude a Member execution recipient. This UI hides recipient review controls, but does not patch the contract; use a non-participating execution wallet for legacy pilots."}</p>}
     {plan.status === 1 ? <p className="mt-4 text-sm text-slate-300">Proof deadline: <strong className="text-white">{formatDateTimeFromUnix(plan.proofDeadline)}</strong>{remaining > 0n ? ` (${formatRemaining(remaining)} active Community time left)` : " (deadline elapsed)"}.</p> : null}

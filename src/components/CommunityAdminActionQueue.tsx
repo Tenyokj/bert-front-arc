@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { type Address } from "viem";
-import { useAccount, usePublicClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useProtocolReceipt as useWaitForTransactionReceipt } from "@/hooks/useProtocolReceipt";
 
 import { communityHubAbi } from "@/lib/community-contracts";
 import { communityErrorMessage } from "@/lib/community-errors";
